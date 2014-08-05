@@ -16,3 +16,7 @@ areas.
 From the [Apache Spark](https://spark.apache.org/) website:
 
 > Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
+
+The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform.
+
+With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. 
