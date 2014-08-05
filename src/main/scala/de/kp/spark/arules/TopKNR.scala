@@ -28,7 +28,7 @@ import scala.collection.JavaConversions._
 
 object TopKNR {
   
-  def extractRules(sc:SparkContext,input:String,k:Int,minconf:Double,delta:Int):List[RuleG] = {
+  def extractRules(sc:SparkContext,input:String,k:Int,minconf:Double,delta:Int, stats:Boolean=true):List[RuleG] = {
           
     val vertical = VerticalBuilder.build(sc,input)    
 	
@@ -37,13 +37,27 @@ object TopKNR {
      */
 	val algo = new TopKNRAlgorithm()
 	val rules = algo.runAlgorithm(k, minconf, vertical, delta)
-	/**
-	 * Show statistics
-	 */
-	algo.printStats();
+
+	if (stats) algo.printStats()
     
     rules.toList
     
+  }
+
+  def rulesToJson(rules:List[RuleG]):String = {
+    
+    String.format("""{"rules":[%s]}""", rules.map(rule => {
+			
+      val antecedent = rule.getItemset1().toList
+      val consequent = rule.getItemset2().toList
+
+      val support    = rule.getAbsoluteSupport()
+      val confidence = rule.getConfidence()
+	
+      new Rule(antecedent,consequent,support,confidence).toJSON
+	
+    }).mkString(","))
+
   }
 
 }

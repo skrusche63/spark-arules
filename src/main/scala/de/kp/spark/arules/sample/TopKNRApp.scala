@@ -54,8 +54,9 @@ object TopKNRApp {
     val delta = 2
     
     val rules = TopKNR.extractRules(sc,output,k,minconf,delta)
-    
-    println("====================")
+    println(TopKNR.rulesToJson(rules))
+   
+    println("===================================================")
     
 	for (rule <- rules) {
 			
@@ -72,7 +73,7 @@ object TopKNRApp {
 	
 	}
     
-    println("====================")
+    println("===================================================")
 
     val end = System.currentTimeMillis()
     println("Total time: " + (end-start) + " ms")

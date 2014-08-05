@@ -28,7 +28,7 @@ import de.kp.spark.arules.util.SPMFBuilder
 
 object TopKApp {
   
-  private val prepare = true
+  private val prepare = false
   
   def main(args:Array[String]) {
 
@@ -52,8 +52,9 @@ object TopKApp {
     val minconf = 0.8
     
     val rules = TopK.extractRules(sc,output,k,minconf)
+    println(TopK.rulesToJson(rules))
     
-    println("====================")
+    println("===================================================")
     
 	for (rule <- rules) {
 			
@@ -70,7 +71,7 @@ object TopKApp {
 	
 	}
     
-    println("====================")
+    println("===================================================")
 
     val end = System.currentTimeMillis()
     println("Total time: " + (end-start) + " ms")

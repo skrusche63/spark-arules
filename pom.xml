@@ -62,6 +62,13 @@
 	  <artifactId>spark-mllib_2.10</artifactId>
 	  <version>1.0.1</version>
     </dependency>
+    
+    <!-- json4s -->
+    <dependency>
+	  <groupId>org.json4s</groupId>
+	  <artifactId>json4s-native_2.10</artifactId>
+	  <version>3.2.10</version>
+    </dependency>
       
   </dependencies>
 
