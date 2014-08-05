@@ -31,13 +31,18 @@ usually accompanied by the following control parameters:
 The goal of association rule mining then is to discover all rules that have a support and confidence that is higher to user-defined thresholds 
 *minimum support* and *minimum confidence*. The challenge is choose the right thresholds with respect to the considered transaction database.
 
-This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job:
+This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job. The problem is especially associated with *minimum support*:
 
-**Thresholds are set too high**: 
+**Threshold is set too high**: 
 This generates too few results and valuable information may be omitted.
 
-**Thresholds are set too low**: 
+**Threshold is set too low**: 
 This can generate a huge amount of results, and the mining task may become very slow.
+
+The dependency of association rule algorithms on *minimum confidence* makes it almost impossible to "automate" association rule mining or use it streaming data sources.
+
+To overcome this problem, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) redefined the problem of association mining as **the top-k association rules** (2012). The proposed algorithm only depends on the parameters *k*, the number of rules to be generated, and *minimum confidence*. 
+
 
 
 
