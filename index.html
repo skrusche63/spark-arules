@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Spark-arules by skrusche63</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Spark-arules</h1>
+        <h2>A Scala and Apache Spark based implementation of Association Rules algorithms.</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/skrusche63/spark-arules/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/skrusche63/spark-arules/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/skrusche63/spark-arules" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h2>
+<a name="top-k-non-redundant-association-rules-with-spark" class="anchor" href="#top-k-non-redundant-association-rules-with-spark"><span class="octicon octicon-link"></span></a>Top-K (Non Redundant) Association Rules with Spark</h2>
+
+<p>Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
+transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets and is able 
+to determine associations of the following kind:</p>
+
+<blockquote>
+<p>A customer who is willing to buy one or more products together is likely to also buy other items as well.</p>
+</blockquote>
+
+<p>Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of 
+such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other 
+areas.</p>
+
+<h3>
+<a name="apache-spark" class="anchor" href="#apache-spark"><span class="octicon octicon-link"></span></a>Apache Spark</h3>
+
+<p>From the <a href="https://spark.apache.org/">Apache Spark</a> website:</p>
+
+<blockquote>
+<p>Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.</p>
+</blockquote>
+
+<p>The increasing number of associated projects, such as <a href="https://spark.apache.org/sql/">Spark SQL</a> and <a href="https://spark.apache.org/streaming/">Spark Streaming</a>, enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, in this project we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.</p>
+
+<h3>
+<a name="top-k-non-redundant-association-rules" class="anchor" href="#top-k-non-redundant-association-rules"><span class="octicon octicon-link"></span></a>Top-K (Non Redundant) Association Rules</h3>
+
+<p>Finding interesting associations between items in transaction databases is a fundamental data mining task. Finding association rules is 
+usually accompanied by the following control parameters:</p>
+
+<ul>
+<li><p><strong>Support</strong>: The percentage of transactions of the database where the rules occurs.</p></li>
+<li><p><strong>Confidence</strong>: The support of the rule divided by the support of its <em>antecedent</em>.</p></li>
+</ul><p>The goal of association rule mining then is to discover all rules that have a support and confidence that is higher to user-defined thresholds 
+<em>minimum support</em> and <em>minimum confidence</em>. The challenge is choose the right thresholds with respect to the considered transaction database.</p>
+
+<p>This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job. The problem is especially associated with <em>minimum support</em>:</p>
+
+<p><strong>Threshold is set too high</strong>: 
+This generates too few results and valuable information may be omitted.</p>
+
+<p><strong>Threshold is set too low</strong>: 
+This can generate a huge amount of results, and the mining task may become very slow.</p>
+
+<p>The dependency of association rule algorithms on <em>minimum confidence</em> makes it almost impossible to "automate" association rule mining or use it streaming data sources.</p>
+
+<p>In 2012, <a href="http://www.philippe-fournier-viger.com/">Philippe-Fournier Viger</a> redefined the problem of association mining as <strong>Top-K Association Rule Mining</strong>. The proposed algorithm only depends on the parameters <em>k</em>, the number of rules to be generated, and <em>minimum confidence</em>. For more information, continue to read <a href="http://www.philippe-fournier-viger.com/spmf/top_k_non_redundant_association_rules.pdf">here</a>.</p>
+
+<p>We adapted Viger's original implementation and made his <strong>Top-K</strong> and <strong>Top-K Non Redundant</strong> algorithms available for Spark.</p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
