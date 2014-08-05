@@ -41,7 +41,7 @@ This can generate a huge amount of results, and the mining task may become very 
 
 The dependency of association rule algorithms on *minimum confidence* makes it almost impossible to "automate" association rule mining or use it streaming data sources.
 
-To overcome this problem, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) redefined the problem of association mining as **the top-k association rules** (2012). The proposed algorithm only depends on the parameters *k*, the number of rules to be generated, and *minimum confidence*. 
+To overcome this problem, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) redefined the problem of association mining as **Top-K Association Rule Mining** (2012). The proposed algorithm only depends on the parameters *k*, the number of rules to be generated, and *minimum confidence*. 
 
 
 
