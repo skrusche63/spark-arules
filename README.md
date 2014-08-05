@@ -9,3 +9,7 @@ to determine associations of the following kind:
 Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of 
 such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other 
 areas.
+
+### Apache Spark
+
+> [Apache Spark](https://spark.apache.org/) is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
