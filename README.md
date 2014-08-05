@@ -1,3 +1,5 @@
+![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
+
 ## Top-K (Non Redundant) Association Rules with Spark
 
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
