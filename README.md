@@ -44,7 +44,7 @@ The dependency of association rule algorithms on *minimum confidence* makes it a
 In 2012, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) redefined the problem of association mining as **Top-K Association Rule Mining**. The proposed algorithm only depends on the parameters *k*, the number of rules to be generated, and *minimum confidence*. For more information, continue to read [here](http://www.philippe-fournier-viger.com/spmf/top_k_non_redundant_association_rules.pdf).
 
 
-In this project, we adapted Viger's original implementation and made his **Top-K** and **Top-K Non Redundant** algorithms available for Spark.
+We adapted Viger's original implementation and made his **Top-K** and **Top-K Non Redundant** algorithms available for Spark.
 
 
 
