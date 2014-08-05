@@ -33,10 +33,10 @@ The goal of association rule mining then is to discover all rules that have a su
 
 This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job:
 
-*Thresholds are set too high*: 
+**Thresholds are set too high**: 
 This generates too few results and valuable information may be omitted.
 
-*Thresholds are set too low*: 
+**Thresholds are set too low**: 
 This can generate a huge amount of results, and the mining task may become very slow.
 
 
