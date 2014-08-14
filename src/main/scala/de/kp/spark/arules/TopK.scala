@@ -21,6 +21,8 @@ package de.kp.spark.arules
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 
+import org.apache.spark.rdd.RDD
+
 import de.kp.core.arules.{TopKAlgorithm,RuleG}
 
 import de.kp.spark.arules.util.VerticalBuilder
@@ -28,10 +30,26 @@ import scala.collection.JavaConversions._
 
 object TopK {
   
-  def extractRules(sc:SparkContext,input:String,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+  def extractFileRules(sc:SparkContext,input:String,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
           
     val vertical = VerticalBuilder.build(sc,input)    
+    
+    /**
+     * Run algorithm and create Top K association rules
+     */
+	val algo = new TopKAlgorithm()
+	val rules = algo.runAlgorithm(k, minconf, vertical)
 	
+	if (stats) algo.printStats()
+    
+    rules.toList
+    
+  }
+  
+  def extractRDDRules(sc:SparkContext,dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+          
+    val vertical = VerticalBuilder.build(sc,dataset)    
+    
     /**
      * Run algorithm and create Top K association rules
      */

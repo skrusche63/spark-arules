@@ -41,7 +41,7 @@ object SPMFBuilder {
   
   private def fromSPMF(sc:SparkContext,input:String):RDD[String] = {
     
-    val source = sc.textFile(input)
+    val source = sc.textFile(input).filter(line => line.isEmpty() == false)
     index(sc,source)
     
   }

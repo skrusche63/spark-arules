@@ -30,29 +30,33 @@ import scala.collection.JavaConversions._
 
 object VerticalBuilder {
 
+  private val useAggregate = false
+
   def build(sc:SparkContext,input:String):Vertical = {
+    /*
+     * Read data from file system
+     */
+    val file = textfile(sc,input).cache()
+    build(sc,file)
+    
+  }
+  
+  def build(sc:SparkContext,dataset:RDD[(Int,Array[String])]):Vertical = {
     
     /**
      * STEP #1
      * 
-     * Read data from file system
+     * Determine max item
      */
-    val file = textfile(sc,input).cache()
+    val ids = dataset.flatMap(value => value._2.map(item => Integer.parseInt(item))).collect()
+    val max = sc.broadcast(ids.max)
     
     /**
      * STEP #2
      * 
-     * Determine max item
-     */
-    val ids = file.flatMap(value => value._2.map(item => Integer.parseInt(item))).collect()
-    val max = sc.broadcast(ids.max)
-    
-    /**
-     * STEP #3
-     * 
      * Build transactions
      */  
-    val transactions = file.map(valu => {
+    val transactions = dataset.map(valu => {
       
       val (tid,items) = valu
       val trans = new Transaction(items.length)
@@ -116,7 +120,44 @@ object VerticalBuilder {
      */
     def combOp(vert1:Vertical,vert2:Vertical):Vertical = vert2      
 
-    transactions.coalesce(1, false).aggregate(new Vertical())(seqOp,combOp)    
+    if (useAggregate) {
+      transactions.coalesce(1, false).aggregate(new Vertical())(seqOp,combOp)    
+      
+    } else {
+      /*
+       * Assign transaction identifier to the respective item
+       */
+      val vertical = transactions.flatMap(trans => trans.getItems().map(item => (item,trans.getId())))
+        .groupBy(group => group._1).map(valu => {
+      
+          val (item,data) = valu
+          /*
+           * Associate item with respective transactions
+           * through a BitSet
+           */      
+          val bitset = new BitSet(total.value.toInt)
+          for ((item,tid) <- data) bitset.set(tid.toInt)
+
+          val support = data.size
+          (item,bitset,support)
+      
+       }).collect()
+    
+      val tableItemTids = Array.fill[BitSet](max.value + 1)(new BitSet(total.value.toInt))
+      val tableItemCount = Array.fill[Int](max.value + 1)(0)
+    
+      vertical.foreach(valu => {
+      
+        val (item,bitset,support) = valu
+      
+        tableItemTids(item) = bitset
+        tableItemCount(item) =  support
+      
+      })
+   
+      new Vertical(tableItemTids,tableItemCount,transactions.collect(),max.value)    
+      
+    }
 
   }
     

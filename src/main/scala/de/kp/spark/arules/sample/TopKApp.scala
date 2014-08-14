@@ -32,8 +32,8 @@ object TopKApp {
   
   def main(args:Array[String]) {
 
-    val input  = "/Work/tmp/arules/input/ContextIGB.txt"
-    val output = "/Work/tmp/arules/output/ContextIGB"
+    val input  = "/Work/tmp/arules/input/marketbasket.dat"
+    val output = "/Work/tmp/arules/output/marketbasket"
     
     var start = System.currentTimeMillis()
     
@@ -51,7 +51,7 @@ object TopKApp {
     val k = 10
     val minconf = 0.8
     
-    val rules = TopK.extractRules(sc,output,k,minconf)
+    val rules = TopK.extractFileRules(sc,output,k,minconf)
     println(TopK.rulesToJson(rules))
     
     println("===================================================")
