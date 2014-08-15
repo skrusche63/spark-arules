@@ -8,9 +8,11 @@ to determine associations of the following kind:
 
 > A customer who is willing to buy one or more products together is likely to also buy other items as well.
 
-Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of 
-such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other 
-areas.
+Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other areas: 
+
+For example, we have made good experience applying association rules to search queries, and may be used to expand the query based on terms already in the query. 
+
+> If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -> [bovine spongiform encephalopathy].
 
 ### Apache Spark
 
