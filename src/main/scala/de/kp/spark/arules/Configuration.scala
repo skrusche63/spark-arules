@@ -18,32 +18,42 @@ package de.kp.spark.arules
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.json4s._
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read,write,writePretty }
+import com.typesafe.config.ConfigFactory
 
-trait RuleJSON {}
+object Configuration {
 
-case class Rule (
-  /*
-   * Antecedent itemset
-   */
-  antecedent:List[Integer],
-  /*
-   * Consequent itemset
-   */
-  consequent:List[Integer],
-  /**
-   * Support
-   */
-  support:Int,
-  /*
-   * Confidence
-   */
-  confidence:Double) extends RuleJSON {
+    /* Load configuration for router */
+  val path = "application.conf"
+  val config = ConfigFactory.load(path)
+
+  def actor():Int = {
   
-  implicit val formats = Serialization.formats(ShortTypeHints(List()))
+    val cfg = config.getConfig("actor")
+    val timeout = cfg.getInt("timeout")
+    
+    timeout
+    
+  }
+
+  def cache():Int = {
   
-  def toJSON:String = write(this)
+    val cfg = config.getConfig("cache")
+    val maxentries = cfg.getInt("maxentries")
+    
+    maxentries
+    
+  }
+  
+  def router():(Int,Int,Int) = {
+  
+    val cfg = config.getConfig("router")
+  
+    val time    = cfg.getInt("time")
+    val retries = cfg.getInt("retries")  
+    val workers = cfg.getInt("workers")
+    
+    (time,retries,workers)
+
+  }
   
 }
