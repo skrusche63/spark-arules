@@ -34,7 +34,7 @@
         <p><img src="https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png" alt="Dr.Krusche &amp; Partner PartG"></p>
 
 <h2>
-<a name="top-k-non-redundant-association-rules-with-spark" class="anchor" href="#top-k-non-redundant-association-rules-with-spark"><span class="octicon octicon-link"></span></a>Top-K (Non Redundant) Association Rules with Spark</h2>
+<a name="association-rule-server-with-akka-and-spark" class="anchor" href="#association-rule-server-with-akka-and-spark"><span class="octicon octicon-link"></span></a>Association Rule Server with Akka and Spark</h2>
 
 <p>Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets and is able 
@@ -44,9 +44,13 @@ to determine associations of the following kind:</p>
 <p>A customer who is willing to buy one or more products together is likely to also buy other items as well.</p>
 </blockquote>
 
-<p>Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of 
-such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other 
-areas.</p>
+<p>Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other areas: </p>
+
+<p>For example, we have made good experience applying association rules to search queries, and may be used to expand the query based on terms already in the query. </p>
+
+<blockquote>
+<p>If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -&gt; [bovine spongiform encephalopathy].</p>
+</blockquote>
 
 <h3>
 <a name="apache-spark" class="anchor" href="#apache-spark"><span class="octicon octicon-link"></span></a>Apache Spark</h3>
