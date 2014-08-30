@@ -1,4 +1,4 @@
-package de.kp.spark.arules
+package de.kp.spark.arules.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -18,33 +18,18 @@ package de.kp.spark.arules
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.json4s._
+import scala.collection.mutable.HashMap
 
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
+class JobConf {
 
-trait RuleJSON {}
-
-case class Rule (
-  /*
-   * Antecedent itemset
-   */
-  antecedent:List[Integer],
-  /*
-   * Consequent itemset
-   */
-  consequent:List[Integer],
-  /**
-   * Support
-   */
-  support:Int,
-  /*
-   * Confidence
-   */
-  confidence:Double) extends RuleJSON {
+  private val props = HashMap.empty[String,Any]
   
-  implicit val formats = Serialization.formats(ShortTypeHints(List()))
+  def set(k:String,v:Any) {
+    props += k -> v
+  }
+
+  def get(k:String):Option[Any] = props.get(k)
   
-  def toJSON:String = write(this)
+  def getProps() = props
   
 }

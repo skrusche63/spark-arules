@@ -1,4 +1,4 @@
-package de.kp.spark.arules
+package de.kp.spark.arules.model
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -42,7 +42,17 @@ case class ARulesRequest(
    * The algorithm to be used when starting a specific mining job;
    * actually two different ARM algorithms are supported: TOPK & TOPKNR
    */
-  algorithm:Option[String]
+  algorithm:Option[String],
+  /*
+   * Number of rules to be returned by the algorithm
+   */
+  k:Option[Int],
+  /*
+   * Minimum confidence to be used by the algorithm
+   */
+  minconf:Option[Double],
+  delta:Option[Int],
+  source:Option[ARulesSource]
 )
 
 case class ARulesResponse(
@@ -55,6 +65,33 @@ case class ARulesResponse(
    */
   message:Option[String],
   status:String
+)
+
+case class ElasticRequest(
+  nodes:String,
+  port:String,
+  resource:String,
+  query:String    
+)
+
+case class FileRequest(
+  path:String
+)
+
+/**
+ * ARulesSource aggregates the access parameters of
+ * file or elasticsearch based association rule sources
+ */
+case class ARulesSource(
+  /*
+   * The path to a file on the HDFS or local file system
+   * that holds a textual description of a sequence database
+   */
+  path:Option[String],
+  nodes:Option[String],
+  port:Option[String],
+  resource:Option[String],
+  query:Option[String]
 )
 
 object ARulesModel {
@@ -77,14 +114,22 @@ object ARulesAlgorithms {
 object ARulesMessages {
 
   def ALGORITHM_IS_UNKNOWN(uid:String,algorithm:String):String = String.format("""Algorithm '%s' is unknown for uid '%s'.""", algorithm, uid)
-  
+ 
   def NO_ALGORITHM_PROVIDED(uid:String):String = String.format("""No algorithm provided for uid '%s'.""", uid)
+
+  def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
 
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 
   def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)
 
   def TASK_IS_UNKNOWN(uid:String,task:String):String = String.format("""The task '%s' is unknown for uid '%s'.""", task, uid)
+  
+  def TOP_K_MISSING_PARAMETERS(uid:String):String = String.format("""Top-K parameter k or minconf is missing for uid '%s'.""", uid)
+
+  def TOP_K_MINING_STARTED(uid:String) = String.format("""Top-K Association Rule Mining started for uid '%s'.""", uid)
+  
+  def TOP_KNR_MINING_STARTED(uid:String) = String.format("""Top-K non-redundant Association Rule Mining started for uid '%s'.""", uid)
   
 }
 

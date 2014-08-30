@@ -1,4 +1,4 @@
-package de.kp.spark.arules
+package de.kp.spark.arules.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -18,33 +18,36 @@ package de.kp.spark.arules
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.json4s._
+import akka.actor.Actor
 
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
+import de.kp.spark.arules.model._
 
-trait RuleJSON {}
+class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
+  
+  /* Specification of Spark specific system properties */
+  private val props = Map(
+    "spark.executor.memory"          -> "1g",
+	"spark.kryoserializer.buffer.mb" -> "256"
+  )
+  
+  /* Create Spark context */
+  private val sc = createCtxLocal("TopKNRActor",props)
 
-case class Rule (
-  /*
-   * Antecedent itemset
-   */
-  antecedent:List[Integer],
-  /*
-   * Consequent itemset
-   */
-  consequent:List[Integer],
-  /**
-   * Support
-   */
-  support:Int,
-  /*
-   * Confidence
-   */
-  confidence:Double) extends RuleJSON {
-  
-  implicit val formats = Serialization.formats(ShortTypeHints(List()))
-  
-  def toJSON:String = write(this)
-  
+  def receive = {
+    
+    case req:ElasticRequest => {
+      
+      val origin = sender
+      
+    }
+    
+    case req:FileRequest => {
+      
+      val origin = sender
+      
+    }
+    
+    case _ => {}
+    
+  }
 }

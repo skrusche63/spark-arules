@@ -27,7 +27,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.routing.RoundRobinRouter
 
 import de.kp.spark.arules.Configuration
-import de.kp.spark.arules.ARulesStatus
+import de.kp.spark.arules.model._
 
 import scala.concurrent.duration.DurationInt
 

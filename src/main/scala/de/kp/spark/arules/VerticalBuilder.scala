@@ -1,4 +1,4 @@
-package de.kp.spark.arules.util
+package de.kp.spark.arules
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-ARULES project
@@ -23,11 +23,18 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.core.arules.{TopKNRAlgorithm,RuleG,Transaction,Vertical}
+import de.kp.core.arules.{Transaction, Vertical}
 
 import java.util.{BitSet,Collections,Comparator}
-import scala.collection.JavaConversions._
 
+import scala.collection.JavaConversions._
+import scala.Array.canBuildFrom
+
+/**
+ * VerticalBuilder generates a vertical database representation, 
+ * which is a prerequisite for using Top-K and Top-K non-redundant
+ * algorithms
+ */
 object VerticalBuilder {
 
   private val useAggregate = false
@@ -37,13 +44,15 @@ object VerticalBuilder {
      * Read data from file system
      */
     val file = textfile(sc,input).cache()
-    build(sc,file)
+    build(file)
     
   }
   
-  def build(sc:SparkContext,dataset:RDD[(Int,Array[String])]):Vertical = {
+  def build(dataset:RDD[(Int,Array[String])]):Vertical = {
     
-    /**
+    val sc = dataset.context
+    
+    /*
      * STEP #1
      * 
      * Determine max item
@@ -51,7 +60,7 @@ object VerticalBuilder {
     val ids = dataset.flatMap(value => value._2.map(item => Integer.parseInt(item))).collect()
     val max = sc.broadcast(ids.max)
     
-    /**
+    /*
      * STEP #2
      * 
      * Build transactions
@@ -165,8 +174,8 @@ object VerticalBuilder {
     
     sc.textFile(input).map(valu => {
       
-      val parts = valu.split(",")  
-      (parts(0).toInt,parts(1).split(" "))
+      val Array(sid,sequence) = valu.split(",")  
+      (sid.toInt,sequence.split(" "))
     
     })
 

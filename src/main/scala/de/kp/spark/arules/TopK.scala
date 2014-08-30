@@ -23,45 +23,58 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.core.arules.{TopKAlgorithm,RuleG}
+import de.kp.core.arules.{TopKAlgorithm,RuleG,Vertical}
+import de.kp.spark.arules.source.{FileSource}
 
-import de.kp.spark.arules.util.VerticalBuilder
 import scala.collection.JavaConversions._
+
+class TopK {
+  
+  /**
+   * Build vertical representation from external data format
+   * and find Top K rules from vertical database
+   */
+  def extractRDDRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+          
+    val vertical = VerticalBuilder.build(dataset)    
+    findRDDRules(vertical,k,minconf,stats)
+    
+  }
+
+  /**
+   * Run algorithm from vertical database and create Top K association rules
+   */
+  def findRDDRules(vertical:Vertical,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+
+    val algo = new TopKAlgorithm()
+	val rules = algo.runAlgorithm(k, minconf, vertical)
+	
+	if (stats) algo.printStats()
+    
+    rules.toList
+    
+  }
+  
+}
 
 object TopK {
   
   def extractFileRules(sc:SparkContext,input:String,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
-          
-    val vertical = VerticalBuilder.build(sc,input)    
     
-    /**
-     * Run algorithm and create Top K association rules
-     */
-	val algo = new TopKAlgorithm()
-	val rules = algo.runAlgorithm(k, minconf, vertical)
-	
-	if (stats) algo.printStats()
+    /* Retrieve data from the file system */
+    val source = new FileSource(sc)
+    val dataset = source.connect(input)
     
-    rules.toList
+    new TopK().extractRDDRules(dataset,k,minconf,stats)
     
   }
   
-  def extractRDDRules(sc:SparkContext,dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
-          
-    val vertical = VerticalBuilder.build(sc,dataset)    
+  def extractRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
     
-    /**
-     * Run algorithm and create Top K association rules
-     */
-	val algo = new TopKAlgorithm()
-	val rules = algo.runAlgorithm(k, minconf, vertical)
-	
-	if (stats) algo.printStats()
-    
-    rules.toList
-    
-  }
+    new TopK().extractRDDRules(dataset,k,minconf,stats)
 
+  }
+  
   def rulesToJson(rules:List[RuleG]):String = {
     
     String.format("""{"rules":[%s]}""", rules.map(rule => {

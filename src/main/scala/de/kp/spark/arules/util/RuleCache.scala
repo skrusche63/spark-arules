@@ -18,21 +18,21 @@ package de.kp.spark.arules.util
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.{Configuration,Rule}
 import java.util.Date
 
-object JobCache {
+object RuleCache {
   
   private val maxentries = Configuration.cache  
-  private val cache = new LRUCache[(String,Long),String](maxentries)
+  private val cache = new LRUCache[(String,Long),List[Rule]](maxentries)
 
-  def add(uid:String,status:String) {
+  def add(uid:String,rules:List[Rule]) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
     val k = (uid,timestamp)
-    val v = status
+    val v = rules
     
     cache.put(k,v)
     
@@ -45,25 +45,7 @@ object JobCache {
     
   }
   
-  /**
-   * Get timestamp when job with 'uid' started
-   */
-  def starttime(uid:String):Long = {
-    
-    val keys = cache.keys().filter(key => key._1 == uid)
-    if (keys.size == 0) {
-      0
-    
-    } else {
-      
-      val first = keys.sortBy(_._2).head
-      first._2
-      
-    }
-    
-  }
-  
-  def status(uid:String):String = {
+  def rules(uid:String):List[Rule] = {
     
     val keys = cache.keys().filter(key => key._1 == uid)
     if (keys.size == 0) {    
@@ -75,7 +57,7 @@ object JobCache {
       cache.get(last) match {
         
         case None => null
-        case Some(status) => status
+        case Some(rules) => rules
       
       }
       

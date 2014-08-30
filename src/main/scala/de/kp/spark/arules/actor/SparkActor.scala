@@ -1,4 +1,4 @@
-package de.kp.spark.arules
+package de.kp.spark.arules.actor
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -18,33 +18,34 @@ package de.kp.spark.arules
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.json4s._
+import org.apache.spark.{SparkConf,SparkContext}
+import org.apache.spark.serializer.KryoSerializer
 
-import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
+trait SparkActor {
+  
+  protected def createCtxLocal(name:String, props:Map[String,String]):SparkContext = {
 
-trait RuleJSON {}
+    for (prop <- props) {
+      System.setProperty(prop._1,prop._2)      
+    }
 
-case class Rule (
-  /*
-   * Antecedent itemset
-   */
-  antecedent:List[Integer],
-  /*
-   * Consequent itemset
-   */
-  consequent:List[Integer],
-  /**
-   * Support
-   */
-  support:Int,
-  /*
-   * Confidence
-   */
-  confidence:Double) extends RuleJSON {
-  
-  implicit val formats = Serialization.formats(ShortTypeHints(List()))
-  
-  def toJSON:String = write(this)
-  
+    val runtime = Runtime.getRuntime()
+	runtime.gc()
+		
+	val cores = runtime.availableProcessors()
+		
+	val conf = new SparkConf()
+	conf.setMaster("local["+cores+"]")
+		
+	conf.setAppName(name);
+    conf.set("spark.serializer", classOf[KryoSerializer].getName)		
+    /* 
+     * Set the Jetty port to 0 to find a random port
+     */
+    conf.set("spark.ui.port", "0")        
+        
+	new SparkContext(conf)
+		
+  }
+
 }

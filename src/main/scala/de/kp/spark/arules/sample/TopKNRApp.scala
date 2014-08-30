@@ -18,15 +18,12 @@ package de.kp.spark.arules.sample
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.{SparkConf,SparkContext}
-import org.apache.spark.SparkContext._
-
-import org.apache.spark.serializer.KryoSerializer
+import org.apache.spark.SparkContext
 
 import de.kp.spark.arules.TopKNR
 import de.kp.spark.arules.util.SPMFBuilder
 
-object TopKNRApp {
+object TopKNRApp extends SparkApp {
   
   private val prepare = false
   
@@ -37,7 +34,7 @@ object TopKNRApp {
     
     var start = System.currentTimeMillis()
     
-    val sc = createLocalCtx("TopKNRApp")
+    val sc = createCtxLocal("TopKNRApp")
     
     if (prepare) {
       
@@ -53,7 +50,7 @@ object TopKNRApp {
     
     val delta = 2
     
-    val rules = TopKNR.extractRules(sc,output,k,minconf,delta)
+    val rules = TopKNR.extractFileRules(sc,output,k,minconf,delta)
     println(TopKNR.rulesToJson(rules))
    
     println("===================================================")
@@ -78,33 +75,6 @@ object TopKNRApp {
     val end = System.currentTimeMillis()
     println("Total time: " + (end-start) + " ms")
     
-  }
-  
-  private def createLocalCtx(name:String):SparkContext = {
-
-	System.setProperty("spark.executor.memory", "4g")
-	System.setProperty("spark.kryoserializer.buffer.mb","256")
-	/**
-	 * Other configurations
-	 * 
-	 * System.setProperty("spark.cores.max", "532")
-	 * System.setProperty("spark.default.parallelism", "256")
-	 * System.setProperty("spark.akka.frameSize", "1024")
-	 * 
-	 */	
-    val runtime = Runtime.getRuntime()
-	runtime.gc()
-		
-	val cores = runtime.availableProcessors()
-		
-	val conf = new SparkConf()
-	conf.setMaster("local["+cores+"]")
-		
-	conf.setAppName(name);
-    conf.set("spark.serializer", classOf[KryoSerializer].getName)		
-        
-	new SparkContext(conf)
-		
   }
 
 }

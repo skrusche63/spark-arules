@@ -18,14 +18,22 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import akka.actor.{Actor,ActorLogging}
+import akka.actor.{Actor,ActorLogging,ActorRef,Props}
 
-import de.kp.spark.arules.{ARulesAlgorithms,ARulesMessages,ARulesModel,ARulesRequest,ARulesResponse,ARulesStatus}
+import akka.pattern.ask
+import akka.util.Timeout
+
+import de.kp.spark.arules.Configuration
+
+import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.JobCache
 
-import java.util.Date
+import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
 class ARulesActor extends Actor with ActorLogging {
+
+  implicit val ec = context.dispatcher
   
   private val algorithmSupport = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
   
@@ -36,9 +44,6 @@ class ARulesActor extends Actor with ActorLogging {
       val origin = sender    
       /* Deserialize mining request */
       val deser = ARulesModel.deserializeRequest(req)
-            
-      val now = new Date()
-      val time = now.getTime()
       
       val (uid,task,algorithm) = (deser.uid,deser.task,deser.algorithm.getOrElse(null))
       task match {
@@ -48,31 +53,82 @@ class ARulesActor extends Actor with ActorLogging {
            * Job MUST not exist AND algorithm MUST be known,
            * then register and start job
            */          
-          val resp = if (JobCache.exists(uid)) {
-            val message = ARulesMessages.TASK_ALREADY_STARTED(uid)
-            new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)            
-
+          val resp = if (JobCache.exists(uid)) {            
+            Future {
+              val message = ARulesMessages.TASK_ALREADY_STARTED(uid)
+              new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)            
+            }
+            
           } else {            
-            if (algorithm == null) {            
-              val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
-              new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)
+            if (algorithm == null) {   
+              Future {
+                val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
+                new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)
+              }
               
             } else {              
               if (algorithmSupport.contains(algorithm)) {
-                startJob(uid,time,algorithm)
+                
+                val source = deser.source.getOrElse(null)
+                if (source == null) {
+                  Future {
+                    val message = ARulesMessages.NO_SOURCE_PROVIDED(uid)
+                    new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)
+                  }
+                  
+                } else {
+                
+                  /* Build job configuration */
+                  val jobConf = new JobConf()
+                
+                  jobConf.set("uid",uid)
+                  jobConf.set("algorithm",algorithm)
+
+                  deser.k match {
+                    case None => {}
+                    case Some(k) => jobConf.set("k",k)
+                  }
+                
+                  deser.minconf match {
+                    case None => {}
+                    case Some(minconf) => jobConf.set("minconf",minconf)
+                  }
+                
+                  deser.delta match {
+                    case None => {}
+                    case Some(delta) => jobConf.set("delta",delta)
+                  }
+                
+                  startJob(jobConf,source).mapTo[ARulesResponse]
+                 
+                }
                 
               } else {              
-                val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
-                new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)
+                Future {
+                  val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
+                  new ARulesResponse(uid, Some(message), ARulesStatus.FAILURE)
+                }
                 
               }
               
             }
             
           }
+
+          resp.onSuccess {
+            case result => origin ! ARulesModel.serializeResponse(result)
+          }
+
+          resp.onFailure {
+            case message => {
+              
+              val response = new ARulesResponse(uid,Some(message.toString),ARulesStatus.FAILURE)
+              origin ! ARulesModel.serializeResponse(response)	      
             
-          origin ! resp
-          
+            }
+	  
+          }
+         
         }
         
         case "stop" => {
@@ -87,9 +143,9 @@ class ARulesActor extends Actor with ActorLogging {
             stopJob(uid)
             
           }
-            
-          origin ! resp
-          
+           
+          origin ! ARulesModel.serializeResponse(resp)
+           
         }
         
         case "status" => {
@@ -105,18 +161,18 @@ class ARulesActor extends Actor with ActorLogging {
             new ARulesResponse(uid, None, status)
             
           }
-            
-          origin ! resp
-          
+           
+          origin ! ARulesModel.serializeResponse(resp)
+           
         }
         
         case _ => {
           
           val message = ARulesMessages.TASK_IS_UNKNOWN(uid,task)
           val resp = new ARulesResponse(deser.uid, Some(message), ARulesStatus.FAILURE)
-          
-          origin ! resp
-          
+           
+          origin ! ARulesModel.serializeResponse(resp)
+           
         }
         
       }
@@ -127,14 +183,54 @@ class ARulesActor extends Actor with ActorLogging {
   
   }
   
-  private def startJob(uid:String,time:Long,algorithm:String):ARulesResponse = {
+  private def startJob(jobConf:JobConf,source:ARulesSource):Future[Any] = {
 
-    val status = ARulesStatus.STARTED
-    JobCache.add(uid,time,status)
-    null
+    val duration = Configuration.actor      
+    implicit val timeout:Timeout = DurationInt(duration).second
+
+    val path = source.path.getOrElse(null)
+    if (path == null) {
+        
+      val nodes = source.nodes.getOrElse(null)
+      val port  = source.port.getOrElse(null)
+        
+      val resource = source.resource.getOrElse(null)
+      val query = source.query.getOrElse(null)
+        
+      val req = new ElasticRequest(nodes,port,resource,query)
+
+      val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
+      val actor = algorithmToActor(algorithm,jobConf)
+      
+      ask(actor, req)
+        
+    } else {
+    
+      val req = new FileRequest(path)
+
+      val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
+      val actor = algorithmToActor(algorithm,jobConf)
+
+      ask(actor, req)
+        
+    }
+  
+  }
+  
+  private def algorithmToActor(algorithm:String,jobConf:JobConf):ActorRef = {
+
+    val actor = if (algorithm == ARulesAlgorithms.TOPK) {      
+      context.actorOf(Props(new TopKActor(jobConf)))      
+      } else {
+       context.actorOf(Props(new TopKNRActor(jobConf)))
+      }
+    
+    actor
+  
   }
   
   private def stopJob(uid:String):ARulesResponse = {
     null
   }
+  
 }
