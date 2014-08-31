@@ -1,6 +1,6 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Association Rule Mining (ARM)Server
+## Association Rule Mining (ARM) Server
 
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:
