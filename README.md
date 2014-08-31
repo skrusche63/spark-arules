@@ -1,6 +1,6 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Association Rule Server with Akka and Spark
+## Association Rule Mining (ARM)Server
 
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:
@@ -20,7 +20,7 @@ From the [Apache Spark](https://spark.apache.org/) website:
 
 > Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
 
-The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, in this project we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
 
 ### Top-K (Non Redundant) Association Rules
 
@@ -49,5 +49,11 @@ In 2012, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) rede
 
 We adapted Viger's original implementation and made his **Top-K** and **Top-K Non Redundant** algorithms available for Spark.
 
+### Technology
 
+* Akka
+* Akka Remoting
+* Elasticsearch
+* Spark
+* Spark Streaming
 
