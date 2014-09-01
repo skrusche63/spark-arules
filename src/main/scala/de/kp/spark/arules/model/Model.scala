@@ -23,6 +23,8 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
+import de.kp.spark.arules.Rule
+
 case class ARulesRequest(
   /* 
    * Unique identifier to distinguish requests from each other;
@@ -64,6 +66,10 @@ case class ARulesResponse(
    * Message
    */
   message:Option[String],
+  /*
+   * The rules computed for the respective job
+   */
+  rules:Option[List[Rule]],
   status:String
 )
 
@@ -71,7 +77,8 @@ case class ElasticRequest(
   nodes:String,
   port:String,
   resource:String,
-  query:String    
+  query:String,
+  fields:String
 )
 
 case class FileRequest(
@@ -91,7 +98,8 @@ case class ARulesSource(
   nodes:Option[String],
   port:Option[String],
   resource:Option[String],
-  query:Option[String]
+  query:Option[String],
+  fields:Option[String]
 )
 
 object ARulesModel {
@@ -126,15 +134,21 @@ object ARulesMessages {
   def TASK_IS_UNKNOWN(uid:String,task:String):String = String.format("""The task '%s' is unknown for uid '%s'.""", task, uid)
   
   def TOP_K_MISSING_PARAMETERS(uid:String):String = String.format("""Top-K parameter k or minconf is missing for uid '%s'.""", uid)
+  
+  def TOP_KNR_MISSING_PARAMETERS(uid:String):String = String.format("""Top-K parameter k, minconf or delta is missing for uid '%s'.""", uid)
 
   def TOP_K_MINING_STARTED(uid:String) = String.format("""Top-K Association Rule Mining started for uid '%s'.""", uid)
   
   def TOP_KNR_MINING_STARTED(uid:String) = String.format("""Top-K non-redundant Association Rule Mining started for uid '%s'.""", uid)
+
+  def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
   
 }
 
 object ARulesStatus {
   
+  val DATASET:String = "dataset"
+    
   val STARTED:String = "started"
   val STOPPED:String = "stopped"
     

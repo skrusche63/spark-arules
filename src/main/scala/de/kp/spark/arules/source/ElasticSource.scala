@@ -21,12 +21,93 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-class ElasticSource(sc:SparkContext) {
+import org.apache.hadoop.conf.{Configuration => HConf}
+import org.apache.hadoop.io.{ArrayWritable,MapWritable,NullWritable,Text}
+
+import org.elasticsearch.hadoop.mr.EsInputFormat
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
+
+class ElasticSource(sc:SparkContext) extends Serializable {
+ 
   /**
-   * Read data from Elasticsearch
+   * Read from an Elasticsearch index that contains the items
+   * of ecommerce orders or transactions
    */
-  def connect(nodes:String,port:String,resource:String,query:String):RDD[(Int,Array[String])] = {
-    null
+  def connect(nodes:String,port:String,resource:String,query:String,fields:String):RDD[(Int,Array[String])] = {
+     
+    val Array(_site,_user,_order,_item,_timestamp) = fields.split(",")
+    
+    /* Elasticsearch specific configuration */
+    val esConf = new HConf()                          
+
+    esConf.set("es.nodes",nodes)
+    esConf.set("es.port",port)
+    
+    esConf.set("es.resource", resource)                
+    esConf.set("es.query", query)                          
+    
+    /* Connect to Elasticsearch */
+    val source = sc.newAPIHadoopRDD(esConf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
+    val items = source.map(hit => {
+      
+      val data = toMap(hit._2)
+      
+      val site = data(_site)
+      val user = data(_user)
+      
+      val order = data(_order)
+      val item  = data(_item)
+      
+      val timestamp = data(_timestamp).toLong
+      
+      (site,user,order,timestamp,item)
+      
+    })
+    /*
+     * Group items by 'order' and aggregate all items of a single order
+     * into a single line and repartition ids to single partition
+     */
+    val ids = items.groupBy(_._3).map(valu => {
+      
+      /* Sort grouped orders by (ascending) timestamp */
+      val data = valu._2.toList.sortBy(_._4)      
+      data.map(record => record._5).toArray
+       
+    }).coalesce(1)
+
+    val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
+    ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
+
+  }
+  
+  /**
+   * A helper method to convert a MapWritable into a Map
+   */
+  private def toMap(mw:MapWritable):Map[String,String] = {
+      
+    val m = mw.map(e => {
+        
+      val k = e._1.toString        
+      val v = (if (e._2.isInstanceOf[Text]) e._2.toString()
+        else if (e._2.isInstanceOf[ArrayWritable]) {
+        
+          val array = e._2.asInstanceOf[ArrayWritable].get()
+          array.map(item => {
+            
+            (if (item.isInstanceOf[NullWritable]) "" else item.asInstanceOf[Text].toString)}).mkString(",")
+            
+        }
+        else "")
+        
+    
+      k -> v
+        
+    })
+      
+    m.toMap
+    
   }
 
 }

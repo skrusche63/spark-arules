@@ -29,9 +29,6 @@ import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
 class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
-      
-  /* Put job to cache */
-  addToCache(jobConf)
    
   /* Specification of Spark specific system properties */
   private val props = Map(
@@ -43,52 +40,49 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
   private val sc = createCtxLocal("TopKActor",props)      
   
   private val uid = jobConf.get("uid").get.asInstanceOf[String]     
+  JobCache.add(uid,ARulesStatus.STARTED)
+
   private val params = parameters()
 
   private val response = if (params == null) {
     val message = ARulesMessages.TOP_K_MISSING_PARAMETERS(uid)
-    new ARulesResponse(uid,Some(message),ARulesStatus.FAILURE)
+    new ARulesResponse(uid,Some(message),None,ARulesStatus.FAILURE)
   
   } else {
      val message = ARulesMessages.TOP_K_MINING_STARTED(uid)
-     new ARulesResponse(uid,Some(message),ARulesStatus.STARTED)
+     new ARulesResponse(uid,Some(message),None,ARulesStatus.STARTED)
     
   }
   
   def receive = {
     
+    /*
+     * Retrieve Top-K association rules from an appropriate index from Elasticsearch
+     */     
     case req:ElasticRequest => {
-      /*
-       * Retrieve Top-K association rules from an appropriate index 
-       * from Elasticsearch
-       */     
-      val origin = sender
-      
-      if (params == null) {
-        origin ! response
+
+      /* Send response to originator of request */
+      sender ! response
           
-      } else {        
-        origin ! response
+      if (params != null) {
 
         try {
           
           /* Retrieve data from Elasticsearch */    
           val source = new ElasticSource(sc)
           
-          val (nodes,port,resource,query) = (req.nodes,req.port,req.resource,req.query)
-          val dataset = source.connect(nodes,port,resource,query)
+          val (nodes,port,resource,query,fields) = (req.nodes,req.port,req.resource,req.query,req.fields)
+          val dataset = source.connect(nodes,port,resource,query,fields)
 
+          JobCache.add(uid,ARulesStatus.DATASET)
+          
           val (k,minconf) = params     
           findRules(dataset,k,minconf)
 
         } catch {
-          case e:Exception => {
-            
-            val status = ARulesStatus.FAILURE
-            JobCache.add(uid,status)
-            
-          }
+          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)          
         }
+      
       }
       
       sc.stop
@@ -96,21 +90,19 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
       
     }
     
+    /*
+     * Retrieve Top-K association rules from an appropriate file from the
+     * (HDFS) file system; the file MUST have a specific file format;
+     * 
+     * actually it MUST be ensured by the client application that such
+     * a file exists in the right format
+     */
     case req:FileRequest => {
-      /*
-       * Retrieve Top-K association rules from an appropriate file from the
-       * (HDFS) file system; the file MUST have a specific file format;
-       * 
-       * actually it MUST be ensured by the client application that such
-       * a file exists in the right format
-       */
-      val origin = sender
 
-      if (params == null) {
-        origin ! response
+      /* Send response to originator of request */
+      sender ! response
           
-      } else {        
-        origin ! response
+      if (params != null) {
 
         try {
     
@@ -120,17 +112,15 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
           val path = req.path
           val dataset = source.connect(path)
 
+          JobCache.add(uid,ARulesStatus.DATASET)
+
           val (k,minconf) = params          
           findRules(dataset,k,minconf)
 
         } catch {
-          case e:Exception => {
-            
-            val status = ARulesStatus.FAILURE
-            JobCache.add(uid,status)
-            
-          }
+          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)
         }
+        
       }
       
       sc.stop
@@ -177,15 +167,6 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
          return null          
       }
     }
-    
-  }
-
-  private def addToCache(jobConf:JobConf) {
-
-    val uid = jobConf.get("uid").get.asInstanceOf[String]
-    val status = ARulesStatus.STARTED
-
-   JobCache.add(uid,status)
     
   }
   

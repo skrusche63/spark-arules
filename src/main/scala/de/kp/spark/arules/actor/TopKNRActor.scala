@@ -20,7 +20,13 @@ package de.kp.spark.arules.actor
 
 import akka.actor.Actor
 
+import org.apache.spark.rdd.RDD
+
+import de.kp.spark.arules.{Rule,TopKNR}
+import de.kp.spark.arules.source.{ElasticSource,FileSource}
+
 import de.kp.spark.arules.model._
+import de.kp.spark.arules.util.{JobCache,RuleCache}
 
 class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
   
@@ -32,22 +38,137 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
   
   /* Create Spark context */
   private val sc = createCtxLocal("TopKNRActor",props)
+  
+  private val uid = jobConf.get("uid").get.asInstanceOf[String]     
+  JobCache.add(uid,ARulesStatus.STARTED)
+
+  private val params = parameters()
+
+  private val response = if (params == null) {
+    val message = ARulesMessages.TOP_KNR_MISSING_PARAMETERS(uid)
+    new ARulesResponse(uid,Some(message),None,ARulesStatus.FAILURE)
+  
+  } else {
+     val message = ARulesMessages.TOP_KNR_MINING_STARTED(uid)
+     new ARulesResponse(uid,Some(message),None,ARulesStatus.STARTED)
+    
+  }
 
   def receive = {
     
+    /*
+     * Retrieve Top-K association rules from an appropriate index from Elasticsearch
+     */     
     case req:ElasticRequest => {
+
+      /* Send response to originator of request */
+      sender ! response
+          
+      if (params != null) {
+
+        try {
+          
+          /* Retrieve data from Elasticsearch */    
+          val source = new ElasticSource(sc)
+          
+          val (nodes,port,resource,query,fields) = (req.nodes,req.port,req.resource,req.query,req.fields)
+          val dataset = source.connect(nodes,port,resource,query,fields)
+
+          JobCache.add(uid,ARulesStatus.DATASET)
+          
+          val (k,minconf,delta) = params     
+          findRules(dataset,k,minconf,delta)
+
+        } catch {
+          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)          
+        }
       
-      val origin = sender
+      }
+      
+      sc.stop
+      context.stop(self)
       
     }
     
+    /*
+     * Retrieve Top-K association rules from an appropriate file from the
+     * (HDFS) file system; the file MUST have a specific file format;
+     * 
+     * actually it MUST be ensured by the client application that such
+     * a file exists in the right format
+     */
     case req:FileRequest => {
+
+      /* Send response to originator of request */
+      sender ! response
+          
+      if (params != null) {
+
+        try {
+    
+          /* Retrieve data from the file system */
+          val source = new FileSource(sc)
+          
+          val path = req.path
+          val dataset = source.connect(path)
+
+          JobCache.add(uid,ARulesStatus.DATASET)
+
+          val (k,minconf,delta) = params          
+          findRules(dataset,k,minconf,delta)
+
+        } catch {
+          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)
+        }
+        
+      }
       
-      val origin = sender
+      sc.stop
+      context.stop(self)
       
     }
     
     case _ => {}
     
   }
+  
+  private def findRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,delta:Int) {
+          
+    val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
+     
+      val antecedent = rule.getItemset1().toList
+      val consequent = rule.getItemset2().toList
+
+      val support    = rule.getAbsoluteSupport()
+      val confidence = rule.getConfidence()
+	
+      new Rule(antecedent,consequent,support,confidence)
+            
+    })
+          
+    /* Put rules to RuleCache */
+    RuleCache.add(uid,rules)
+          
+    /* Update JobCache */
+    JobCache.add(uid,ARulesStatus.FINISHED)
+    
+  }
+  
+  private def parameters():(Int,Double,Int) = {
+      
+    try {
+      val k = jobConf.get("k").get.asInstanceOf[Int]
+      val minconf = jobConf.get("minconf").get.asInstanceOf[Double]
+        
+      val delta = jobConf.get("delta").get.asInstanceOf[Int]
+      return (k,minconf,delta)
+        
+    } catch {
+      case e:Exception => {
+         return null          
+      }
+    }
+    
+  }
+  
 }

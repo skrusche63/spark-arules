@@ -21,7 +21,7 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-class FileSource(sc:SparkContext) {
+class FileSource(sc:SparkContext) extends Serializable {
 
   /**
    * Read data from file system: it is expected that the lines with
