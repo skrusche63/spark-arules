@@ -50,10 +50,12 @@ class ARulesActor extends Actor with ActorLogging {
         
         case "start" => {
           
-          val algorithm = deser.algorithm.getOrElse(null)
+          val algorithm  = deser.algorithm.getOrElse(null)
+          val parameters = deser.parameters.getOrElse(null)
+          
           val source = deser.source.getOrElse(null)
           
-          val response = validateStart(uid,algorithm,source) match {
+          val response = validateStart(uid,algorithm,parameters,source) match {
             
             case None => {
               /* Build job configuration */
@@ -62,17 +64,10 @@ class ARulesActor extends Actor with ActorLogging {
               jobConf.set("uid",uid)
               jobConf.set("algorithm",algorithm)
 
-              deser.k match {
-                case None => {}
-                case Some(k) => jobConf.set("k",k)
-              }
-                
-              deser.minconf match {
-                case None => {}
-                case Some(minconf) => jobConf.set("minconf",minconf)
-              }
-                
-              deser.delta match {
+              jobConf.set("k",parameters.k)
+              jobConf.set("minconf",parameters.minconf)
+               
+              parameters.delta match {
                 case None => {}
                 case Some(delta) => jobConf.set("delta",delta)
               }
@@ -82,7 +77,7 @@ class ARulesActor extends Actor with ActorLogging {
             }
             
             case Some(message) => {
-              Future {new ARulesResponse(uid, Some(message), None, ARulesStatus.FAILURE)} 
+              Future {new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)} 
               
             }
             
@@ -94,7 +89,7 @@ class ARulesActor extends Actor with ActorLogging {
 
           response.onFailure {
             case message => {             
-              val resp = new ARulesResponse(uid,Some(message.toString),None,ARulesStatus.FAILURE)
+              val resp = new ARulesResponse(uid,Some(message.toString),None,None,ARulesStatus.FAILURE)
               origin ! ARulesModel.serializeResponse(resp)	                  
             }	  
           }
@@ -107,7 +102,7 @@ class ARulesActor extends Actor with ActorLogging {
            */
           val resp = if (JobCache.exists(uid) == false) {
             val message = ARulesMessages.TASK_DOES_NOT_EXIST(uid)
-            new ARulesResponse(uid, Some(message), None, ARulesStatus.FAILURE)
+            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
             
           } else {            
             stopJob(uid)
@@ -117,18 +112,44 @@ class ARulesActor extends Actor with ActorLogging {
           origin ! ARulesModel.serializeResponse(resp)
            
         }
-         
+        
+        case "consequent" => {
+
+          val resp = if (RuleCache.exists(uid) == false) {           
+            val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
+            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+            
+          } else {    
+             
+            val antecedent = deser.antecedent.getOrElse(null)
+             if (antecedent == null) {
+               val message = ARulesMessages.ANTECEDENTS_DO_NOT_EXIST(uid)
+               new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+             
+             } else {
+            
+              val consequent = RuleCache.consequent(uid,antecedent.items)
+              new ARulesResponse(uid,None,None,Some(consequent),ARulesStatus.SUCCESS)
+             
+             }
+            
+          }
+           
+          origin ! ARulesModel.serializeResponse(resp)
+          
+        }
+        
         case "rules" => {
           /*
            * Rules MUST exist then return computed rules
            */
           val resp = if (RuleCache.exists(uid) == false) {           
             val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
-            new ARulesResponse(uid, Some(message), None, ARulesStatus.FAILURE)
+            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
             
           } else {            
             val rules = RuleCache.rules(uid)
-            new ARulesResponse(uid, None, Some(rules),ARulesStatus.SUCCESS)
+            new ARulesResponse(uid,None,Some(rules),None,ARulesStatus.SUCCESS)
             
           }
            
@@ -142,11 +163,11 @@ class ARulesActor extends Actor with ActorLogging {
            */
           val resp = if (JobCache.exists(uid) == false) {           
             val message = ARulesMessages.TASK_DOES_NOT_EXIST(uid)
-            new ARulesResponse(uid, Some(message), None, ARulesStatus.FAILURE)
+            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
             
           } else {            
             val status = JobCache.status(uid)
-            new ARulesResponse(uid, None, None, status)
+            new ARulesResponse(uid,None,None,None,status)
             
           }
            
@@ -157,7 +178,7 @@ class ARulesActor extends Actor with ActorLogging {
         case _ => {
           
           val message = ARulesMessages.TASK_IS_UNKNOWN(uid,task)
-          val resp = new ARulesResponse(deser.uid, Some(message), None, ARulesStatus.FAILURE)
+          val resp = new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
            
           origin ! ARulesModel.serializeResponse(resp)
            
@@ -210,7 +231,7 @@ class ARulesActor extends Actor with ActorLogging {
     null
   }
 
-  private def validateStart(uid:String,algorithm:String,source:ARulesSource):Option[String] = {
+  private def validateStart(uid:String,algorithm:String,parameters:ARulesParameters,source:ARulesSource):Option[String] = {
 
     if (JobCache.exists(uid)) {            
       val message = ARulesMessages.TASK_ALREADY_STARTED(uid)
@@ -220,19 +241,25 @@ class ARulesActor extends Actor with ActorLogging {
             
     if (algorithm == null) {   
       val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
-      Some(message)
+      return Some(message)
     
     }
               
     if (algorithmSupport.contains(algorithm) == false) {
       val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
-      Some(message)
+      return Some(message)
     
     }
-                
+    
+    if (parameters == null) {
+      val message = ARulesMessages.NO_PARAMETERS_PROVIDED(uid)
+      return Some(message)
+      
+    }
+    
     if (source == null) {
       val message = ARulesMessages.NO_SOURCE_PROVIDED(uid)
-      Some(message)
+      return Some(message)
  
     }
 

@@ -46,11 +46,11 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
 
   private val response = if (params == null) {
     val message = ARulesMessages.TOP_K_MISSING_PARAMETERS(uid)
-    new ARulesResponse(uid,Some(message),None,ARulesStatus.FAILURE)
+    new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
   
   } else {
      val message = ARulesMessages.TOP_K_MINING_STARTED(uid)
-     new ARulesResponse(uid,Some(message),None,ARulesStatus.STARTED)
+     new ARulesResponse(uid,Some(message),None,None,ARulesStatus.STARTED)
     
   }
   

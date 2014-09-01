@@ -62,6 +62,33 @@ object RuleCache {
       }
       
     }
+  
   }
 
+  /**
+   * Retrieve those rules, where the antecedents match
+   * the provided ones, and restrict to those consequents
+   * that have the maximum confidence
+   */
+  def consequent(uid:String,antecedent:List[Integer]):List[Integer] = {
+  
+    /* Restrict to those rules, that match the antecedents */
+    val candidates = rules(uid)
+      .filter(rule => isEqual(rule.antecedent,antecedent))
+      .map(rule => (rule.consequent,rule.confidence,rule.support))
+      
+    if (candidates.isEmpty) {
+      List.empty[Integer]
+    
+    } else
+      candidates.sortBy(_._2).reverse.head._1
+
+  } 
+  
+  private def isEqual(itemset1:List[Integer],itemset2:List[Integer]):Boolean = {
+    
+    val intersect = itemset1.intersect(itemset2)
+    intersect.size == itemset1.size
+    
+  }
 }

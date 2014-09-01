@@ -25,6 +25,22 @@ import org.json4s.native.Serialization.{read,write}
 
 import de.kp.spark.arules.Rule
 
+case class ARulesAntecedent(
+  items:List[Integer]
+)
+
+case class ARulesParameters(
+  /*
+   * Number of rules to be returned by the algorithm
+   */
+  k:Int,
+  /*
+   * Minimum confidence to be used by the algorithm
+   */
+  minconf:Double,
+  delta:Option[Int]    
+)
+
 case class ARulesRequest(
   /* 
    * Unique identifier to distinguish requests from each other;
@@ -46,14 +62,13 @@ case class ARulesRequest(
    */
   algorithm:Option[String],
   /*
-   * Number of rules to be returned by the algorithm
+   * The parameters either for the Top-K or Top-KNR algorithm
    */
-  k:Option[Int],
+  parameters:Option[ARulesParameters],
   /*
-   * Minimum confidence to be used by the algorithm
+   * The antecedent candidates to be used in a recommendation request
    */
-  minconf:Option[Double],
-  delta:Option[Int],
+  antecedent:Option[ARulesAntecedent],
   source:Option[ARulesSource]
 )
 
@@ -70,6 +85,10 @@ case class ARulesResponse(
    * The rules computed for the respective job
    */
   rules:Option[List[Rule]],
+  /*
+   * The consequent computed for the respective job
+   */
+  consequent:Option[List[Integer]],
   status:String
 )
 
@@ -125,7 +144,11 @@ object ARulesMessages {
  
   def NO_ALGORITHM_PROVIDED(uid:String):String = String.format("""No algorithm provided for uid '%s'.""", uid)
 
+  def NO_PARAMETERS_PROVIDED(uid:String):String = String.format("""No parameters provided for uid '%s'.""", uid)
+
   def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
+
+  def ANTECEDENTS_DO_NOT_EXIST(uid:String):String = String.format("""No antecedents found for uid '%s'.""", uid)
 
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 
