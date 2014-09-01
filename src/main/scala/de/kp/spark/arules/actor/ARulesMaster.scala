@@ -30,6 +30,7 @@ import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.Future
 
 class ARulesMaster extends Actor with ActorLogging {
   
@@ -40,8 +41,9 @@ class ARulesMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val router = context.actorOf(Props(new ARulesActor()).withRouter(RoundRobinRouter(workers)))
-
+  val miner = context.actorOf(Props[ARulesMiner])
+  val questor = context.actorOf(Props[ARulesActor].withRouter(RoundRobinRouter(workers)))
+  
   def receive = {
     
     case req:String => {
@@ -52,10 +54,29 @@ class ARulesMaster extends Actor with ActorLogging {
       implicit val timeout:Timeout = DurationInt(duration).second
 	  	    
 	  val origin = sender
-      val response = ask(router, req).mapTo[String]
+
+	  val deser = ARulesModel.deserializeRequest(req)
+	  val (uid,task) = (deser.uid,deser.task)
+
+	  val response = deser.task match {
+        
+        case "start" => ask(miner,deser).mapTo[ARulesResponse]
+        case "status" => ask(miner,deser).mapTo[ARulesResponse]
+        
+        case "rules" => ask(questor,deser).mapTo[ARulesResponse]
+        case "consequent" => ask(questor,deser).mapTo[ARulesResponse]
+       
+        case _ => {
+
+          Future {          
+            val message = ARulesMessages.TASK_IS_UNKNOWN(uid,task)
+            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+          } 
+        }
       
+      }
       response.onSuccess {
-        case result => origin ! result
+        case result => origin ! ARulesModel.serializeResponse(result)
       }
       response.onFailure {
         case result => origin ! ARulesStatus.FAILURE	      

@@ -31,7 +31,7 @@ import de.kp.spark.arules.util.{JobCache,RuleCache}
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class ARulesActor extends Actor with ActorLogging {
+class ARulesMiner extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
@@ -94,67 +94,6 @@ class ARulesActor extends Actor with ActorLogging {
             }	  
           }
          
-        }
-        
-        case "stop" => {
-          /*
-           * Job MUST exist then stop job
-           */
-          val resp = if (JobCache.exists(uid) == false) {
-            val message = ARulesMessages.TASK_DOES_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-            
-          } else {            
-            stopJob(uid)
-            
-          }
-           
-          origin ! ARulesModel.serializeResponse(resp)
-           
-        }
-        
-        case "consequent" => {
-
-          val resp = if (RuleCache.exists(uid) == false) {           
-            val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-            
-          } else {    
-             
-            val antecedent = deser.antecedent.getOrElse(null)
-             if (antecedent == null) {
-               val message = ARulesMessages.ANTECEDENTS_DO_NOT_EXIST(uid)
-               new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-             
-             } else {
-            
-              val consequent = RuleCache.consequent(uid,antecedent.items)
-              new ARulesResponse(uid,None,None,Some(consequent),ARulesStatus.SUCCESS)
-             
-             }
-            
-          }
-           
-          origin ! ARulesModel.serializeResponse(resp)
-          
-        }
-        
-        case "rules" => {
-          /*
-           * Rules MUST exist then return computed rules
-           */
-          val resp = if (RuleCache.exists(uid) == false) {           
-            val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-            
-          } else {            
-            val rules = RuleCache.rules(uid)
-            new ARulesResponse(uid,None,Some(rules),None,ARulesStatus.SUCCESS)
-            
-          }
-           
-          origin ! ARulesModel.serializeResponse(resp)
-           
         }
        
         case "status" => {
@@ -225,10 +164,6 @@ class ARulesActor extends Actor with ActorLogging {
         
     }
   
-  }
-  
-  private def stopJob(uid:String):ARulesResponse = {
-    null
   }
 
   private def validateStart(uid:String,algorithm:String,parameters:ARulesParameters,source:ARulesSource):Option[String] = {
