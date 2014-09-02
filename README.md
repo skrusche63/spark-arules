@@ -13,7 +13,10 @@ For example, we have made good experience applying association rules to search q
 
 > If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -> [bovine spongiform encephalopathy].
 
-The Association Rule Service supports mining & retrieval of association rules, and also real-time recommendations based on these rules. The server is implemented as a micro service on top of Akka Remoting and may be easily integrated in a reactive loose coupling environment.
+The Association Rule Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.
+
+
+The Association Rule Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of [Akka](http://akka.io) and [Spark](https://spark.apache.org/) and can be easily integrated in a reactive loose coupling environment.
 
 ---
 
