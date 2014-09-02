@@ -4,11 +4,11 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Spark-arules : A Scala and Apache Spark based implementation of Association Rules algorithms.">
+    <meta name="description" content="Reactive Association Rule Engine : Knowledge discovery, data mining and real-time recommendations for Elasticsearch">
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Spark-arules</title>
+    <title>Reactive Association Rule Engine</title>
   </head>
 
   <body>
@@ -18,8 +18,8 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/skrusche63/spark-arules">View on GitHub</a>
 
-          <h1 id="project_title">Spark-arules</h1>
-          <h2 id="project_tagline">A Scala and Apache Spark based implementation of Association Rules algorithms.</h2>
+          <h1 id="project_title">Reactive Association Rule Engine</h1>
+          <h2 id="project_tagline">Knowledge discovery, data mining and real-time recommendations for Elasticsearch</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/skrusche63/spark-arules/zipball/master">Download this project as a .zip file</a>
@@ -34,11 +34,10 @@
         <p><img src="https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png" alt="Dr.Krusche &amp; Partner PartG"></p>
 
 <h2>
-<a name="association-rule-server-with-akka-and-spark" class="anchor" href="#association-rule-server-with-akka-and-spark"><span class="octicon octicon-link"></span></a>Association Rule Server with Akka and Spark</h2>
+<a name="reactive-association-rule-engine" class="anchor" href="#reactive-association-rule-engine"><span class="octicon octicon-link"></span></a>Reactive Association Rule Engine</h2>
 
 <p>Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
-transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets and is able 
-to determine associations of the following kind:</p>
+transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:</p>
 
 <blockquote>
 <p>A customer who is willing to buy one or more products together is likely to also buy other items as well.</p>
@@ -46,24 +45,17 @@ to determine associations of the following kind:</p>
 
 <p>Association rules are used as a basis for decision making in promotional pricing, product placement and more. The application of such rules, however, is not restricted to market basket analysis and will be used in intrusion detection, web usage mining and other areas: </p>
 
-<p>For example, we have made good experience applying association rules to search queries, and may be used to expand the query based on terms already in the query. </p>
+<p>For example, we have made good experience applying association rules to search queries, where they are used to expand the query based on terms already in the query. </p>
 
 <blockquote>
 <p>If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -&gt; [bovine spongiform encephalopathy].</p>
 </blockquote>
 
-<h3>
-<a name="apache-spark" class="anchor" href="#apache-spark"><span class="octicon octicon-link"></span></a>Apache Spark</h3>
+<p>The Association Rule Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.</p>
 
-<p>From the <a href="https://spark.apache.org/">Apache Spark</a> website:</p>
+<p>The Association Rule Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of <a href="http://akka.io">Akka</a> and <a href="https://spark.apache.org/">Spark</a> and can be easily integrated in a reactive loose coupling environment.</p>
 
-<blockquote>
-<p>Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.</p>
-</blockquote>
-
-<p>The increasing number of associated projects, such as <a href="https://spark.apache.org/sql/">Spark SQL</a> and <a href="https://spark.apache.org/streaming/">Spark Streaming</a>, enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, in this project we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.</p>
-
-<h3>
+<hr><h3>
 <a name="top-k-non-redundant-association-rules" class="anchor" href="#top-k-non-redundant-association-rules"><span class="octicon octicon-link"></span></a>Top-K (Non Redundant) Association Rules</h3>
 
 <p>Finding interesting associations between items in transaction databases is a fundamental data mining task. Finding association rules is 
@@ -88,13 +80,53 @@ This can generate a huge amount of results, and the mining task may become very 
 <p>In 2012, <a href="http://www.philippe-fournier-viger.com/">Philippe-Fournier Viger</a> redefined the problem of association mining as <strong>Top-K Association Rule Mining</strong>. The proposed algorithm only depends on the parameters <em>k</em>, the number of rules to be generated, and <em>minimum confidence</em>. For more information, continue to read <a href="http://www.philippe-fournier-viger.com/spmf/top_k_non_redundant_association_rules.pdf">here</a>.</p>
 
 <p>We adapted Viger's original implementation and made his <strong>Top-K</strong> and <strong>Top-K Non Redundant</strong> algorithms available for Spark.</p>
+
+<hr><h3>
+<a name="akka" class="anchor" href="#akka"><span class="octicon octicon-link"></span></a>Akka</h3>
+
+<p>Akka is a toolkit to build concurrent scalable applications, using the <a href="http://en.wikipedia.org/wiki/Actor_model">Actor Model</a>. Akka comes with a feature called <em>Akka Remoting</em>, which easily enables to setup a communication between software components in a peer-to-peer fashion.</p>
+
+<p>Akka and Akka Remoting are an appropriate means to establish a communication between prior independent software components - easy and fast.</p>
+
+<hr><h3>
+<a name="spark" class="anchor" href="#spark"><span class="octicon octicon-link"></span></a>Spark</h3>
+
+<p>From the <a href="https://spark.apache.org/">Apache Spark</a> website:</p>
+
+<blockquote>
+<p>Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.</p>
+</blockquote>
+
+<p>The increasing number of associated projects, such as <a href="https://spark.apache.org/sql/">Spark SQL</a> and <a href="https://spark.apache.org/streaming/">Spark Streaming</a>, enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.</p>
+
+<hr><h3>
+<a name="elasticsearch" class="anchor" href="#elasticsearch"><span class="octicon octicon-link"></span></a>Elasticsearch</h3>
+
+<p><a href="http://www.elasticsearch.org">Elasticsearch</a> is a flexible and powerful distributed real-time search and analytics engine. Besides linguistic and semantic enrichment, for data in a search index there is an increasing demand to apply analytics, knowledge discovery &amp; data mining, and even predictive analytics to gain deeper insights into the data and further increase their business value.</p>
+
+<p>A step towards analytics is the recently introduced combination with <a href="http://logstash.net/">Logstash</a> to easily store logs and other time based event data from any system in a single place.</p>
+
+<p>The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. </p>
+
+<p>E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. </p>
+
+<hr><h3>
+<a name="technology" class="anchor" href="#technology"><span class="octicon octicon-link"></span></a>Technology</h3>
+
+<ul>
+<li>Akka</li>
+<li>Akka Remoting</li>
+<li>Elasticsearch</li>
+<li>Spark</li>
+<li>Spark Streaming</li>
+</ul>
       </section>
     </div>
 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">Spark-arules maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
+        <p class="copyright">Reactive Association Rule Engine maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
