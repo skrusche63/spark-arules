@@ -15,15 +15,7 @@ For example, we have made good experience applying association rules to search q
 
 The Association Rule Service supports mining & retrieval of association rules, and also real-time recommendations based on these rules. The server is implemented as a micro service on top of Akka Remoting and may be easily integrated in a reactive loose coupling environment.
 
-
-### Apache Spark
-
-
-From the [Apache Spark](https://spark.apache.org/) website:
-
-> Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
-
-The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+---
 
 ### Top-K (Non Redundant) Association Rules
 
@@ -51,6 +43,26 @@ In 2012, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) rede
 
 
 We adapted Viger's original implementation and made his **Top-K** and **Top-K Non Redundant** algorithms available for Spark.
+
+---
+
+### Akka
+
+Akka is a toolkit to build concurrent scalable applications, using the [Actor Model](http://en.wikipedia.org/wiki/Actor_model). Akka comes with a feature called *Akka Remoting*, which easily enables to setup a communication between software components in a peer-to-peer fashion.
+
+Akka and Akka Remoting are an appropriate means to establish a communication between prior independent software components - easy and fast.
+
+---
+
+### Apache Spark
+
+From the [Apache Spark](https://spark.apache.org/) website:
+
+> Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
+
+The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+
+---
 
 ### Technology
 
