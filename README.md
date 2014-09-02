@@ -75,7 +75,7 @@ A step towards analytics is the recently introduced combination with [Logstash](
 
 The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
 
-E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis platform. 
+E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
 
 ---
 
