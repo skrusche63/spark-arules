@@ -1,6 +1,6 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Association Rule Service
+## Reactive Association Rule Engine
 
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:
@@ -13,16 +13,12 @@ For example, we have made good experience applying association rules to search q
 
 > If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -> [bovine spongiform encephalopathy].
 
-The Association Rule Service supports mining & retrieval of association rules, and also real-time recommendations based on these rules. The server is implemented as a micro service on top of Akka Remoting and may be easily integrated in a reactive loose coupling environment.
-
-### Apache Spark
+The Association Rule Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.
 
 
-From the [Apache Spark](https://spark.apache.org/) website:
+The Association Rule Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of [Akka](http://akka.io) and [Spark](https://spark.apache.org/) and can be easily integrated in a reactive loose coupling environment.
 
-> Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
-
-The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+---
 
 ### Top-K (Non Redundant) Association Rules
 
@@ -50,6 +46,38 @@ In 2012, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) rede
 
 
 We adapted Viger's original implementation and made his **Top-K** and **Top-K Non Redundant** algorithms available for Spark.
+
+---
+
+### Akka
+
+Akka is a toolkit to build concurrent scalable applications, using the [Actor Model](http://en.wikipedia.org/wiki/Actor_model). Akka comes with a feature called *Akka Remoting*, which easily enables to setup a communication between software components in a peer-to-peer fashion.
+
+Akka and Akka Remoting are an appropriate means to establish a communication between prior independent software components - easy and fast.
+
+---
+
+### Spark
+
+From the [Apache Spark](https://spark.apache.org/) website:
+
+> Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
+
+The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+
+---
+
+### Elasticsearch
+
+[Elasticsearch](http://www.elasticsearch.org) is a flexible and powerful distributed real-time search and analytics engine. Besides linguistic and semantic enrichment, for data in a search index there is an increasing demand to apply analytics, knowledge discovery & data mining, and even predictive analytics to gain deeper insights into the data and further increase their business value.
+
+A step towards analytics is the recently introduced combination with [Logstash](http://logstash.net/) to easily store logs and other time based event data from any system in a single place.
+
+The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
+
+E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
+
+---
 
 ### Technology
 
