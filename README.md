@@ -69,6 +69,14 @@ The increasing number of associated projects, such as [Spark SQL](https://spark.
 
 ### Elasticsearch
 
+[Elasticsearch](http://www.elasticsearch.org) is a flexible and powerful distributed real-time search and analytics engine. Besides linguistic and semantic enrichment, for data in a search index there is an increasing demand to apply analytics, knowledge discovery & data mining, and even predictive analytics to gain deeper insights into the data and further increase their business value.
+
+A step towards analytics is the recently introduced combination with [Logstash](http://logstash.net/) to easily store logs and other time based event data from any system in a single place.
+
+The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
+
+E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis platform. 
+
 ---
 
 ### Technology
