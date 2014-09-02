@@ -29,8 +29,6 @@ class ARulesActor extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
-  private val algorithmSupport = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
-  
   def receive = {
 
     case req:ARulesRequest => {

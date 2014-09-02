@@ -39,21 +39,19 @@ class ARulesMiner extends Actor with ActorLogging {
   
   def receive = {
 
-    case req:String => {
+    case req:ARulesRequest => {
       
       val origin = sender    
-      /* Deserialize mining request */
-      val deser = ARulesModel.deserializeRequest(req)
       
-      val (uid,task) = (deser.uid,deser.task)
+      val (uid,task) = (req.uid,req.task)
       task match {
         
         case "start" => {
           
-          val algorithm  = deser.algorithm.getOrElse(null)
-          val parameters = deser.parameters.getOrElse(null)
+          val algorithm  = req.algorithm.getOrElse(null)
+          val parameters = req.parameters.getOrElse(null)
           
-          val source = deser.source.getOrElse(null)
+          val source = req.source.getOrElse(null)
           
           val response = validateStart(uid,algorithm,parameters,source) match {
             
