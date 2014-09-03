@@ -35,23 +35,15 @@ class ElasticSource(sc:SparkContext) extends Serializable {
    * Read from an Elasticsearch index that contains the items
    * of ecommerce orders or transactions
    */
-  def connect(nodes:String,port:String,resource:String,query:String,fields:String):RDD[(Int,Array[String])] = {
+  def connect(conf:HConf):RDD[(Int,Array[String])] = {
      
-    val Array(_site,_user,_order,_item,_timestamp) = fields.split(",")
-    
-    /* Elasticsearch specific configuration */
-    val esConf = new HConf()                          
-
-    esConf.set("es.nodes",nodes)
-    esConf.set("es.port",port)
-    
-    esConf.set("es.resource", resource)                
-    esConf.set("es.query", query)                          
-    
+    val fields = sc.broadcast(conf.get("es.fields").split(","))
+  
     /* Connect to Elasticsearch */
-    val source = sc.newAPIHadoopRDD(esConf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
+    val source = sc.newAPIHadoopRDD(conf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
     val items = source.map(hit => {
-      
+
+      val Array(_site,_user,_order,_item,_timestamp) = fields.value
       val data = toMap(hit._2)
       
       val site = data(_site)

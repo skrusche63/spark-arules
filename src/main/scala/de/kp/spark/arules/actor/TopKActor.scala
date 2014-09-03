@@ -21,8 +21,9 @@ package de.kp.spark.arules.actor
 import akka.actor.Actor
 
 import org.apache.spark.rdd.RDD
+import org.apache.hadoop.conf.{Configuration => HConf}
 
-import de.kp.spark.arules.{Rule,TopK}
+import de.kp.spark.arules.{Configuration,Rule,TopK}
 import de.kp.spark.arules.source.{ElasticSource,FileSource}
 
 import de.kp.spark.arules.model._
@@ -68,11 +69,12 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
 
         try {
           
+          val conf = Configuration.elastic
+          conf.set("es.fields",req.fields)
+          
           /* Retrieve data from Elasticsearch */    
           val source = new ElasticSource(sc)
-          
-          val (nodes,port,resource,query,fields) = (req.nodes,req.port,req.resource,req.query,req.fields)
-          val dataset = source.connect(nodes,port,resource,query,fields)
+          val dataset = source.connect(conf)
 
           JobCache.add(uid,ARulesStatus.DATASET)
           
