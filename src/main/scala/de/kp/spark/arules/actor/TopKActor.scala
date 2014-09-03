@@ -30,15 +30,9 @@ import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
 class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
-   
-  /* Specification of Spark specific system properties */
-  private val props = Map(
-    "spark.executor.memory"          -> "1g",
-	"spark.kryoserializer.buffer.mb" -> "256"
-  )
   
   /* Create Spark context */
-  private val sc = createCtxLocal("TopKActor",props)      
+  private val sc = createCtxLocal("TopKActor",Configuration.spark)      
   
   private val uid = jobConf.get("uid").get.asInstanceOf[String]     
   JobCache.add(uid,ARulesStatus.STARTED)

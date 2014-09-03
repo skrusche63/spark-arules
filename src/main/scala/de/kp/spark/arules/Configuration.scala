@@ -72,4 +72,15 @@ object Configuration {
 
   }
   
+  def spark():Map[String,String] = {
+  
+    val cfg = config.getConfig("spark")
+    
+    Map(
+      "spark.executor.memory"          -> cfg.getString("spark.executor.memory"),
+	  "spark.kryoserializer.buffer.mb" -> cfg.getString("spark.kryoserializer.buffer.mb")
+    )
+
+  }
+  
 }
