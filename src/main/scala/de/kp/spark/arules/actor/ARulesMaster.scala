@@ -42,7 +42,7 @@ class ARulesMaster extends Actor with ActorLogging {
   }
 
   val miner = context.actorOf(Props[ARulesMiner])
-  val questor = context.actorOf(Props[ARulesActor].withRouter(RoundRobinRouter(workers)))
+  val questor = context.actorOf(Props[ARulesQuestor].withRouter(RoundRobinRouter(workers)))
   
   def receive = {
     

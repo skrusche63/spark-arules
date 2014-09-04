@@ -48,12 +48,11 @@ case class ARulesRequest(
    */
   uid:String,
   /*
-   * The task of the request: for mining requests such as Association
-   * Rule Mining (ARM), three different task are supported:
+   * The task of the request: for mining requests, two different task 
+   * are supported:
    * 
    * a) start:   start a specific mining job
-   * b) stop:    stop a specific mining job
-   * c) status:  get actual status of mining job
+   * b) status:  get actual status of mining job
    */
   task:String,
   /*

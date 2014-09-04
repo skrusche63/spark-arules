@@ -25,7 +25,7 @@ import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
-class ARulesActor extends Actor with ActorLogging {
+class ARulesQuestor extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
