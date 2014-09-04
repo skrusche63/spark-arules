@@ -64,7 +64,7 @@ class ARulesMaster extends Actor with ActorLogging {
         case "status" => ask(miner,deser).mapTo[ARulesResponse]
         
         case "rules" => ask(questor,deser).mapTo[ARulesResponse]
-        case "consequent" => ask(questor,deser).mapTo[ARulesResponse]
+        case "predict" => ask(questor,deser).mapTo[ARulesResponse]
        
         case _ => {
 

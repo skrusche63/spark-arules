@@ -38,7 +38,7 @@ class ARulesQuestor extends Actor with ActorLogging {
       val (uid,task) = (req.uid,req.task)
       task match {
         
-        case "consequent" => {
+        case "predict" => {
 
           val resp = if (RuleCache.exists(uid) == false) {           
             val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
