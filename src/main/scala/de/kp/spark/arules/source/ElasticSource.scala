@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.io.{ArrayWritable,MapWritable,NullWritable,Text}
 
 import org.elasticsearch.hadoop.mr.EsInputFormat
+import de.kp.spark.arules.spec.FieldSpec
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
@@ -36,23 +37,22 @@ class ElasticSource(sc:SparkContext) extends Serializable {
    * of ecommerce orders or transactions
    */
   def connect(conf:HConf):RDD[(Int,Array[String])] = {
-     
-    val fields = sc.broadcast(conf.get("es.fields").split(","))
-  
+
+    val spec = sc.broadcast(FieldSpec.get)
+
     /* Connect to Elasticsearch */
     val source = sc.newAPIHadoopRDD(conf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
-    val items = source.map(hit => {
+    val dataset = source.map(hit => toMap(hit._2))
 
-      val Array(_site,_user,_order,_item,_timestamp) = fields.value
-      val data = toMap(hit._2)
+    val items = dataset.map(data => {
       
-      val site = data(_site)
-      val user = data(_user)
-      
-      val order = data(_order)
-      val item  = data(_item)
-      
-      val timestamp = data(_timestamp).toLong
+      val site = data(spec.value("site")._1)
+      val timestamp = data(spec.value("timestamp")._1).toLong
+
+      val user = data(spec.value("user")._1)      
+      val order = data(spec.value("order")._1)
+
+      val item  = data(spec.value("item")._1)
       
       (site,user,order,timestamp,item)
       

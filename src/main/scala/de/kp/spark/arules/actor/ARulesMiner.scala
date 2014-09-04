@@ -134,30 +134,18 @@ class ARulesMiner extends Actor with ActorLogging {
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
 
+    val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
+    val actor = algorithmToActor(algorithm,jobConf)
+
     val path = source.path.getOrElse(null)
     if (path == null) {
-        
-      val nodes = source.nodes.getOrElse(null)
-      val port  = source.port.getOrElse(null)
-        
-      val resource = source.resource.getOrElse(null)
-      val query = source.query.getOrElse(null)
 
-      val fields = source.fields.getOrElse(null)
-      val req = new ElasticRequest(nodes,port,resource,query,fields)
-
-      val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
-      val actor = algorithmToActor(algorithm,jobConf)
-      
+      val req = new ElasticRequest()      
       ask(actor, req)
         
     } else {
     
       val req = new FileRequest(path)
-
-      val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
-      val actor = algorithmToActor(algorithm,jobConf)
-
       ask(actor, req)
         
     }

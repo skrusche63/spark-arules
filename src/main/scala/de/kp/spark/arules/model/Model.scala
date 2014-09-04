@@ -92,13 +92,7 @@ case class ARulesResponse(
   status:String
 )
 
-case class ElasticRequest(
-  nodes:String,
-  port:String,
-  resource:String,
-  query:String,
-  fields:String
-)
+case class ElasticRequest()
 
 case class FileRequest(
   path:String

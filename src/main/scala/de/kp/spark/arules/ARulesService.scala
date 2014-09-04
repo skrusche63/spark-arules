@@ -1,4 +1,4 @@
-package de.kp.spark.weblog.akka
+package de.kp.spark.arules
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project

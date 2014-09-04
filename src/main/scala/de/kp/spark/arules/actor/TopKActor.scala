@@ -64,7 +64,6 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
         try {
           
           val conf = Configuration.elastic
-          conf.set("es.fields",req.fields)
           
           /* Retrieve data from Elasticsearch */    
           val source = new ElasticSource(sc)
