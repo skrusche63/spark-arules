@@ -79,6 +79,12 @@ E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platfo
 
 ---
 
+### Relational Database
+
+Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
+
+---
+
 ### Technology
 
 * Akka
