@@ -20,6 +20,12 @@ The Association Rule Engine supports rule discovery and also real-time recommend
 
 ---
 
+### Architecture
+
+![Association Rules Service Architecture](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/Association-Rules-Architecture.png)
+
+---
+
 ### Top-K (Non Redundant) Association Rules
 
 Finding interesting associations between items in transaction databases is a fundamental data mining task. Finding association rules is 
