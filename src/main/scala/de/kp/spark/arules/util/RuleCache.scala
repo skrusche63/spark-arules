@@ -70,7 +70,7 @@ object RuleCache {
    * the provided ones, and restrict to those consequents
    * that have the maximum confidence
    */
-  def consequent(uid:String,antecedent:List[Integer]):List[Integer] = {
+  def consequent(uid:String,antecedent:List[Int]):List[Int] = {
   
     /* Restrict to those rules, that match the antecedents */
     val candidates = rules(uid)
@@ -78,14 +78,14 @@ object RuleCache {
       .map(rule => (rule.consequent,rule.confidence,rule.support))
       
     if (candidates.isEmpty) {
-      List.empty[Integer]
+      List.empty[Int]
     
     } else
       candidates.sortBy(_._2).reverse.head._1
 
   } 
   
-  private def isEqual(itemset1:List[Integer],itemset2:List[Integer]):Boolean = {
+  private def isEqual(itemset1:List[Int],itemset2:List[Int]):Boolean = {
     
     val intersect = itemset1.intersect(itemset2)
     intersect.size == itemset1.size

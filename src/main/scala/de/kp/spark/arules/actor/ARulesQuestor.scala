@@ -25,36 +25,39 @@ import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
+import scala.collection.JavaConversions._
+
 class ARulesQuestor extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
   def receive = {
 
-    case req:ARulesRequest => {
+    case req:ServiceRequest => {
       
       val origin = sender    
-      
-      val (uid,task) = (req.uid,req.task)
-      task match {
+      val uid = req.data("uid")
+
+      req.task match {
         
         case "predict" => {
 
           val resp = if (RuleCache.exists(uid) == false) {           
-            val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+            failure(req,ARulesMessages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
              
-            val antecedent = req.antecedent.getOrElse(null)
+            val antecedent = req.data.getOrElse("antecedent", null)            
              if (antecedent == null) {
-               val message = ARulesMessages.ANTECEDENTS_DO_NOT_EXIST(uid)
-               new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+               failure(req,ARulesMessages.ANTECEDENTS_DO_NOT_EXIST(uid))
              
              } else {
             
-              val consequent = RuleCache.consequent(uid,antecedent.items)
-              new ARulesResponse(uid,None,None,Some(consequent),ARulesStatus.SUCCESS)
+               
+              val consequent = RuleCache.consequent(uid,antecedent.split(",").map(_.toInt).toList).mkString(",")
+              val data = Map("uid" -> uid, "consequent" -> consequent)
+            
+              new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
             
@@ -69,12 +72,14 @@ class ARulesQuestor extends Actor with ActorLogging {
            * Rules MUST exist then return computed rules
            */
           val resp = if (RuleCache.exists(uid) == false) {           
-            val message = ARulesMessages.RULES_DO_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+           failure(req, ARulesMessages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
-            val rules = RuleCache.rules(uid)
-            new ARulesResponse(uid,None,Some(rules),None,ARulesStatus.SUCCESS)
+            
+            val rules = RuleCache.rules(uid).map(rule => rule.toJSON).mkString(",")
+            val data = Map("uid" -> uid, "rules" -> rules)
+            
+            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
            
@@ -82,10 +87,24 @@ class ARulesQuestor extends Actor with ActorLogging {
            
         }
         
+        case _ => {
+          
+          val msg = ARulesMessages.TASK_IS_UNKNOWN(uid,req.task)
+          origin ! ARulesModel.serializeResponse(failure(req,msg))
+           
+        }
+        
       }
       
     }
   
+  }
+
+  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
+    
+    val data = Map("uid" -> req.data("uid"), "message" -> message)
+    new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+    
   }
   
 }

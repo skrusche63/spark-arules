@@ -29,25 +29,15 @@ import de.kp.spark.arules.source.{ElasticSource,FileSource,JdbcSource}
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
-class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
+class TopKNRActor(req:ServiceRequest) extends Actor with SparkActor {
   
   /* Create Spark context */
   private val sc = createCtxLocal("TopKNRActor",Configuration.spark)
   
-  private val uid = jobConf.get("uid").get.asInstanceOf[String]     
+  private val uid = req.data("uid")    
   JobCache.add(uid,ARulesStatus.STARTED)
 
   private val params = parameters()
-
-  private val response = if (params == null) {
-    val message = ARulesMessages.TOP_KNR_MISSING_PARAMETERS(uid)
-    new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-  
-  } else {
-     val message = ARulesMessages.TOP_KNR_MINING_STARTED(uid)
-     new ARulesResponse(uid,Some(message),None,None,ARulesStatus.STARTED)
-    
-  }
 
   def receive = {
     
@@ -156,8 +146,8 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
           
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
      
-      val antecedent = rule.getItemset1().toList
-      val consequent = rule.getItemset2().toList
+      val antecedent = rule.getItemset1().toList.map(_.toInt)
+      val consequent = rule.getItemset2().toList.map(_.toInt)
 
       val support    = rule.getAbsoluteSupport()
       val confidence = rule.getConfidence()
@@ -177,10 +167,10 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
   private def parameters():(Int,Double,Int) = {
       
     try {
-      val k = jobConf.get("k").get.asInstanceOf[Int]
-      val minconf = jobConf.get("minconf").get.asInstanceOf[Double]
+      val k = req.data("k").toInt
+      val minconf = req.data("minconf")toDouble
         
-      val delta = jobConf.get("delta").get.asInstanceOf[Int]
+      val delta = req.data("delta").toInt
       return (k,minconf,delta)
         
     } catch {
@@ -189,6 +179,23 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
       }
     }
     
+  }
+  
+  private def response():ServiceResponse = {
+    
+    val uid = req.data("uid")
+    
+    if (params == null) {
+      val data = Map("uid" -> uid, "message" -> ARulesMessages.TOP_KNR_MISSING_PARAMETERS(uid))
+      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+  
+    } else {
+      val data = Map("uid" -> uid, "message" -> ARulesMessages.TOP_KNR_MINING_STARTED(uid))
+      new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
+      
+  
+    }
+
   }
   
 }

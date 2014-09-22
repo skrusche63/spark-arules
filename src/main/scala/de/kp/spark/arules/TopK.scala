@@ -79,8 +79,8 @@ object TopK {
     
     String.format("""{"rules":[%s]}""", rules.map(rule => {
 			
-      val antecedent = rule.getItemset1().toList
-      val consequent = rule.getItemset2().toList
+      val antecedent = rule.getItemset1().toList.map(_.toInt)
+      val consequent = rule.getItemset2().toList.map(_.toInt)
 
       val support    = rule.getAbsoluteSupport()
       val confidence = rule.getConfidence()

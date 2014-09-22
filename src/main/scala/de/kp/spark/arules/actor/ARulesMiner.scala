@@ -37,32 +37,19 @@ class ARulesMiner extends Actor with ActorLogging {
   
   def receive = {
 
-    case req:ARulesRequest => {
+    case req:ServiceRequest => {
       
       val origin = sender    
-      
-      val (uid,task) = (req.uid,req.task)
-      task match {
+      val uid = req.data("uid")
+
+      req.task match {
         
-        case "start" => {
+        case "train" => {
           
-          val parameters = req.parameters.getOrElse(null)          
-          val response = validateStart(uid,parameters) match {
+          val response = validate(req.data) match {
             
-            case None => {
-              /* Build job configuration */
-              val jobConf = new JobConf()
-              val params = parameters.map(p => (p.name, p.valu)).toMap
-              
-              /* Start job */
-              startJob(uid,params).mapTo[ARulesResponse]
-              
-            }
-            
-            case Some(message) => {
-              Future {new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)} 
-              
-            }
+            case None => train(req).mapTo[ServiceResponse]            
+            case Some(message) => Future {failure(req,message)}
             
           }
 
@@ -71,8 +58,8 @@ class ARulesMiner extends Actor with ActorLogging {
           }
 
           response.onFailure {
-            case message => {             
-              val resp = new ARulesResponse(uid,Some(message.toString),None,None,ARulesStatus.FAILURE)
+            case throwable => {             
+              val resp = failure(req,throwable.toString)
               origin ! ARulesModel.serializeResponse(resp)	                  
             }	  
           }
@@ -80,16 +67,15 @@ class ARulesMiner extends Actor with ActorLogging {
         }
        
         case "status" => {
+          
           /*
            * Job MUST exist the return actual status
            */
           val resp = if (JobCache.exists(uid) == false) {           
-            val message = ARulesMessages.TASK_DOES_NOT_EXIST(uid)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+            failure(req,ARulesMessages.TASK_DOES_NOT_EXIST(uid))
             
           } else {            
-            val status = JobCache.status(uid)
-            new ARulesResponse(uid,None,None,None,status)
+            status(req)
             
           }
            
@@ -99,10 +85,8 @@ class ARulesMiner extends Actor with ActorLogging {
         
         case _ => {
           
-          val message = ARulesMessages.TASK_IS_UNKNOWN(uid,task)
-          val resp = new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
-           
-          origin ! ARulesModel.serializeResponse(resp)
+          val msg = ARulesMessages.TASK_IS_UNKNOWN(uid,req.task)
+          origin ! ARulesModel.serializeResponse(failure(req,msg))
            
         }
         
@@ -114,25 +98,28 @@ class ARulesMiner extends Actor with ActorLogging {
   
   }
   
-  private def startJob(uid:String,params:Map[String,String]):Future[Any] = {
+  private def train(req:ServiceRequest):Future[Any] = {
 
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
+    
     /*
      * Retrieve appropriate actor from initial request parameters
      */
-    val actor = toActor(uid,params)
+    val actor = toActor(req)
     /*
      * Retrieve appropriate source request from paramaters
      */
+    val params = req.data
+    
     val source = params("source")
     if (source == ARulesSources.FILE) {
       /*
        * Retrieve transaction database from file system; the respective
        * path is provided through configuration paramaters
        */
-      val req = new FileRequest()      
-      ask(actor, req)
+      val request = new FileRequest()      
+      ask(actor, request)
       
     } else if (source == ARulesSources.ELASTIC) {
       /*
@@ -140,8 +127,8 @@ class ARulesMiner extends Actor with ActorLogging {
        * the respective access parameters are provided through configuration
        * parameters
        */
-      val req = new ElasticRequest()      
-      ask(actor, req)
+      val request = new ElasticRequest()      
+      ask(actor, request)
       
     } else {
       /*
@@ -150,105 +137,81 @@ class ARulesMiner extends Actor with ActorLogging {
       val site  = params("site").toInt
       val query = params("query")
       
-      val req = new JdbcRequest(site,query)      
-      ask(actor, req)
+      val request = new JdbcRequest(site,query)      
+      ask(actor, request)
       
     }
     
   }
 
-  private def validateStart(uid:String,parameters:List[ARulesParameter]):Option[String] = {
+  private def status(req:ServiceRequest):ServiceResponse = {
+    
+    val uid = req.data("uid")
+    val data = Map("uid" -> uid)
+                
+    new ServiceResponse(req.service,req.task,data,JobCache.status(uid))	
 
+  }
+
+  private def validate(params:Map[String,String]):Option[String] = {
+
+    val uid = params("uid")
+    
     if (JobCache.exists(uid)) {            
-      val message = ARulesMessages.TASK_ALREADY_STARTED(uid)
-      return Some(message)
-    
-    }
-    
-    if (parameters == null) {
-      val message = ARulesMessages.NO_PARAMETERS_PROVIDED(uid)
-      return Some(message)
-      
+      return Some(ARulesMessages.TASK_ALREADY_STARTED(uid))    
     }
 
-    /*
-     * Distinguish between different parameters
-     */
-    val params = parameters.map(p => (p.name,p.valu)).toMap
-    try {
-      /*
-       * Validate 'algorithm'
-       */
-      params.get("algorithm") match {
+    params.get("algorithm") match {
         
-        case None => {
-          val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
-          return Some(message)              
-        }
-        
-        case Some(algorithm) => {
-          if (algorithms.contains(algorithm) == false) {
-            val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
-            return Some(message)    
-          }
-          
-        }
+      case None => {
+        return Some(ARulesMessages.NO_ALGORITHM_PROVIDED(uid))              
       }
-      
-      params.get("source") match {
         
-        case None => {
-          val message = ARulesMessages.NO_SOURCE_PROVIDED(uid)
-          return Some(message)          
+      case Some(algorithm) => {
+        if (algorithms.contains(algorithm) == false) {
+          return Some(ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm))    
         }
-        
-        case Some(source) => {
-          if (sources.contains(source) == false) {
-            val message = ARulesMessages.SOURCE_IS_UNKNOWN(uid,source)
-            return Some(message)    
-          }
           
-        }
-        
       }
-      
-    } catch {
-      case e:Exception => {/* do nothing */}
+    
+    }  
+    
+    params.get("source") match {
+        
+      case None => {
+        return Some(ARulesMessages.NO_SOURCE_PROVIDED(uid))          
+      }
+        
+      case Some(source) => {
+        if (sources.contains(source) == false) {
+          return Some(ARulesMessages.SOURCE_IS_UNKNOWN(uid,source))    
+        }          
+      }
+        
     }
 
     None
     
   }
 
-  private def toActor(uid:String,params:Map[String,String]):ActorRef = {
+  private def toActor(req:ServiceRequest):ActorRef = {
 
-    val conf = new JobConf()
-    conf.set("uid",uid)
-
-    params.get("k") match {
-      case None => {}
-      case Some(k) => conf.set("k",k)
-    }
-              
-    params.get("minconf") match {
-     case None => {}
-     case Some(minconf) => conf.set("minconf",minconf)
-    }
-               
-    params.get("delta") match {
-      case None => {}
-      case Some(delta) => conf.set("delta",delta)
-    }
-    
-    val algorithm = params("algorithm")
+    val algorithm = req.data("algorithm")
     val actor = if (algorithm == ARulesAlgorithms.TOPK) {      
-      context.actorOf(Props(new TopKActor(conf)))      
+      context.actorOf(Props(new TopKActor(req)))      
     } else {
-     context.actorOf(Props(new TopKNRActor(conf)))
+     context.actorOf(Props(new TopKNRActor(req)))
     }
     
     actor
   
+  }
+
+  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
+    
+    val data = Map("uid" -> req.data("uid"), "message" -> message)
+    new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+    
   }
   
 }

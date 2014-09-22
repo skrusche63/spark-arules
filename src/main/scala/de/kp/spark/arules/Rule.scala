@@ -29,11 +29,11 @@ case class Rule (
   /*
    * Antecedent itemset
    */
-  antecedent:List[Integer],
+  antecedent:List[Int],
   /*
    * Consequent itemset
    */
-  consequent:List[Integer],
+  consequent:List[Int],
   /**
    * Support
    */

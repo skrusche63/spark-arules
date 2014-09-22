@@ -56,22 +56,20 @@ class ARulesMaster extends Actor with ActorLogging {
 	  val origin = sender
 
 	  val deser = ARulesModel.deserializeRequest(req)
-	  val (uid,task) = (deser.uid,deser.task)
-
 	  val response = deser.task match {
         
-        case "start" => ask(miner,deser).mapTo[ARulesResponse]
-        case "status" => ask(miner,deser).mapTo[ARulesResponse]
+        case "train"  => ask(miner,deser).mapTo[ServiceResponse]
+        case "status" => ask(miner,deser).mapTo[ServiceResponse]
         
-        case "rules" => ask(questor,deser).mapTo[ARulesResponse]
-        case "predict" => ask(questor,deser).mapTo[ARulesResponse]
+        case "rules" => ask(questor,deser).mapTo[ServiceResponse]
+        case "predict" => ask(questor,deser).mapTo[ServiceResponse]
        
         case _ => {
 
-          Future {          
-            val message = ARulesMessages.TASK_IS_UNKNOWN(uid,task)
-            new ARulesResponse(uid,Some(message),None,None,ARulesStatus.FAILURE)
+          Future {     
+            failure(deser,ARulesMessages.TASK_IS_UNKNOWN(deser.data("uid"),deser.task))
           } 
+        
         }
       
       }
@@ -79,12 +77,19 @@ class ARulesMaster extends Actor with ActorLogging {
         case result => origin ! ARulesModel.serializeResponse(result)
       }
       response.onFailure {
-        case result => origin ! ARulesStatus.FAILURE	      
+        case result => origin ! failure(deser,ARulesMessages.GENERAL_ERROR(deser.data("uid")))	      
 	  }
       
     }
   
     case _ => {}
+    
+  }
+
+  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
+    
+    val data = Map("uid" -> req.data("uid"), "message" -> message)
+    new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
     
   }
 

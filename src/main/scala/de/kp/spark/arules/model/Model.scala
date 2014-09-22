@@ -25,57 +25,11 @@ import org.json4s.native.Serialization.{read,write}
 
 import de.kp.spark.arules.Rule
 
-case class ARulesAntecedent(
-  items:List[Integer]
+case class ServiceRequest(
+  service:String,task:String,data:Map[String,String]
 )
-
-case class ARulesParameter(
-  name:String,
-  valu:String
-)
-
-case class ARulesRequest(
-  /* 
-   * Unique identifier to distinguish requests from each other;
-   * the request is responsible for setting appropriate identifiers
-   */
-  uid:String,
-  /*
-   * The task of the request: for mining requests, two different task 
-   * are supported:
-   * 
-   * a) start:   start a specific mining job
-   * b) status:  get actual status of mining job
-   */
-  task:String,
-  /*
-   * The request parameters
-   */
-  parameters:Option[List[ARulesParameter]],
-  /*
-   * The antecedent candidates to be used in a recommendation request
-   */
-  antecedent:Option[ARulesAntecedent]
-)
-
-case class ARulesResponse(
-  /*
-   * Unique identifier of the request, this response belongs to
-   */
-  uid:String,
-  /*
-   * Message
-   */
-  message:Option[String],
-  /*
-   * The rules computed for the respective job
-   */
-  rules:Option[List[Rule]],
-  /*
-   * The consequent computed for the respective job
-   */
-  consequent:Option[List[Integer]],
-  status:String
+case class ServiceResponse(
+  service:String,task:String,data:Map[String,String],status:String
 )
 
 case class ElasticRequest()
@@ -88,9 +42,9 @@ object ARulesModel {
     
   implicit val formats = Serialization.formats(NoTypeHints)
 
-  def serializeResponse(response:ARulesResponse):String = write(response)
+  def serializeResponse(response:ServiceResponse):String = write(response)
   
-  def deserializeRequest(request:String):ARulesRequest = read[ARulesRequest](request)
+  def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
   
 }
 
@@ -110,6 +64,8 @@ object ARulesSources {
 object ARulesMessages {
 
   def ALGORITHM_IS_UNKNOWN(uid:String,algorithm:String):String = String.format("""Algorithm '%s' is unknown for uid '%s'.""", algorithm, uid)
+
+  def GENERAL_ERROR(uid:String):String = String.format("""A general error appeared for uid '%s'.""", uid)
  
   def NO_ALGORITHM_PROVIDED(uid:String):String = String.format("""No algorithm provided for uid '%s'.""", uid)
 
