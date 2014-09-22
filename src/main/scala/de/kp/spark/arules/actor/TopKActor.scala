@@ -127,7 +127,7 @@ class TopKActor(jobConf:JobConf) extends Actor with SparkActor {
     
   }
   
-  private def findRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double) {
+  private def findRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double) {
           
     val rules = TopK.extractRules(dataset,k,minconf).map(rule => {
      

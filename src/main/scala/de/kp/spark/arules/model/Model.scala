@@ -106,12 +106,7 @@ case class ARulesSource(
    * The path to a file on the HDFS or local file system
    * that holds a textual description of a sequence database
    */
-  path:Option[String],
-  nodes:Option[String],
-  port:Option[String],
-  resource:Option[String],
-  query:Option[String],
-  fields:Option[String]
+  path:Option[String]
 )
 
 object ARulesModel {

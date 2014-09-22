@@ -25,7 +25,7 @@ import org.apache.spark.rdd.RDD
 
 import de.kp.core.arules.{Transaction, Vertical}
 
-import java.util.{BitSet,Collections,Comparator}
+import java.util.BitSet
 
 import scala.collection.JavaConversions._
 import scala.Array.canBuildFrom
@@ -39,7 +39,7 @@ object VerticalBuilder {
 
   private val useAggregate = false
 
-  def build(sc:SparkContext,input:String):Vertical = {
+  def build(@transient sc:SparkContext,input:String):Vertical = {
     /*
      * Read data from file system
      */
@@ -48,7 +48,7 @@ object VerticalBuilder {
     
   }
   
-  def build(dataset:RDD[(Int,Array[String])]):Vertical = {
+  def build(dataset:RDD[(Int,Array[Int])]):Vertical = {
     
     val sc = dataset.context
     
@@ -57,7 +57,7 @@ object VerticalBuilder {
      * 
      * Determine max item
      */
-    val ids = dataset.flatMap(value => value._2.map(item => Integer.parseInt(item))).collect()
+    val ids = dataset.flatMap(value => value._2).collect()
     val max = sc.broadcast(ids.max)
     
     /*
@@ -68,27 +68,16 @@ object VerticalBuilder {
     val transactions = dataset.map(valu => {
       
       val (tid,items) = valu
-      val trans = new Transaction(items.length)
-      
-      trans.setId(tid.toString)      
-      items.foreach(item => {
-        
-        if (item != "") {
-          trans.addItem(Integer.parseInt(item)) 
-        }
-        
-      })
-		
       /*
-       * Sort transactions by descending order of items because
+       * Sort items of a transaction by descending order because
        * TopKRules and TNR assume that items are sorted by lexical 
        * order for optimization
        */ 
-	  Collections.sort(trans.getItems(), new Comparator[Integer](){
-		def compare(o1:Integer, o2:Integer):Int = {
-		  return o2-o1
-	    }}
-	  )
+      val reverse = items.toSeq.sorted.reverse
+      val trans = new Transaction(items.length)
+      
+      trans.setId(tid.toString)      
+      reverse.foreach(item => trans.addItem(item))
       
 	  trans
 	  
@@ -170,12 +159,12 @@ object VerticalBuilder {
 
   }
     
-  private def textfile(sc:SparkContext, input:String):RDD[(Int,Array[String])] = {
+  private def textfile(sc:SparkContext, input:String):RDD[(Int,Array[Int])] = {
     
     sc.textFile(input).map(valu => {
       
       val Array(sid,sequence) = valu.split(",")  
-      (sid.toInt,sequence.split(" "))
+      (sid.toInt,sequence.split(" ").map(_.toInt))
     
     })
 

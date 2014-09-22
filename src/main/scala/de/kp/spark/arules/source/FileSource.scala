@@ -27,12 +27,12 @@ class FileSource(sc:SparkContext) extends Serializable {
    * Read data from file system: it is expected that the lines with
    * the respective text file are already formatted in the SPMF form
    */
-  def connect(input:String):RDD[(Int,Array[String])] = {
+  def connect(input:String):RDD[(Int,Array[Int])] = {
     
     sc.textFile(input).map(valu => {
       
       val Array(sid,sequence) = valu.split(",")  
-      (sid.toInt,sequence.split(" "))
+      (sid.toInt,sequence.split(" ").map(_.toInt))
     
     }).cache
     

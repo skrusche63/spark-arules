@@ -36,15 +36,18 @@ class ElasticSource(sc:SparkContext) extends Serializable {
    * Read from an Elasticsearch index that contains the items
    * of ecommerce orders or transactions
    */
-  def connect(conf:HConf):RDD[(Int,Array[String])] = {
+  def connect(conf:HConf):RDD[(Int,Array[Int])] = {
 
     val spec = sc.broadcast(FieldSpec.get)
 
-    /* Connect to Elasticsearch */
+    /* 
+     * Connect to Elasticsearch and extract the following fields from the
+     * respective search index: site, timestamp, user, order and item
+     */
     val source = sc.newAPIHadoopRDD(conf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
-    val dataset = source.map(hit => toMap(hit._2))
+    val rawset = source.map(hit => toMap(hit._2))
 
-    val items = dataset.map(data => {
+    val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1)
       val timestamp = data(spec.value("timestamp")._1).toLong
@@ -52,21 +55,25 @@ class ElasticSource(sc:SparkContext) extends Serializable {
       val user = data(spec.value("user")._1)      
       val order = data(spec.value("order")._1)
 
-      val item  = data(spec.value("item")._1)
+      val item  = data(spec.value("item")._1).toInt
       
       (site,user,order,timestamp,item)
       
     })
+    
     /*
-     * Group items by 'order' and aggregate all items of a single order
-     * into a single line and repartition ids to single partition
+     * Next we convert the dataset into the SPMF format. This requires to
+     * group the dataset by 'order', sort items in ascending order and make
+     * sure that no item appears more than once in a certain order.
+     * 
+     * Finally, we organize all items of an order into an array, repartition 
+     * them to single partition and assign a unqiue transaction identifier.
      */
-    val ids = items.groupBy(_._3).map(valu => {
-      
-      /* Sort grouped orders by (ascending) timestamp */
-      val data = valu._2.toList.sortBy(_._4)      
-      data.map(record => record._5).toArray
-       
+    val ids = dataset.groupBy(_._3).map(valu => {
+
+      val sorted = valu._2.map(_._5).toList.distinct.sorted    
+      sorted.toArray
+    
     }).coalesce(1)
 
     val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)

@@ -34,7 +34,7 @@ class TopK {
    * Build vertical representation from external data format
    * and find Top K rules from vertical database
    */
-  def extractRDDRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+  def extractRDDRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
           
     val vertical = VerticalBuilder.build(dataset)    
     findRDDRules(vertical,k,minconf,stats)
@@ -69,7 +69,7 @@ object TopK {
     
   }
   
-  def extractRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+  def extractRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
     
     new TopK().extractRDDRules(dataset,k,minconf,stats)
 

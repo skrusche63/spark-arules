@@ -34,7 +34,7 @@ class TopKNR {
    * Build vertical representation from external data format
    * and find Top K NR rules from vertical database
    */
-  def extractRDDRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
+  def extractRDDRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
           
     val vertical = VerticalBuilder.build(dataset)    
     findRDDRules(vertical,k,minconf,delta,stats)
@@ -69,7 +69,7 @@ object TopKNR {
     
   }
   
-  def extractRules(dataset:RDD[(Int,Array[String])],k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
+  def extractRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
     
     new TopKNR().extractRDDRules(dataset,k,minconf,delta,stats)
 
