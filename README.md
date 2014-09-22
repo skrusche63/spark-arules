@@ -26,6 +26,30 @@ The Association Rule Engine supports rule discovery and also real-time recommend
 
 ---
 
+### Use Cases
+
+Association Rule Mining is a wide-spread method that is used in many application areas. Here we describe selected use case that are relevant for ecommerce sites, and we certainly do not claim that the list of use cases is complete.
+
+##### Discounting & Pricing
+
+Discounting & promotional pricing has to ensure that the right discounting is offered to the right product. Knowledge about products that are often purchased together is important here: It helps to avoid simultaneous discounting of products that are in any case often sold together. It also helps to decide which products have to be discouunted to push sales of products.
+
+The knowledge about products that are frequently purchased together also help to decide which other product can be offered as a bonus to customers that bought another product, e.g. to increase customer satisfaction.
+
+##### Dynamic Product Catalogs
+
+Knowing products (or categories) that are frequently purchased together helps to dynamically adapt product catalogs to actual behavior and needs of customers by simply grouping these products on a single catalog page.
+
+##### Product Recommendation
+
+Detecting product bundles in the customers previous purchase behavior is an imported information to increase cross-selling, and supports features such as "customer who have bought the product a certain customer is actually looking at also bought these products".
+
+##### Purchase Prediction
+
+Discovering products that are frequently bought together helps to predict which products will be probably bought next.
+
+---
+
 ### Top-K (Non Redundant) Association Rules
 
 Finding interesting associations between items in transaction databases is a fundamental data mining task. Finding association rules is 
