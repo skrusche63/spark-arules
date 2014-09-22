@@ -59,11 +59,11 @@ class TopKNR {
 
 object TopKNR {
   
-  def extractFileRules(sc:SparkContext,input:String,k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
+  def extractFileRules(@transient sc:SparkContext,k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
 
     /* Retrieve data from the file system */
     val source = new FileSource(sc)
-    val dataset = source.connect(input)
+    val dataset = source.connect()
     
     new TopKNR().extractRDDRules(dataset,k,minconf,delta,stats)
     

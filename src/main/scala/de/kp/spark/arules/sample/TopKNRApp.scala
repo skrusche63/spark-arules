@@ -50,7 +50,7 @@ object TopKNRApp extends SparkApp {
     
     val delta = 2
     
-    val rules = TopKNR.extractFileRules(sc,output,k,minconf,delta)
+    val rules = TopKNR.extractFileRules(sc,k,minconf,delta)
     println(TopKNR.rulesToJson(rules))
    
     println("===================================================")

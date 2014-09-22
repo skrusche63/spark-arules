@@ -25,18 +25,22 @@ import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.io.{ArrayWritable,MapWritable,NullWritable,Text}
 
 import org.elasticsearch.hadoop.mr.EsInputFormat
+
+import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.spec.FieldSpec
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 
-class ElasticSource(sc:SparkContext) extends Serializable {
+class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
+          
+  val conf = Configuration.elastic
  
   /**
    * Read from an Elasticsearch index that contains the items
    * of ecommerce orders or transactions
    */
-  def connect(conf:HConf):RDD[(Int,Array[Int])] = {
+  override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])] = {
 
     val spec = sc.broadcast(FieldSpec.get)
 

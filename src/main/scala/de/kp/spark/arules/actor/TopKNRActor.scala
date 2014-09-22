@@ -24,7 +24,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.hadoop.conf.{Configuration => HConf}
 
 import de.kp.spark.arules.{Configuration,Rule,TopKNR}
-import de.kp.spark.arules.source.{ElasticSource,FileSource}
+import de.kp.spark.arules.source.{ElasticSource,FileSource,JdbcSource}
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
@@ -52,7 +52,8 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
   def receive = {
     
     /*
-     * Retrieve Top-K association rules from an appropriate index from Elasticsearch
+     * Retrieve Top-KNR association rules from an appropriate 
+     * search index from Elasticsearch
      */     
     case req:ElasticRequest => {
 
@@ -62,12 +63,10 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
       if (params != null) {
 
         try {
-           
-          val conf = Configuration.elastic
           
           /* Retrieve data from Elasticsearch */    
           val source = new ElasticSource(sc)
-          val dataset = source.connect(conf)
+          val dataset = source.connect()
 
           JobCache.add(uid,ARulesStatus.DATASET)
           
@@ -86,11 +85,8 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
     }
     
     /*
-     * Retrieve Top-K association rules from an appropriate file from the
-     * (HDFS) file system; the file MUST have a specific file format;
-     * 
-     * actually it MUST be ensured by the client application that such
-     * a file exists in the right format
+     * Retrieve Top-KNR association rules from an appropriate 
+     * file from the (HDFS) file system
      */
     case req:FileRequest => {
 
@@ -103,13 +99,42 @@ class TopKNRActor(jobConf:JobConf) extends Actor with SparkActor {
     
           /* Retrieve data from the file system */
           val source = new FileSource(sc)
-          
-          val path = req.path
-          val dataset = source.connect(path)
+          val dataset = source.connect()
 
           JobCache.add(uid,ARulesStatus.DATASET)
 
           val (k,minconf,delta) = params          
+          findRules(dataset,k,minconf,delta)
+
+        } catch {
+          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)
+        }
+        
+      }
+      
+      sc.stop
+      context.stop(self)
+      
+    }
+    /*
+     * Retrieve Top-KNR association rules from an appropriate
+     * table from a JDBC database 
+     */
+    case req:JdbcRequest => {
+
+      /* Send response to originator of request */
+      sender ! response
+          
+      if (params != null) {
+
+        try {
+    
+          val source = new JdbcSource(sc)
+          val dataset = source.connect(Map("site" -> req.site, "query" -> req.query))
+
+          JobCache.add(uid,ARulesStatus.DATASET)
+
+          val (k,minconf,delta) = params     
           findRules(dataset,k,minconf,delta)
 
         } catch {

@@ -29,16 +29,9 @@ case class ARulesAntecedent(
   items:List[Integer]
 )
 
-case class ARulesParameters(
-  /*
-   * Number of rules to be returned by the algorithm
-   */
-  k:Int,
-  /*
-   * Minimum confidence to be used by the algorithm
-   */
-  minconf:Double,
-  delta:Option[Int]    
+case class ARulesParameter(
+  name:String,
+  valu:String
 )
 
 case class ARulesRequest(
@@ -56,19 +49,13 @@ case class ARulesRequest(
    */
   task:String,
   /*
-   * The algorithm to be used when starting a specific mining job;
-   * actually two different ARM algorithms are supported: TOPK & TOPKNR
+   * The request parameters
    */
-  algorithm:Option[String],
-  /*
-   * The parameters either for the Top-K or Top-KNR algorithm
-   */
-  parameters:Option[ARulesParameters],
+  parameters:Option[List[ARulesParameter]],
   /*
    * The antecedent candidates to be used in a recommendation request
    */
-  antecedent:Option[ARulesAntecedent],
-  source:Option[ARulesSource]
+  antecedent:Option[ARulesAntecedent]
 )
 
 case class ARulesResponse(
@@ -93,21 +80,9 @@ case class ARulesResponse(
 
 case class ElasticRequest()
 
-case class FileRequest(
-  path:String
-)
+case class FileRequest()
 
-/**
- * ARulesSource aggregates the access parameters of
- * file or elasticsearch based association rule sources
- */
-case class ARulesSource(
-  /*
-   * The path to a file on the HDFS or local file system
-   * that holds a textual description of a sequence database
-   */
-  path:Option[String]
-)
+case class JdbcRequest(site:Int,query:String)
 
 object ARulesModel {
     
@@ -120,10 +95,16 @@ object ARulesModel {
 }
 
 object ARulesAlgorithms {
-  
+  /* The value of the algorithms actually supported */
   val TOPK:String   = "TOPK"
-  val TOPKNR:String = "TOPKNR"
-  
+  val TOPKNR:String = "TOPKNR"  
+}
+
+object ARulesSources {
+  /* The names of the data source actually supported */
+  val FILE:String    = "FILE"
+  val ELASTIC:String = "ELASTIC" 
+  val JDBC:String    = "JDBC"    
 }
 
 object ARulesMessages {
@@ -153,6 +134,8 @@ object ARulesMessages {
   def TOP_KNR_MINING_STARTED(uid:String) = String.format("""Top-K non-redundant Association Rule Mining started for uid '%s'.""", uid)
 
   def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
+
+  def SOURCE_IS_UNKNOWN(uid:String,source:String):String = String.format("""Source '%s' is unknown for uid '%s'.""", source, uid)
   
 }
 

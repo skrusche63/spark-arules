@@ -19,23 +19,21 @@ package de.kp.spark.arules.actor
  */
 
 import akka.actor.{Actor,ActorLogging,ActorRef,Props}
-
 import akka.pattern.ask
 import akka.util.Timeout
-
 import de.kp.spark.arules.Configuration
-
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
-
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
+import org.apache.pig.builtin.TOMAP
 
 class ARulesMiner extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
-  private val algorithmSupport = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
+  private val algorithms = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
+  private val sources = Array(ARulesSources.FILE,ARulesSources.ELASTIC,ARulesSources.JDBC)
   
   def receive = {
 
@@ -48,29 +46,16 @@ class ARulesMiner extends Actor with ActorLogging {
         
         case "start" => {
           
-          val algorithm  = req.algorithm.getOrElse(null)
-          val parameters = req.parameters.getOrElse(null)
-          
-          val source = req.source.getOrElse(null)
-          
-          val response = validateStart(uid,algorithm,parameters,source) match {
+          val parameters = req.parameters.getOrElse(null)          
+          val response = validateStart(uid,parameters) match {
             
             case None => {
               /* Build job configuration */
               val jobConf = new JobConf()
-                
-              jobConf.set("uid",uid)
-              jobConf.set("algorithm",algorithm)
-
-              jobConf.set("k",parameters.k)
-              jobConf.set("minconf",parameters.minconf)
-               
-              parameters.delta match {
-                case None => {}
-                case Some(delta) => jobConf.set("delta",delta)
-              }
+              val params = parameters.map(p => (p.name, p.valu)).toMap
+              
               /* Start job */
-              startJob(jobConf,source).mapTo[ARulesResponse]
+              startJob(uid,params).mapTo[ARulesResponse]
               
             }
             
@@ -129,45 +114,53 @@ class ARulesMiner extends Actor with ActorLogging {
   
   }
   
-  private def startJob(jobConf:JobConf,source:ARulesSource):Future[Any] = {
+  private def startJob(uid:String,params:Map[String,String]):Future[Any] = {
 
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
-
-    val algorithm = jobConf.get("algorithm").get.asInstanceOf[String]
-    val actor = algorithmToActor(algorithm,jobConf)
-
-    val path = source.path.getOrElse(null)
-    if (path == null) {
-
+    /*
+     * Retrieve appropriate actor from initial request parameters
+     */
+    val actor = toActor(uid,params)
+    /*
+     * Retrieve appropriate source request from paramaters
+     */
+    val source = params("source")
+    if (source == ARulesSources.FILE) {
+      /*
+       * Retrieve transaction database from file system; the respective
+       * path is provided through configuration paramaters
+       */
+      val req = new FileRequest()      
+      ask(actor, req)
+      
+    } else if (source == ARulesSources.ELASTIC) {
+      /*
+       * Retrieve transaction database from an Elasticsearch search index;
+       * the respective access parameters are provided through configuration
+       * parameters
+       */
       val req = new ElasticRequest()      
       ask(actor, req)
-        
+      
     } else {
-    
-      val req = new FileRequest(path)
+      /*
+       * Retrieve transaction database from JDBC database
+       */
+      val site  = params("site").toInt
+      val query = params("query")
+      
+      val req = new JdbcRequest(site,query)      
       ask(actor, req)
-        
+      
     }
-  
+    
   }
 
-  private def validateStart(uid:String,algorithm:String,parameters:ARulesParameters,source:ARulesSource):Option[String] = {
+  private def validateStart(uid:String,parameters:List[ARulesParameter]):Option[String] = {
 
     if (JobCache.exists(uid)) {            
       val message = ARulesMessages.TASK_ALREADY_STARTED(uid)
-      return Some(message)
-    
-    }
-            
-    if (algorithm == null) {   
-      val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
-      return Some(message)
-    
-    }
-              
-    if (algorithmSupport.contains(algorithm) == false) {
-      val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
       return Some(message)
     
     }
@@ -177,24 +170,82 @@ class ARulesMiner extends Actor with ActorLogging {
       return Some(message)
       
     }
-    
-    if (source == null) {
-      val message = ARulesMessages.NO_SOURCE_PROVIDED(uid)
-      return Some(message)
- 
+
+    /*
+     * Distinguish between different parameters
+     */
+    val params = parameters.map(p => (p.name,p.valu)).toMap
+    try {
+      /*
+       * Validate 'algorithm'
+       */
+      params.get("algorithm") match {
+        
+        case None => {
+          val message = ARulesMessages.NO_ALGORITHM_PROVIDED(uid)
+          return Some(message)              
+        }
+        
+        case Some(algorithm) => {
+          if (algorithms.contains(algorithm) == false) {
+            val message = ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm)
+            return Some(message)    
+          }
+          
+        }
+      }
+      
+      params.get("source") match {
+        
+        case None => {
+          val message = ARulesMessages.NO_SOURCE_PROVIDED(uid)
+          return Some(message)          
+        }
+        
+        case Some(source) => {
+          if (sources.contains(source) == false) {
+            val message = ARulesMessages.SOURCE_IS_UNKNOWN(uid,source)
+            return Some(message)    
+          }
+          
+        }
+        
+      }
+      
+    } catch {
+      case e:Exception => {/* do nothing */}
     }
 
     None
     
   }
 
-  private def algorithmToActor(algorithm:String,jobConf:JobConf):ActorRef = {
+  private def toActor(uid:String,params:Map[String,String]):ActorRef = {
 
+    val conf = new JobConf()
+    conf.set("uid",uid)
+
+    params.get("k") match {
+      case None => {}
+      case Some(k) => conf.set("k",k)
+    }
+              
+    params.get("minconf") match {
+     case None => {}
+     case Some(minconf) => conf.set("minconf",minconf)
+    }
+               
+    params.get("delta") match {
+      case None => {}
+      case Some(delta) => conf.set("delta",delta)
+    }
+    
+    val algorithm = params("algorithm")
     val actor = if (algorithm == ARulesAlgorithms.TOPK) {      
-      context.actorOf(Props(new TopKActor(jobConf)))      
-      } else {
-       context.actorOf(Props(new TopKNRActor(jobConf)))
-      }
+      context.actorOf(Props(new TopKActor(conf)))      
+    } else {
+     context.actorOf(Props(new TopKNRActor(conf)))
+    }
     
     actor
   

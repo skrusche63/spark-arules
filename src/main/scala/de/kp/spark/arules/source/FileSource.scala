@@ -21,13 +21,17 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-class FileSource(sc:SparkContext) extends Serializable {
+import de.kp.spark.arules.Configuration
 
+class FileSource(@transient sc:SparkContext) extends Source(sc) {
+
+  val input = Configuration.file()
+  
   /**
    * Read data from file system: it is expected that the lines with
    * the respective text file are already formatted in the SPMF form
    */
-  def connect(input:String):RDD[(Int,Array[Int])] = {
+  override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])] = {
     
     sc.textFile(input).map(valu => {
       

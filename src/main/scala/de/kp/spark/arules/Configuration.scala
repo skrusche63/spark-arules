@@ -59,6 +59,27 @@ object Configuration {
     conf
     
   }
+   
+  def file():String = {
+  
+    val cfg = config.getConfig("file")
+    cfg.getString("path")   
+    
+  }
+ 
+  def mysql():(String,String,String,String) = {
+
+   val cfg = config.getConfig("mysql")
+  
+   val url = cfg.getString("url")
+   val db  = cfg.getString("database")
+  
+   val user = cfg.getString("user")
+   val password = cfg.getString("password")
+    
+   (url,db,user,password)
+   
+  }
   
   def router():(Int,Int,Int) = {
   
