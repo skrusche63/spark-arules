@@ -98,4 +98,5 @@ Elasticsearch is one of the connectors actually supported. As many ecommerce sit
 * Elasticsearch
 * Spark
 * Spark Streaming
+* Spray
 
