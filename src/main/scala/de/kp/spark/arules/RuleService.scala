@@ -21,21 +21,21 @@ package de.kp.spark.arules
 import akka.actor.{ActorSystem,Props}
 import com.typesafe.config.ConfigFactory
 
-import de.kp.spark.arules.actor.ARulesMaster
+import de.kp.spark.arules.actor.RuleMaster
 
 /**
- * ARulesService is an Akka Remoting based Association Rule
+ * RuleService is an Akka Remoting based Association Rule
  * Mining Service that actually supports Top-K and Top-K
- * non redundant algorithms
+ * non redundant algorithm
  */
-object ARulesService {
+object RuleService {
 
   def main(args: Array[String]) {
     
     val name:String = "arules-server"
     val conf:String = "server.conf"
 
-    val server = new ARulesService(conf, name)
+    val server = new RuleService(conf, name)
     while (true) {}
     
     server.shutdown
@@ -44,12 +44,12 @@ object ARulesService {
 
 }
 
-class ARulesService(conf:String, name:String) {
+class RuleService(conf:String, name:String) {
 
   val system = ActorSystem(name, ConfigFactory.load(conf))
   sys.addShutdownHook(system.shutdown)
 
-  val master = system.actorOf(Props[ARulesMaster], name="arules-master")
+  val master = system.actorOf(Props[RuleMaster], name="arules-master")
 
   def shutdown = system.shutdown()
   

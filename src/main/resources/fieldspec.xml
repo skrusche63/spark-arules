@@ -1,7 +1,6 @@
 <fieldspec>
 	<field name="site" type="String">site</field>
-	<field name="timestamp" type="Long">timestamp</field>
 	<field name="user" type="String">user</field>
-    <field name="order" type="String">order</field>	
+    <field type="String" name="group">order</field>	
     <field name="item" type="Integer">item</field>
 </fieldspec>

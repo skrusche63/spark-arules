@@ -27,7 +27,7 @@ import de.kp.spark.arules.util.{JobCache,RuleCache}
 
 import scala.collection.JavaConversions._
 
-class ARulesQuestor extends Actor with ActorLogging {
+class RuleQuestor extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
@@ -39,7 +39,11 @@ class ARulesQuestor extends Actor with ActorLogging {
       val uid = req.data("uid")
 
       req.task match {
-        
+        /*
+         * This task retrieves all rules that match the antecendents or
+         * consequents provided with this prediction request; the client
+         * may then decide how to proceed with this information 
+         */
         case "predict" => {
 
           val resp = if (RuleCache.exists(uid) == false) {           
@@ -47,17 +51,26 @@ class ARulesQuestor extends Actor with ActorLogging {
             
           } else {    
              
-            val antecedent = req.data.getOrElse("antecedent", null)            
-             if (antecedent == null) {
-               failure(req,ARulesMessages.ANTECEDENTS_DO_NOT_EXIST(uid))
+            val antecedent = req.data.getOrElse("antecedent", null) 
+            val consequent = req.data.getOrElse("consequent", null)            
+
+            if (antecedent == null && consequent == null) {
+               failure(req,ARulesMessages.NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid))
              
              } else {
             
+               val rules = (if (antecedent != null) {
+                 val items = antecedent.split(",").map(_.toInt).toList
+                 RuleCache.rulesByAntecedent(uid,items)
                
-              val consequent = RuleCache.consequent(uid,antecedent.split(",").map(_.toInt).toList).mkString(",")
-              val data = Map("uid" -> uid, "consequent" -> consequent)
-            
-              new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+               } else {
+                 val items = consequent.split(",").map(_.toInt).toList
+                 RuleCache.rulesByConsequent(uid,items)
+                 
+               }).map(rule => rule.toJSON).mkString(",")
+               
+               val data = Map("uid" -> uid, "rules" -> rules)
+               new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
             
@@ -69,7 +82,8 @@ class ARulesQuestor extends Actor with ActorLogging {
         
         case "rules" => {
           /*
-           * Rules MUST exist then return computed rules
+           * This task retrieves all the association rules detected
+           * by a previously finished data mining task
            */
           val resp = if (RuleCache.exists(uid) == false) {           
            failure(req, ARulesMessages.RULES_DO_NOT_EXIST(uid))

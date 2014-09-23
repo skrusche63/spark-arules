@@ -67,21 +67,22 @@ object RuleCache {
 
   /**
    * Retrieve those rules, where the antecedents match
-   * the provided ones, and restrict to those consequents
-   * that have the maximum confidence
+   * the provided ones
    */
-  def consequent(uid:String,antecedent:List[Int]):List[Int] = {
+  def rulesByAntecedent(uid:String, antecedent:List[Int]):List[Rule] = {
   
     /* Restrict to those rules, that match the antecedents */
-    val candidates = rules(uid)
-      .filter(rule => isEqual(rule.antecedent,antecedent))
-      .map(rule => (rule.consequent,rule.confidence,rule.support))
-      
-    if (candidates.isEmpty) {
-      List.empty[Int]
-    
-    } else
-      candidates.sortBy(_._2).reverse.head._1
+    rules(uid).filter(rule => isEqual(rule.antecedent,antecedent))
+
+  } 
+  /**
+   * Retrieve those rules, where the consequents match
+   * the provided ones
+   */
+  def rulesByConsequent(uid:String, consequent:List[Int]):List[Rule] = {
+  
+    /* Restrict to those rules, that match the consequents */
+    rules(uid).filter(rule => isEqual(rule.consequent,consequent))
 
   } 
   

@@ -32,7 +32,7 @@ import de.kp.spark.arules.model._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
-class ARulesMaster extends Actor with ActorLogging {
+class RuleMaster extends Actor with ActorLogging {
   
   /* Load configuration for routers */
   val (time,retries,workers) = Configuration.router   
@@ -41,8 +41,8 @@ class ARulesMaster extends Actor with ActorLogging {
     case _ : Exception => SupervisorStrategy.Restart
   }
 
-  val miner = context.actorOf(Props[ARulesMiner])
-  val questor = context.actorOf(Props[ARulesQuestor].withRouter(RoundRobinRouter(workers)))
+  val miner = context.actorOf(Props[RuleMiner])
+  val questor = context.actorOf(Props[RuleQuestor].withRouter(RoundRobinRouter(workers)))
   
   def receive = {
     
@@ -57,11 +57,22 @@ class ARulesMaster extends Actor with ActorLogging {
 
 	  val deser = ARulesModel.deserializeRequest(req)
 	  val response = deser.task match {
-        
+        /*
+         * Starting the association rule mining and ask for the 
+         * current status of the mining task
+         */
         case "train"  => ask(miner,deser).mapTo[ServiceResponse]
         case "status" => ask(miner,deser).mapTo[ServiceResponse]
-        
+        /*
+         * Retrieve all the rules discovered by a previous mining
+         * task; relevant is the 'uid' of the mining task to get
+         * the respective rules
+         */
         case "rules" => ask(questor,deser).mapTo[ServiceResponse]
+        /*
+         * Predicts on either the antecends or the consequents of
+         * previously mining association rules
+         */
         case "predict" => ask(questor,deser).mapTo[ServiceResponse]
        
         case _ => {

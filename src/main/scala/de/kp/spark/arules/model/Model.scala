@@ -73,7 +73,14 @@ object ARulesMessages {
 
   def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
 
-  def ANTECEDENTS_DO_NOT_EXIST(uid:String):String = String.format("""No antecedents found for uid '%s'.""", uid)
+  /*
+   * Predict request have to provide either antecedents or consequents 
+   * that will be used as match criteria against discovered rules
+   */
+  def NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid:String):String = 
+    String.format("""
+      No antecedents or consequents are provided for uid '%s'.
+    """.stripMargin, uid)
 
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 

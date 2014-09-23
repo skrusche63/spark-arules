@@ -52,20 +52,18 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
     val dataset = readTable(site,query).map(data => {
       
       val site = data(spec.value("site")._1).asInstanceOf[String]
-      val timestamp = data(spec.value("timestamp")._1).asInstanceOf[Long]
-
       val user = data(spec.value("user")._1).asInstanceOf[String] 
-      val order = data(spec.value("order")._1).asInstanceOf[String]
 
+      val group = data(spec.value("group")._1).asInstanceOf[String]
       val item  = data(spec.value("item")._1).asInstanceOf[Int]
       
-      (site,user,order,timestamp,item)
+      (site,user,group,item)
       
     })
     
     /*
      * Next we convert the dataset into the SPMF format. This requires to
-     * group the dataset by 'order', sort items in ascending order and make
+     * group the dataset by 'group', sort items in ascending order and make
      * sure that no item appears more than once in a certain order.
      * 
      * Finally, we organize all items of an order into an array, repartition 
@@ -73,7 +71,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
      */
     val ids = dataset.groupBy(_._3).map(valu => {
 
-      val sorted = valu._2.map(_._5).toList.distinct.sorted    
+      val sorted = valu._2.map(_._4).toList.distinct.sorted    
       sorted.toArray
     
     }).coalesce(1)

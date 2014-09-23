@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import org.apache.pig.builtin.TOMAP
 
-class ARulesMiner extends Actor with ActorLogging {
+class RuleMiner extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
