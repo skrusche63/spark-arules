@@ -97,7 +97,7 @@ The increasing number of associated projects, such as [Spark SQL](https://spark.
 
 ---
 
-### Data Sources
+### Data Connectors
 
 The Reactive Association Rule Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.
 
@@ -113,10 +113,6 @@ The Association Rule Engine comes with a connector to Elasticsearch and thus bri
 
 E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
 
-#### Relational Databases
-
-Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
-
 #### Piwik Analytics
 
 [Piwik Analytics](http://piwik.org) is the leading and widely used open source web analytics platform, and is an excellent starting point to move into the world of dynamic catalogs, product recommendations, purchase predictions and more.
@@ -125,6 +121,10 @@ Elasticsearch is one of the connectors actually supported. As many ecommerce sit
 
 [Pimcore](http://pimcore.org) is an open source multi-channel experience and engagement management platform and contains a variety of integrated applications such as Digital Asset Management, Ecommerce Framework, Marketing & Campaign Management, Multi-Channel & Web-to-Print, Product Information Management, Targeting & Personalization and
 Web Content Management.
+
+#### Relational Databases
+
+Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
 
 ---
 
