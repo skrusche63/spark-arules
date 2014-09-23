@@ -121,6 +121,11 @@ Elasticsearch is one of the connectors actually supported. As many ecommerce sit
 
 [Piwik Analytics](http://piwik.org) is the leading and widely used open source web analytics platform, and is an excellent starting point to move into the world of dynamic catalogs, product recommendations, purchase predictions and more.
 
+#### Pimcore (coming soon)
+
+[Pimcore](http://pimcore.org) is an open source multi-channel experience and engagement management platform and contains a variety of integrated applications such as Digital Asset Management, Ecommerce Framework, Marketing & Campaign Management, Multi-Channel & Web-to-Print, Product Information Management, Targeting & Personalization and
+Web Content Management.
+
 ---
 
 ### Technology
