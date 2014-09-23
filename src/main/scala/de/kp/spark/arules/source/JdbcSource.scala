@@ -28,15 +28,22 @@ import de.kp.spark.arules.spec.FieldSpec
 
 import scala.collection.mutable.HashMap
 
+/**
+ * JdbcSource is a common connector to Jdbc databases; it uses a common
+ * field specification to retrieve the respective transaction database
+ * and is independent of the interpretation of an 'item': An item may be
+ * an article of a publisher site, a product or service of a retailer site,
+ * and also a customer state to specify a certain behavioral state.
+ */
 class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
 
-  private val MYSQL_DRIVER   = "com.mysql.jdbc.Driver"
-  private val NUM_PARTITIONS = 1
+  protected val MYSQL_DRIVER   = "com.mysql.jdbc.Driver"
+  protected val NUM_PARTITIONS = 1
    
-  private val (url,database,user,password) = Configuration.mysql
+  protected val (url,database,user,password) = Configuration.mysql
   
-  private val fieldspec = FieldSpec.get
-  private val fields = fieldspec.map(kv => kv._2._1).toList
+  protected val fieldspec = FieldSpec.get
+  protected val fields = fieldspec.map(kv => kv._2._1).toList
   
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
     
@@ -81,7 +88,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
 
   }
   
-  private def readTable(site:Int,query:String):RDD[Map[String,Any]] = {
+  protected def readTable(site:Int,query:String):RDD[Map[String,Any]] = {
     /*
      * The value of 'site' is used as upper and lower bound for 
      * the range (key) variable of the database table
@@ -99,7 +106,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
    * Convert database row into Map[String,Any] and restrict
    * to column names that are defined by the field spec
    */
-  private def getRow(rs:ResultSet):Map[String,Any] = {
+  protected def getRow(rs:ResultSet):Map[String,Any] = {
     val metadata = rs.getMetaData()
     val numCols  = metadata.getColumnCount()
     
@@ -123,7 +130,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
     
   }
   
-  private def getConnection(url:String,database:String,user:String,password:String):Connection = {
+  protected def getConnection(url:String,database:String,user:String,password:String):Connection = {
 
     /* Create MySQL connection */
 	Class.forName(MYSQL_DRIVER).newInstance()	
@@ -135,7 +142,7 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
     
   }
   
-  private def getEndpoint(url:String,database:String):String = {
+  protected def getEndpoint(url:String,database:String):String = {
 		
 	val endpoint = "jdbc:mysql://" + url + "/" + database
 	endpoint

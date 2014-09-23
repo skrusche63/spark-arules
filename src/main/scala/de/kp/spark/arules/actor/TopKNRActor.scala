@@ -21,128 +21,91 @@ package de.kp.spark.arules.actor
 import akka.actor.Actor
 
 import org.apache.spark.rdd.RDD
-import org.apache.hadoop.conf.{Configuration => HConf}
 
 import de.kp.spark.arules.{Configuration,Rule,TopKNR}
-import de.kp.spark.arules.source.{ElasticSource,FileSource,JdbcSource}
+import de.kp.spark.arules.source.{ElasticSource,FileSource,JdbcSource,PiwikSource}
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
 
-class TopKNRActor(req:ServiceRequest) extends Actor with SparkActor {
+class TopKNRActor extends Actor with SparkActor {
   
   /* Create Spark context */
   private val sc = createCtxLocal("TopKNRActor",Configuration.spark)
-  
-  private val uid = req.data("uid")    
-  JobCache.add(uid,ARulesStatus.STARTED)
-
-  private val params = parameters()
 
   def receive = {
     
-    /*
-     * Retrieve Top-KNR association rules from an appropriate 
-     * search index from Elasticsearch
-     */     
-    case req:ElasticRequest => {
+    case req:ServiceRequest => {
+
+      val uid = req.data("uid")     
+      val params = properties(req)
 
       /* Send response to originator of request */
-      sender ! response
-          
-      if (params != null) {
+      sender ! response(req, (params == null))
 
+      if (params != null) {
+        /* Register status */
+        JobCache.add(uid,ARulesStatus.STARTED)
+ 
         try {
           
-          /* Retrieve data from Elasticsearch */    
-          val source = new ElasticSource(sc)
-          val dataset = source.connect()
+          val source = req.data("source")
+          val dataset = source match {
+            
+            /* 
+             * Discover top k association rules from transaction database persisted 
+             * as an appropriate search index from Elasticsearch; the configuration
+             * parameters are retrieved from the service configuration 
+             */    
+            case ARulesSources.ELASTIC => new ElasticSource(sc).connect()
+            /* 
+             * Discover top k association rules from transaction database persisted 
+             * as a file on the (HDFS) file system; the configuration parameters are 
+             * retrieved from the service configuration  
+             */    
+            case ARulesSources.FILE => new FileSource(sc).connect()
+            /*
+             * Retrieve Top-K association rules from transaction database persisted 
+             * as an appropriate table from a JDBC database; the configuration parameters 
+             * are retrieved from the service configuration
+             */
+            case ARulesSources.JDBC => new JdbcSource(sc).connect(req.data)
+             /*
+             * Retrieve Top-K association rules from transaction database persisted 
+             * as an appropriate table from a Piwik database; the configuration parameters 
+             * are retrieved from the service configuration
+             */
+            case ARulesSources.PIWIK => new PiwikSource(sc).connect(req.data)
+            
+          }
 
           JobCache.add(uid,ARulesStatus.DATASET)
           
           val (k,minconf,delta) = params     
-          findRules(dataset,k,minconf,delta)
+          findRules(uid,dataset,k,minconf,delta)
 
         } catch {
           case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)          
         }
-      
+ 
+
       }
       
       sc.stop
       context.stop(self)
-      
-    }
-    
-    /*
-     * Retrieve Top-KNR association rules from an appropriate 
-     * file from the (HDFS) file system
-     */
-    case req:FileRequest => {
-
-      /* Send response to originator of request */
-      sender ! response
           
-      if (params != null) {
-
-        try {
+    }
     
-          /* Retrieve data from the file system */
-          val source = new FileSource(sc)
-          val dataset = source.connect()
-
-          JobCache.add(uid,ARulesStatus.DATASET)
-
-          val (k,minconf,delta) = params          
-          findRules(dataset,k,minconf,delta)
-
-        } catch {
-          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)
-        }
-        
-      }
+    case _ => {
       
       sc.stop
       context.stop(self)
       
     }
-    /*
-     * Retrieve Top-KNR association rules from an appropriate
-     * table from a JDBC database 
-     */
-    case req:JdbcRequest => {
-
-      /* Send response to originator of request */
-      sender ! response
-          
-      if (params != null) {
-
-        try {
-    
-          val source = new JdbcSource(sc)
-          val dataset = source.connect(Map("site" -> req.site, "query" -> req.query))
-
-          JobCache.add(uid,ARulesStatus.DATASET)
-
-          val (k,minconf,delta) = params     
-          findRules(dataset,k,minconf,delta)
-
-        } catch {
-          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)
-        }
-        
-      }
-      
-      sc.stop
-      context.stop(self)
-      
-    }
-    
-    case _ => {}
     
   }
-  
-  private def findRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,delta:Int) {
+ 
+  private def findRules(uid:String,dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,delta:Int) {
           
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
      
@@ -164,7 +127,7 @@ class TopKNRActor(req:ServiceRequest) extends Actor with SparkActor {
     
   }
   
-  private def parameters():(Int,Double,Int) = {
+  private def properties(req:ServiceRequest):(Int,Double,Int) = {
       
     try {
       val k = req.data("k").toInt
@@ -181,11 +144,11 @@ class TopKNRActor(req:ServiceRequest) extends Actor with SparkActor {
     
   }
   
-  private def response():ServiceResponse = {
+  private def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
     
     val uid = req.data("uid")
     
-    if (params == null) {
+    if (missing == true) {
       val data = Map("uid" -> uid, "message" -> ARulesMessages.TOP_KNR_MISSING_PARAMETERS(uid))
       new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
   

@@ -59,6 +59,7 @@ object ARulesSources {
   val FILE:String    = "FILE"
   val ELASTIC:String = "ELASTIC" 
   val JDBC:String    = "JDBC"    
+  val PIWIK:String   = "PIWIK"    
 }
 
 object ARulesMessages {

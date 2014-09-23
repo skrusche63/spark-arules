@@ -33,7 +33,7 @@ class RuleMiner extends Actor with ActorLogging {
   implicit val ec = context.dispatcher
   
   private val algorithms = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
-  private val sources = Array(ARulesSources.FILE,ARulesSources.ELASTIC,ARulesSources.JDBC)
+  private val sources = Array(ARulesSources.FILE,ARulesSources.ELASTIC,ARulesSources.JDBC,ARulesSources.PIWIK)
   
   def receive = {
 
@@ -68,9 +68,6 @@ class RuleMiner extends Actor with ActorLogging {
        
         case "status" => {
           
-          /*
-           * Job MUST exist the return actual status
-           */
           val resp = if (JobCache.exists(uid) == false) {           
             failure(req,ARulesMessages.TASK_DOES_NOT_EXIST(uid))
             
@@ -103,44 +100,7 @@ class RuleMiner extends Actor with ActorLogging {
     val duration = Configuration.actor      
     implicit val timeout:Timeout = DurationInt(duration).second
     
-    /*
-     * Retrieve appropriate actor from initial request parameters
-     */
-    val actor = toActor(req)
-    /*
-     * Retrieve appropriate source request from paramaters
-     */
-    val params = req.data
-    
-    val source = params("source")
-    if (source == ARulesSources.FILE) {
-      /*
-       * Retrieve transaction database from file system; the respective
-       * path is provided through configuration paramaters
-       */
-      val request = new FileRequest()      
-      ask(actor, request)
-      
-    } else if (source == ARulesSources.ELASTIC) {
-      /*
-       * Retrieve transaction database from an Elasticsearch search index;
-       * the respective access parameters are provided through configuration
-       * parameters
-       */
-      val request = new ElasticRequest()      
-      ask(actor, request)
-      
-    } else {
-      /*
-       * Retrieve transaction database from JDBC database
-       */
-      val site  = params("site").toInt
-      val query = params("query")
-      
-      val request = new JdbcRequest(site,query)      
-      ask(actor, request)
-      
-    }
+    ask(actor(req), req)
     
   }
 
@@ -194,16 +154,14 @@ class RuleMiner extends Actor with ActorLogging {
     
   }
 
-  private def toActor(req:ServiceRequest):ActorRef = {
+  private def actor(req:ServiceRequest):ActorRef = {
 
     val algorithm = req.data("algorithm")
-    val actor = if (algorithm == ARulesAlgorithms.TOPK) {      
-      context.actorOf(Props(new TopKActor(req)))      
+    if (algorithm == ARulesAlgorithms.TOPK) {      
+      context.actorOf(Props(new TopKActor()))      
     } else {
-     context.actorOf(Props(new TopKNRActor(req)))
+     context.actorOf(Props(new TopKNRActor()))
     }
-    
-    actor
   
   }
 
