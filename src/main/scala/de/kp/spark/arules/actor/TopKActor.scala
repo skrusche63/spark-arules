@@ -24,7 +24,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.hadoop.conf.{Configuration => HConf}
 
 import de.kp.spark.arules.{Configuration,Rule,TopK}
-import de.kp.spark.arules.source.{ElasticSource,FileSource,JdbcSource,PiwikSource}
+import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.util.{JobCache,RuleCache}
@@ -50,40 +50,8 @@ class TopKActor extends Actor with SparkActor {
  
         try {
           
-          val source = req.data("source")
-          val dataset = source match {
-            
-            /* 
-             * Discover top k association rules from transaction database persisted 
-             * as an appropriate search index from Elasticsearch; the configuration
-             * parameters are retrieved from the service configuration 
-             */    
-            case Sources.ELASTIC => new ElasticSource(sc).connect()
-            /* 
-             * Discover top k association rules from transaction database persisted 
-             * as a file on the (HDFS) file system; the configuration parameters are 
-             * retrieved from the service configuration  
-             */    
-            case Sources.FILE => new FileSource(sc).connect()
-            /*
-             * Retrieve Top-K association rules from transaction database persisted 
-             * as an appropriate table from a JDBC database; the configuration parameters 
-             * are retrieved from the service configuration
-             */
-            case Sources.JDBC => new JdbcSource(sc).connect(req.data)
-             /*
-             * Retrieve Top-K association rules from transaction database persisted 
-             * as an appropriate table from a Piwik database; the configuration parameters 
-             * are retrieved from the service configuration
-             */
-            case Sources.PIWIK => new PiwikSource(sc).connect(req.data)
-            
-          }
-
-          JobCache.add(uid,ARulesStatus.DATASET)
-          
-          val (k,minconf) = params     
-          findRules(uid,dataset,k,minconf)
+          val dataset = new TransactionSource(sc).get(req.data)
+          findRules(uid,dataset,params)
 
         } catch {
           case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)          
@@ -106,8 +74,11 @@ class TopKActor extends Actor with SparkActor {
     
   }
   
-  private def findRules(uid:String,dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double) {
+  private def findRules(uid:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double)) {
+
+    JobCache.add(uid,ARulesStatus.DATASET)
           
+    val (k,minconf) = params               
     val rules = TopK.extractRules(dataset,k,minconf).map(rule => {
      
       val antecedent = rule.getItemset1().toList.map(_.toInt)
@@ -131,8 +102,9 @@ class TopKActor extends Actor with SparkActor {
   private def properties(req:ServiceRequest):(Int,Double) = {
       
     try {
+      
       val k = req.data("k").toInt
-      val minconf = req.data("minconf")toDouble
+      val minconf = req.data("minconf").toDouble
         
       return (k,minconf)
         
