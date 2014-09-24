@@ -47,7 +47,7 @@ class RuleQuestor extends Actor with ActorLogging {
         case "predict" => {
 
           val resp = if (RuleCache.exists(uid) == false) {           
-            failure(req,ARulesMessages.RULES_DO_NOT_EXIST(uid))
+            failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
              
@@ -55,7 +55,7 @@ class RuleQuestor extends Actor with ActorLogging {
             val consequent = req.data.getOrElse("consequent", null)            
 
             if (antecedent == null && consequent == null) {
-               failure(req,ARulesMessages.NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid))
+               failure(req,Messages.NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid))
              
              } else {
             
@@ -86,7 +86,7 @@ class RuleQuestor extends Actor with ActorLogging {
            * by a previously finished data mining task
            */
           val resp = if (RuleCache.exists(uid) == false) {           
-           failure(req, ARulesMessages.RULES_DO_NOT_EXIST(uid))
+           failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
@@ -103,7 +103,7 @@ class RuleQuestor extends Actor with ActorLogging {
         
         case _ => {
           
-          val msg = ARulesMessages.TASK_IS_UNKNOWN(uid,req.task)
+          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
           origin ! ARulesModel.serializeResponse(failure(req,msg))
            
         }

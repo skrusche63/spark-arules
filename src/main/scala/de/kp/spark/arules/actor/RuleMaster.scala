@@ -78,7 +78,7 @@ class RuleMaster extends Actor with ActorLogging {
         case _ => {
 
           Future {     
-            failure(deser,ARulesMessages.TASK_IS_UNKNOWN(deser.data("uid"),deser.task))
+            failure(deser,Messages.TASK_IS_UNKNOWN(deser.data("uid"),deser.task))
           } 
         
         }
@@ -88,7 +88,7 @@ class RuleMaster extends Actor with ActorLogging {
         case result => origin ! ARulesModel.serializeResponse(result)
       }
       response.onFailure {
-        case result => origin ! failure(deser,ARulesMessages.GENERAL_ERROR(deser.data("uid")))	      
+        case result => origin ! failure(deser,Messages.GENERAL_ERROR(deser.data("uid")))	      
 	  }
       
     }

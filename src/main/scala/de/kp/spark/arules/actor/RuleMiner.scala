@@ -32,8 +32,8 @@ class RuleMiner extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
   
-  private val algorithms = Array(ARulesAlgorithms.TOPK,ARulesAlgorithms.TOPKNR)
-  private val sources = Array(ARulesSources.FILE,ARulesSources.ELASTIC,ARulesSources.JDBC,ARulesSources.PIWIK)
+  private val algorithms = Array(Algorithms.TOPK,Algorithms.TOPKNR)
+  private val sources = Array(Sources.ELASTIC,Sources.FILE,Sources.JDBC,Sources.PIWIK)
   
   def receive = {
 
@@ -69,8 +69,7 @@ class RuleMiner extends Actor with ActorLogging {
         case "status" => {
           
           val resp = if (JobCache.exists(uid) == false) {           
-            failure(req,ARulesMessages.TASK_DOES_NOT_EXIST(uid))
-            
+            failure(req,Messages.TASK_DOES_NOT_EXIST(uid))           
           } else {            
             status(req)
             
@@ -82,7 +81,7 @@ class RuleMiner extends Actor with ActorLogging {
         
         case _ => {
           
-          val msg = ARulesMessages.TASK_IS_UNKNOWN(uid,req.task)
+          val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
           origin ! ARulesModel.serializeResponse(failure(req,msg))
            
         }
@@ -118,18 +117,18 @@ class RuleMiner extends Actor with ActorLogging {
     val uid = params("uid")
     
     if (JobCache.exists(uid)) {            
-      return Some(ARulesMessages.TASK_ALREADY_STARTED(uid))    
+      return Some(Messages.TASK_ALREADY_STARTED(uid))   
     }
 
     params.get("algorithm") match {
         
       case None => {
-        return Some(ARulesMessages.NO_ALGORITHM_PROVIDED(uid))              
+        return Some(Messages.NO_ALGORITHM_PROVIDED(uid))              
       }
         
       case Some(algorithm) => {
         if (algorithms.contains(algorithm) == false) {
-          return Some(ARulesMessages.ALGORITHM_IS_UNKNOWN(uid,algorithm))    
+          return Some(Messages.ALGORITHM_IS_UNKNOWN(uid,algorithm))    
         }
           
       }
@@ -139,12 +138,12 @@ class RuleMiner extends Actor with ActorLogging {
     params.get("source") match {
         
       case None => {
-        return Some(ARulesMessages.NO_SOURCE_PROVIDED(uid))          
+        return Some(Messages.NO_SOURCE_PROVIDED(uid))       
       }
         
       case Some(source) => {
         if (sources.contains(source) == false) {
-          return Some(ARulesMessages.SOURCE_IS_UNKNOWN(uid,source))    
+          return Some(Messages.SOURCE_IS_UNKNOWN(uid,source))    
         }          
       }
         
@@ -157,7 +156,7 @@ class RuleMiner extends Actor with ActorLogging {
   private def actor(req:ServiceRequest):ActorRef = {
 
     val algorithm = req.data("algorithm")
-    if (algorithm == ARulesAlgorithms.TOPK) {      
+    if (algorithm == Algorithms.TOPK) {      
       context.actorOf(Props(new TopKActor()))      
     } else {
      context.actorOf(Props(new TopKNRActor()))

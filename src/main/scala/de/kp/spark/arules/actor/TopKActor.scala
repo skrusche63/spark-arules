@@ -58,25 +58,25 @@ class TopKActor extends Actor with SparkActor {
              * as an appropriate search index from Elasticsearch; the configuration
              * parameters are retrieved from the service configuration 
              */    
-            case ARulesSources.ELASTIC => new ElasticSource(sc).connect()
+            case Sources.ELASTIC => new ElasticSource(sc).connect()
             /* 
              * Discover top k association rules from transaction database persisted 
              * as a file on the (HDFS) file system; the configuration parameters are 
              * retrieved from the service configuration  
              */    
-            case ARulesSources.FILE => new FileSource(sc).connect()
+            case Sources.FILE => new FileSource(sc).connect()
             /*
              * Retrieve Top-K association rules from transaction database persisted 
              * as an appropriate table from a JDBC database; the configuration parameters 
              * are retrieved from the service configuration
              */
-            case ARulesSources.JDBC => new JdbcSource(sc).connect(req.data)
+            case Sources.JDBC => new JdbcSource(sc).connect(req.data)
              /*
              * Retrieve Top-K association rules from transaction database persisted 
              * as an appropriate table from a Piwik database; the configuration parameters 
              * are retrieved from the service configuration
              */
-            case ARulesSources.PIWIK => new PiwikSource(sc).connect(req.data)
+            case Sources.PIWIK => new PiwikSource(sc).connect(req.data)
             
           }
 
@@ -149,13 +149,12 @@ class TopKActor extends Actor with SparkActor {
     val uid = req.data("uid")
     
     if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> ARulesMessages.TOP_K_MISSING_PARAMETERS(uid))
+      val data = Map("uid" -> uid, "message" -> Messages.TOP_K_MISSING_PARAMETERS(uid))
       new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
   
     } else {
-      val data = Map("uid" -> uid, "message" -> ARulesMessages.TOP_K_MINING_STARTED(uid))
+      val data = Map("uid" -> uid, "message" -> Messages.TOP_K_MINING_STARTED(uid))
       new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
-      
   
     }
 

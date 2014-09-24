@@ -32,12 +32,6 @@ case class ServiceResponse(
   service:String,task:String,data:Map[String,String],status:String
 )
 
-case class ElasticRequest()
-
-case class FileRequest()
-
-case class JdbcRequest(site:Int,query:String)
-
 object ARulesModel {
     
   implicit val formats = Serialization.formats(NoTypeHints)
@@ -48,13 +42,13 @@ object ARulesModel {
   
 }
 
-object ARulesAlgorithms {
+object Algorithms {
   /* The value of the algorithms actually supported */
   val TOPK:String   = "TOPK"
   val TOPKNR:String = "TOPKNR"  
 }
 
-object ARulesSources {
+object Sources {
   /* The names of the data source actually supported */
   val FILE:String    = "FILE"
   val ELASTIC:String = "ELASTIC" 
@@ -62,7 +56,7 @@ object ARulesSources {
   val PIWIK:String   = "PIWIK"    
 }
 
-object ARulesMessages {
+object Messages {
 
   def ALGORITHM_IS_UNKNOWN(uid:String,algorithm:String):String = String.format("""Algorithm '%s' is unknown for uid '%s'.""", algorithm, uid)
 
