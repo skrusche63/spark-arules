@@ -22,7 +22,7 @@ import akka.actor.Actor
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.arules.{Configuration,Rule,TopKNR}
+import de.kp.spark.arules.{Configuration,TopKNR}
 import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
@@ -38,6 +38,8 @@ class TopKNRActor extends Actor with SparkActor {
     case req:ServiceRequest => {
 
       val uid = req.data("uid")     
+      val task = req.task
+
       val params = properties(req)
 
       /* Send response to originator of request */
@@ -45,15 +47,15 @@ class TopKNRActor extends Actor with SparkActor {
 
       if (params != null) {
         /* Register status */
-        JobCache.add(uid,ARulesStatus.STARTED)
+        JobCache.add(uid,task,ARulesStatus.STARTED)
  
         try {
           
           val dataset = new TransactionSource(sc).get(req.data)
-          findRules(uid,dataset,params)
+          findRules(uid,task,dataset,params)
 
         } catch {
-          case e:Exception => JobCache.add(uid,ARulesStatus.FAILURE)          
+          case e:Exception => JobCache.add(uid,task,ARulesStatus.FAILURE)          
         }
  
 
@@ -73,9 +75,9 @@ class TopKNRActor extends Actor with SparkActor {
     
   }
  
-  private def findRules(uid:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)) {
+  private def findRules(uid:String,task:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)) {
 
-    JobCache.add(uid,ARulesStatus.DATASET)
+    JobCache.add(uid,task,ARulesStatus.DATASET)
           
     val (k,minconf,delta) = params
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
@@ -94,7 +96,7 @@ class TopKNRActor extends Actor with SparkActor {
     RuleCache.add(uid,rules)
           
     /* Update JobCache */
-    JobCache.add(uid,ARulesStatus.FINISHED)
+    JobCache.add(uid,task,ARulesStatus.FINISHED)
     
   }
   

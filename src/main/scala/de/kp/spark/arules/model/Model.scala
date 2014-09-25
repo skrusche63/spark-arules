@@ -23,7 +23,7 @@ import org.json4s._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
-import de.kp.spark.arules.Rule
+trait RuleJSON {}
 
 case class ServiceRequest(
   service:String,task:String,data:Map[String,String]
@@ -32,13 +32,65 @@ case class ServiceResponse(
   service:String,task:String,data:Map[String,String],status:String
 )
 
-object ARulesModel {
+/*
+ * Service requests are mapped onto job descriptions and are stored
+ * in a Redis instance
+ */
+case class JobDesc(
+  service:String,task:String,status:String
+)
+
+case class Rule (
+  /*
+   * Antecedent itemset
+   */
+  antecedent:List[Int],
+  /*
+   * Consequent itemset
+   */
+  consequent:List[Int],
+  /**
+   * Support
+   */
+  support:Int,
+  /*
+   * Confidence
+   */
+  confidence:Double) extends RuleJSON {
+  
+  implicit val formats = Serialization.formats(ShortTypeHints(List()))
+  
+  def toJSON:String = write(this)
+  
+}
+
+case class Rules (items:List[Rule])
+
+object Serializer {
     
   implicit val formats = Serialization.formats(NoTypeHints)
 
+  /*
+   * Support for serialization and deserialization of job descriptions
+   */
+  def serializeJob(job:JobDesc):String = write(job)
+
+  def deserializeJob(job:String):JobDesc = read[JobDesc](job)
+  
+  /*
+   * Support for serialization of a service response and deserialization
+   * of a certain serice request
+   */
   def serializeResponse(response:ServiceResponse):String = write(response)
   
   def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
+  
+  /*
+   * Support for serialization and deserialization of rules
+   */
+  def serializeRules(rules:Rules):String = write(rules)
+  
+  def deserializeRules(rules:String):Rules = read[Rules](rules)
   
 }
 

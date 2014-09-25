@@ -18,48 +18,48 @@ package de.kp.spark.arules.util
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.arules.{Configuration,Rule}
+import de.kp.spark.arules.model._
+import de.kp.spark.arules.redis.RedisClient
+
 import java.util.Date
+import scala.collection.JavaConversions._
 
 object RuleCache {
-  
-  private val maxentries = Configuration.cache  
-  private val cache = new LRUCache[(String,Long),List[Rule]](maxentries)
 
-  def add(uid:String,rules:List[Rule]) {
+  val client  = RedisClient()
+  val service = "arules"
+
+  def add(uid:String,items:List[Rule]) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = (uid,timestamp)
-    val v = rules
+    val k = "rule:" + service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeRules(new Rules(items))
     
-    cache.put(k,v)
+    client.zadd(k,timestamp,v)
     
   }
   
   def exists(uid:String):Boolean = {
-    
-    val keys = cache.keys().filter(key => key._1 == uid)
-    (keys.size > 0)
+
+    val k = "rule:" + service + ":" + uid
+    client.exists(k)
     
   }
   
-  def rules(uid:String):List[Rule] = {
+  def rules(uid:String):String = {
+
+    val k = "rule:" + service + ":" + uid
+    val rules = client.zrange(k, 0, -1)
+
+    if (rules.size() == 0) {
+      Serializer.serializeRules(new Rules(List.empty[Rule]))
     
-    val keys = cache.keys().filter(key => key._1 == uid)
-    if (keys.size == 0) {    
-      null
-      
     } else {
       
-      val last = keys.sortBy(_._2).last
-      cache.get(last) match {
-        
-        case None => null
-        case Some(rules) => rules
-      
-      }
+      val last = rules.toList.last
+      last.split(":")(1)
       
     }
   
@@ -69,22 +69,41 @@ object RuleCache {
    * Retrieve those rules, where the antecedents match
    * the provided ones
    */
-  def rulesByAntecedent(uid:String, antecedent:List[Int]):List[Rule] = {
+  def rulesByAntecedent(uid:String, antecedent:List[Int]):String = {
   
     /* Restrict to those rules, that match the antecedents */
-    rules(uid).filter(rule => isEqual(rule.antecedent,antecedent))
-
+    val items = rulesAsList(uid).filter(rule => isEqual(rule.antecedent,antecedent))
+    Serializer.serializeRules(new Rules(items))
+    
   } 
   /**
    * Retrieve those rules, where the consequents match
    * the provided ones
    */
-  def rulesByConsequent(uid:String, consequent:List[Int]):List[Rule] = {
+  def rulesByConsequent(uid:String, consequent:List[Int]):String = {
   
     /* Restrict to those rules, that match the consequents */
-    rules(uid).filter(rule => isEqual(rule.consequent,consequent))
+    val items = rulesAsList(uid).filter(rule => isEqual(rule.consequent,consequent))
+    Serializer.serializeRules(new Rules(items))
 
   } 
+  
+  private def rulesAsList(uid:String):List[Rule] = {
+
+    val k = "rule:" + service + ":" + uid
+    val rules = client.zrange(k, 0, -1)
+
+    if (rules.size() == 0) {
+      List.empty[Rule]
+    
+    } else {
+      
+      val last = rules.toList.last
+      Serializer.deserializeRules(last.split(":")(1)).items
+      
+    }
+  
+  }
   
   private def isEqual(itemset1:List[Int],itemset2:List[Int]):Boolean = {
     

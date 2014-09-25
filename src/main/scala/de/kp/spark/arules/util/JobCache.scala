@@ -18,30 +18,33 @@ package de.kp.spark.arules.util
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.model._
+import de.kp.spark.arules.redis.RedisClient
+
 import java.util.Date
+import scala.collection.JavaConversions._
 
 object JobCache {
-  
-  private val maxentries = Configuration.cache  
-  private val cache = new LRUCache[(String,Long),String](maxentries)
 
-  def add(uid:String,status:String) {
+  val client  = RedisClient()
+  val service = "arules"
+
+  def add(uid:String,task:String,status:String) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = (uid,timestamp)
-    val v = status
+    val k = "job:" + service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
     
-    cache.put(k,v)
+    client.zadd(k,timestamp,v)
     
   }
   
   def exists(uid:String):Boolean = {
-    
-    val keys = cache.keys().filter(key => key._1 == uid)
-    (keys.size > 0)
+
+    val k = "job:" + service + ":" + uid
+    client.exists(k)
     
   }
   
@@ -50,36 +53,36 @@ object JobCache {
    */
   def starttime(uid:String):Long = {
     
-    val keys = cache.keys().filter(key => key._1 == uid)
-    if (keys.size == 0) {
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
       0
     
     } else {
       
-      val first = keys.sortBy(_._2).head
-      first._2
+      val first = jobs.iterator().next()
+      first.split(":")(0).toLong
       
     }
-    
+     
   }
   
   def status(uid:String):String = {
-    
-    val keys = cache.keys().filter(key => key._1 == uid)
-    if (keys.size == 0) {    
+
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
       null
-      
+    
     } else {
       
-      val last = keys.sortBy(_._2).last
-      cache.get(last) match {
-        
-        case None => null
-        case Some(status) => status
-      
-      }
+      val job = Serializer.deserializeJob(jobs.toList.last)
+      job.status
       
     }
+
   }
 
 }

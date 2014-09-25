@@ -24,6 +24,8 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
 import de.kp.core.arules.{TopKNRAlgorithm,RuleG,Vertical}
+
+import de.kp.spark.arules.model._
 import de.kp.spark.arules.source.FileSource
 
 import scala.collection.JavaConversions._
@@ -77,7 +79,7 @@ object TopKNR {
 
   def rulesToJson(rules:List[RuleG]):String = {
     
-    String.format("""{"rules":[%s]}""", rules.map(rule => {
+    val items = rules.map(rule => {
 			
       val antecedent = rule.getItemset1().toList.map(_.toInt)
       val consequent = rule.getItemset2().toList.map(_.toInt)
@@ -85,9 +87,11 @@ object TopKNR {
       val support    = rule.getAbsoluteSupport()
       val confidence = rule.getConfidence()
 	
-      new Rule(antecedent,consequent,support,confidence).toJSON
+      new Rule(antecedent,consequent,support,confidence)
 	
-    }).mkString(","))
+    })
+    
+    Serializer.serializeRules(new Rules(items))
 
   }
 

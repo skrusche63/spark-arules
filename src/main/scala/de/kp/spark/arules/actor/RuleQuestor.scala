@@ -67,7 +67,7 @@ class RuleQuestor extends Actor with ActorLogging {
                  val items = consequent.split(",").map(_.toInt).toList
                  RuleCache.rulesByConsequent(uid,items)
                  
-               }).map(rule => rule.toJSON).mkString(",")
+               })
                
                val data = Map("uid" -> uid, "rules" -> rules)
                new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
@@ -76,7 +76,7 @@ class RuleQuestor extends Actor with ActorLogging {
             
           }
            
-          origin ! ARulesModel.serializeResponse(resp)
+          origin ! Serializer.serializeResponse(resp)
           
         }
         
@@ -90,21 +90,21 @@ class RuleQuestor extends Actor with ActorLogging {
             
           } else {            
             
-            val rules = RuleCache.rules(uid).map(rule => rule.toJSON).mkString(",")
-            val data = Map("uid" -> uid, "rules" -> rules)
-            
+            val rules = RuleCache.rules(uid)
+
+            val data = Map("uid" -> uid, "rules" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
            
-          origin ! ARulesModel.serializeResponse(resp)
+          origin ! Serializer.serializeResponse(resp)
            
         }
         
         case _ => {
           
           val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
-          origin ! ARulesModel.serializeResponse(failure(req,msg))
+          origin ! Serializer.serializeResponse(failure(req,msg))
            
         }
         

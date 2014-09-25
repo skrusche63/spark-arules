@@ -54,13 +54,13 @@ class RuleMiner extends Actor with ActorLogging {
           }
 
           response.onSuccess {
-            case result => origin ! ARulesModel.serializeResponse(result)
+            case result => origin ! Serializer.serializeResponse(result)
           }
 
           response.onFailure {
             case throwable => {             
               val resp = failure(req,throwable.toString)
-              origin ! ARulesModel.serializeResponse(resp)	                  
+              origin ! Serializer.serializeResponse(resp)	                  
             }	  
           }
          
@@ -75,14 +75,14 @@ class RuleMiner extends Actor with ActorLogging {
             
           }
            
-          origin ! ARulesModel.serializeResponse(resp)
+          origin ! Serializer.serializeResponse(resp)
            
         }
         
         case _ => {
           
           val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
-          origin ! ARulesModel.serializeResponse(failure(req,msg))
+          origin ! Serializer.serializeResponse(failure(req,msg))
            
         }
         
