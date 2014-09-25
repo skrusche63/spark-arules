@@ -39,13 +39,13 @@ class TransactionSource(@transient sc:SparkContext) {
        * as an appropriate search index from Elasticsearch; the configuration
        * parameters are retrieved from the service configuration 
        */    
-      case Sources.ELASTIC => new ElasticSource(sc).connect()
+      case Sources.ELASTIC => new ElasticSource(sc).connect(data)
       /* 
        * Discover top k association rules from transaction database persisted 
        * as a file on the (HDFS) file system; the configuration parameters are 
        * retrieved from the service configuration  
        */    
-      case Sources.FILE => new FileSource(sc).connect()
+      case Sources.FILE => new FileSource(sc).connect(data)
       /*
        * Retrieve Top-K association rules from transaction database persisted 
        * as an appropriate table from a JDBC database; the configuration parameters 

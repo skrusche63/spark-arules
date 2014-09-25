@@ -21,6 +21,8 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.arules.io.JdbcReader
+
 /**
  * PiwikSource is an extension of the common JdbcSource that holds Piwik specific
  * data about fields and types on the server side for convenience.
@@ -36,7 +38,9 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
     val enddate   = params("enddate").asInstanceOf[String]
 
     val sql = query(database,site.toString,startdate,enddate)
-    val rows = readTable(site,sql).filter(row => (isDeleted(row) == false)).map(row => {
+    
+    val rawset = new JdbcReader(sc,site,sql).read(fields)    
+    val rows = rawset.filter(row => (isDeleted(row) == false)).map(row => {
       
       val site = row("idsite").asInstanceOf[Long]
       /* Convert 'idvisitor' into a HEX String representation */
@@ -69,6 +73,64 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
     ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
 
   }
+  
+  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
+    
+    /* Retrieve site, start & end date from params */
+    val site = params("site").asInstanceOf[Int]
+    
+    val startdate = params("startdate").asInstanceOf[String]
+    val enddate   = params("enddate").asInstanceOf[String]
+
+    val sql = query(database,site.toString,startdate,enddate)
+    
+    val rawset = new JdbcReader(sc,site,sql).read(fields)    
+    val dataset = rawset.filter(row => (isDeleted(row) == false)).map(row => {
+      
+      val site = row("idsite").asInstanceOf[Long]
+      /* Convert 'idvisitor' into a HEX String representation */
+      val idvisitor = row("idvisitor").asInstanceOf[Array[Byte]]     
+      val user = new java.math.BigInteger(1, idvisitor).toString(16)
+
+      val group = row("idorder").asInstanceOf[String]
+      val item  = row("idaction_sku").asInstanceOf[Long]
+
+      /*
+       * Convert server_time into universal timestamp
+       */
+      val server_time = row("server_time").asInstanceOf[java.sql.Timestamp]
+      val timestamp = server_time.getTime()
+      
+      (site,user,group,item,timestamp)
+      
+    })
+    
+    dataset.groupBy(v => (v._1,v._2)).map(data => {
+      
+      val (site,user) = data._1
+      val groups = data._2.groupBy(_._3).map(group => {
+
+        /*
+         * Every group has a unique timestamp, i.e the timestamp
+         * is sufficient to identify a certain group for a user
+         */
+        val timestamp = group._2.head._5
+        val items = group._2.map(_._4.toInt).toList
+
+        (timestamp,items)
+        
+      }).toList.sortBy(_._1)
+      
+      /*
+       * For merging with the rules discovered, we restrict to the 
+       * list of items of the latest group and interpret these as
+       * antecedent candidates with respect to the association rules.
+       */
+     (site.toString,user,groups.last._2)
+       
+    })
+  }
+  
   /**
    * A commerce item may be deleted from a certain order
    */

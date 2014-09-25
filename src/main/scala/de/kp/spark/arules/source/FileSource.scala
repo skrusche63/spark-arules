@@ -42,4 +42,8 @@ class FileSource(@transient sc:SparkContext) extends Source(sc) {
     
   }
   
+  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
+    throw new Exception("Not implemented")
+  }
+  
 }

@@ -28,4 +28,6 @@ abstract class Source(@transient sc:SparkContext) extends Serializable {
    */
   def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])]
 
+  def related(params:Map[String,Any]):RDD[(String,String,List[Int])]
+
 }

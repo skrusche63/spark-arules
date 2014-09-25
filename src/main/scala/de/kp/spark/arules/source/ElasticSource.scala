@@ -26,7 +26,12 @@ import de.kp.spark.arules.spec.FieldSpec
 
 class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
  
-  override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])] = {
+  /**
+   * Retrieve the transaction database to be evaluated from
+   * an appropriate Elasticsearch search; the field names that
+   * contribute to the transactions are specified by FieldSpec
+   */
+  override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
 
     val query = params("query").asInstanceOf[String]
     val resource = params("resource").asInstanceOf[String]
@@ -70,4 +75,56 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
 
   }
 
+  def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
+
+    val query = params("query").asInstanceOf[String]
+    val resource = params("resource").asInstanceOf[String]
+
+    val spec = sc.broadcast(FieldSpec.get)
+
+    /* 
+     * Connect to Elasticsearch and extract the following fields from the
+     * respective search index: site, user, group and item
+     */
+    val rawset = new ElasticReader(sc,resource,query).read
+    val dataset = rawset.map(data => {
+      
+      val site = data(spec.value("site")._1)
+      val user = data(spec.value("user")._1)      
+
+      val group = data(spec.value("group")._1)
+      val item  = data(spec.value("item")._1).toInt
+
+      val timestamp  = data(spec.value("timestamp")._1).toLong
+      
+      (site,user,group,item,timestamp)
+      
+    })
+    
+    dataset.groupBy(v => (v._1,v._2)).map(data => {
+      
+      val (site,user) = data._1
+      val groups = data._2.groupBy(_._3).map(group => {
+
+        /*
+         * Every group has a unique timestamp, i.e the timestamp
+         * is sufficient to identify a certain group for a user
+         */
+        val timestamp = group._2.head._5
+        val items = group._2.map(_._4.toInt).toList
+
+        (timestamp,items)
+        
+      }).toList.sortBy(_._1)
+      
+      /*
+       * For merging with the rules discovered, we restrict to the 
+       * list of items of the latest group and interpret these as
+       * antecedent candidates with respect to the association rules.
+       */
+     (site,user,groups.last._2)
+       
+    })
+    
+  }
 }

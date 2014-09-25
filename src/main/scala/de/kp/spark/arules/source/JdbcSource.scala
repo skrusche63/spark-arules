@@ -18,15 +18,13 @@ package de.kp.spark.arules.source
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.sql.{Connection,DriverManager,ResultSet}
-
 import org.apache.spark.SparkContext
-import org.apache.spark.rdd.{JdbcRDD,RDD}
+import org.apache.spark.rdd.RDD
 
 import de.kp.spark.arules.Configuration
-import de.kp.spark.arules.spec.FieldSpec
+import de.kp.spark.arules.io.JdbcReader
 
-import scala.collection.mutable.HashMap
+import de.kp.spark.arules.spec.FieldSpec
 
 /**
  * JdbcSource is a common connector to Jdbc databases; it uses a common
@@ -56,7 +54,8 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
      */
     val spec = sc.broadcast(FieldSpec.get)
 
-    val dataset = readTable(site,query).map(data => {
+    val rawset = new JdbcReader(sc,site,query).read(fields)
+    val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1).asInstanceOf[String]
       val user = data(spec.value("user")._1).asInstanceOf[String] 
@@ -87,66 +86,57 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
     ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
 
   }
-  
-  protected def readTable(site:Int,query:String):RDD[Map[String,Any]] = {
-    /*
-     * The value of 'site' is used as upper and lower bound for 
-     * the range (key) variable of the database table
-     */
-    val result = new JdbcRDD(sc,() => getConnection(url,database,user,password),
-      query,site,site,NUM_PARTITIONS,
-      (rs:ResultSet) => getRow(rs)
-    ).cache()
+   
+  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
 
-    result
+    /* Retrieve site and query from params */
+    val site = params("site").asInstanceOf[Int]
+    val query = params("query").asInstanceOf[String]
     
-  }
-  
-  /**
-   * Convert database row into Map[String,Any] and restrict
-   * to column names that are defined by the field spec
-   */
-  protected def getRow(rs:ResultSet):Map[String,Any] = {
-    val metadata = rs.getMetaData()
-    val numCols  = metadata.getColumnCount()
-    
-    val row = HashMap.empty[String,Any]
-    (1 to numCols).foreach(i => {
+    /*
+     * Convert field specification into broadcast variable
+     */
+    val spec = sc.broadcast(FieldSpec.get)
+
+    val rawset = new JdbcReader(sc,site,query).read(fields)
+    val dataset = rawset.map(data => {
       
-      val k = metadata.getColumnName(i)
-      val v = rs.getObject(i)
+      val site = data(spec.value("site")._1).asInstanceOf[String]
+      val user = data(spec.value("user")._1).asInstanceOf[String]      
+
+      val group = data(spec.value("group")._1).asInstanceOf[String]
+      val item  = data(spec.value("item")._1).asInstanceOf[Int]
+
+      val timestamp  = data(spec.value("timestamp")._1).asInstanceOf[Long]
       
-      if (fields.isEmpty) {
-        row += k -> v
-        
-      } else {        
-        if (fields.contains(k)) row += k -> v
-        
-      }
+      (site,user,group,item,timestamp)
       
     })
-
-    row.toMap
     
-  }
-  
-  protected def getConnection(url:String,database:String,user:String,password:String):Connection = {
+    dataset.groupBy(v => (v._1,v._2)).map(data => {
+      
+      val (site,user) = data._1
+      val groups = data._2.groupBy(_._3).map(group => {
 
-    /* Create MySQL connection */
-	Class.forName(MYSQL_DRIVER).newInstance()	
-	val endpoint = getEndpoint(url,database)
-		
-	/* Generate database connection */
-	val	connection = DriverManager.getConnection(endpoint,user,password)
-    connection
-    
-  }
-  
-  protected def getEndpoint(url:String,database:String):String = {
-		
-	val endpoint = "jdbc:mysql://" + url + "/" + database
-	endpoint
-		
+        /*
+         * Every group has a unique timestamp, i.e the timestamp
+         * is sufficient to identify a certain group for a user
+         */
+        val timestamp = group._2.head._5
+        val items = group._2.map(_._4.toInt).toList
+
+        (timestamp,items)
+        
+      }).toList.sortBy(_._1)
+      
+      /*
+       * For merging with the rules discovered, we restrict to the 
+       * list of items of the latest group and interpret these as
+       * antecedent candidates with respect to the association rules.
+       */
+     (site,user,groups.last._2)
+       
+    })
   }
 
 }
