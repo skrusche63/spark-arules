@@ -21,36 +21,23 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import org.apache.hadoop.conf.{Configuration => HConf}
-import org.apache.hadoop.io.{ArrayWritable,MapWritable,NullWritable,Text}
-
-import org.elasticsearch.hadoop.mr.EsInputFormat
-
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.io.ElasticReader
 import de.kp.spark.arules.spec.FieldSpec
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ArrayBuffer
-
 class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
-          
-  val conf = Configuration.elastic
  
-  /**
-   * Read from an Elasticsearch index that contains the items
-   * of ecommerce orders or transactions
-   */
   override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])] = {
+
+    val query = params("query").asInstanceOf[String]
+    val resource = params("resource").asInstanceOf[String]
 
     val spec = sc.broadcast(FieldSpec.get)
 
     /* 
      * Connect to Elasticsearch and extract the following fields from the
-     * respective search index: site, timestamp, user, order and item
+     * respective search index: site, user, group and item
      */
-    val source = sc.newAPIHadoopRDD(conf, classOf[EsInputFormat[Text, MapWritable]], classOf[Text], classOf[MapWritable])
-    val rawset = source.map(hit => toMap(hit._2))
-
+    val rawset = new ElasticReader(sc,resource,query).read
     val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1)
@@ -81,34 +68,6 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
     val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
     ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
 
-  }
-  
-  /**
-   * A helper method to convert a MapWritable into a Map
-   */
-  private def toMap(mw:MapWritable):Map[String,String] = {
-      
-    val m = mw.map(e => {
-        
-      val k = e._1.toString        
-      val v = (if (e._2.isInstanceOf[Text]) e._2.toString()
-        else if (e._2.isInstanceOf[ArrayWritable]) {
-        
-          val array = e._2.asInstanceOf[ArrayWritable].get()
-          array.map(item => {
-            
-            (if (item.isInstanceOf[NullWritable]) "" else item.asInstanceOf[Text].toString)}).mkString(",")
-            
-        }
-        else "")
-        
-    
-      k -> v
-        
-    })
-      
-    m.toMap
-    
   }
 
 }
