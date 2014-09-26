@@ -87,7 +87,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
     val rawset = new JdbcReader(sc,site,sql).read(fields)    
     val dataset = rawset.filter(row => (isDeleted(row) == false)).map(row => {
       
-      val site = row("idsite").asInstanceOf[Long]
+      val idsite = row("idsite").asInstanceOf[Long]
       /* Convert 'idvisitor' into a HEX String representation */
       val idvisitor = row("idvisitor").asInstanceOf[Array[Byte]]     
       val user = new java.math.BigInteger(1, idvisitor).toString(16)
@@ -101,7 +101,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
       val server_time = row("server_time").asInstanceOf[java.sql.Timestamp]
       val timestamp = server_time.getTime()
       
-      (site,user,group,item,timestamp)
+      (idsite,user,group,item,timestamp)
       
     })
     

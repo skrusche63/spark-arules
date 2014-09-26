@@ -59,8 +59,39 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.PIWIK => new PiwikSource(sc).connect(data)
             
+      case _ => null
+      
    }
 
   }
-  
+
+  def related(data:Map[String,String]):RDD[(String,String,List[Int])] = {
+    
+    val source = data("source")
+    source match {
+      /* 
+       * Retrieve most recent itemset from a transaction database persisted
+       * as an appropriate search index from Elasticsearch; the configuration
+       * parameters are retrieved from the service configuration 
+       */    
+      case Sources.ELASTIC => new ElasticSource(sc).related(data)
+      /*
+       * Retrieve most recent itemset from a transaction database persisted
+       * as an appropriate table from a JDBC database; the parameters are 
+       * retrieved from the service configuration
+       */
+      case Sources.JDBC => new JdbcSource(sc).related(data)
+      /*
+       * Retrieve most recent itemset from a transaction database persisted
+       * as an appropriate table from a Piwik database; the parameters are 
+       * retrieved from the service configuration
+       */
+      case Sources.PIWIK => new PiwikSource(sc).related(data)
+            
+      case _ => null
+      
+   }
+    
+  }
+
 }

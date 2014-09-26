@@ -21,9 +21,9 @@ package de.kp.spark.arules.actor
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.arules.Configuration
-
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.util.{JobCache,RuleCache}
+
+import de.kp.spark.arules.redis.RedisCache
 
 import scala.collection.JavaConversions._
 
@@ -41,12 +41,12 @@ class RuleQuestor extends Actor with ActorLogging {
       req.task match {
         /*
          * This task retrieves all rules that match the antecendents or
-         * consequents provided with this prediction request; the client
+         * consequents provided with this service request; the client
          * may then decide how to proceed with this information 
          */
-        case "predict" => {
+        case "associated" => {
 
-          val resp = if (RuleCache.exists(uid) == false) {           
+          val resp = if (RedisCache.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -61,11 +61,11 @@ class RuleQuestor extends Actor with ActorLogging {
             
                val rules = (if (antecedent != null) {
                  val items = antecedent.split(",").map(_.toInt).toList
-                 RuleCache.rulesByAntecedent(uid,items)
+                 RedisCache.rulesByAntecedent(uid,items)
                
                } else {
                  val items = consequent.split(",").map(_.toInt).toList
-                 RuleCache.rulesByConsequent(uid,items)
+                 RedisCache.rulesByConsequent(uid,items)
                  
                })
                
@@ -79,18 +79,39 @@ class RuleQuestor extends Actor with ActorLogging {
           origin ! Serializer.serializeResponse(resp)
           
         }
-        
+         
+        case "relations" => {
+          /*
+           * This task retrieves all the relations detected
+           * by a previously finished data mining task
+           */
+          val resp = if (RedisCache.relationsExist(uid) == false) {           
+           failure(req, Messages.RELATIONS_DO_NOT_EXIST(uid))
+            
+          } else {            
+            
+            val relations = RedisCache.relations(uid)
+
+            val data = Map("uid" -> uid, "relations" -> relations)            
+            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+            
+          }
+           
+          origin ! Serializer.serializeResponse(resp)
+           
+        }
+       
         case "rules" => {
           /*
            * This task retrieves all the association rules detected
            * by a previously finished data mining task
            */
-          val resp = if (RuleCache.exists(uid) == false) {           
+          val resp = if (RedisCache.rulesExist(uid) == false) {           
            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val rules = RuleCache.rules(uid)
+            val rules = RedisCache.rules(uid)
 
             val data = Map("uid" -> uid, "rules" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)

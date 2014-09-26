@@ -1,4 +1,4 @@
-package de.kp.spark.arules.util
+package de.kp.spark.arules.redis
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -19,33 +19,87 @@ package de.kp.spark.arules.util
  */
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.redis.RedisClient
 
 import java.util.Date
 import scala.collection.JavaConversions._
 
-object RuleCache {
+object RedisCache {
 
   val client  = RedisClient()
   val service = "arules"
 
-  def add(uid:String,items:List[Rule]) {
+  def addRelations(uid:String, relations:MultiRelations) {
+   
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "relation:" + service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeMultiRelations(relations)
+    
+    client.zadd(k,timestamp,v)
+    
+  }
+
+  def addRules(uid:String, rules:Rules) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
     val k = "rule:" + service + ":" + uid
-    val v = "" + timestamp + ":" + Serializer.serializeRules(new Rules(items))
+    val v = "" + timestamp + ":" + Serializer.serializeRules(rules)
     
     client.zadd(k,timestamp,v)
     
   }
   
-  def exists(uid:String):Boolean = {
+  def addStatus(uid:String, task:String, status:String) {
+   
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "job:" + service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
+    
+    client.zadd(k,timestamp,v)
+    
+  }
+ 
+  def relationsExist(uid:String):Boolean = {
+
+    val k = "relation:" + service + ":" + uid
+    client.exists(k)
+    
+  }
+   
+  def rulesExist(uid:String):Boolean = {
 
     val k = "rule:" + service + ":" + uid
     client.exists(k)
     
+  }
+  
+  def taskExists(uid:String):Boolean = {
+
+    val k = "job:" + service + ":" + uid
+    client.exists(k)
+    
+  }
+  
+  def relations(uid:String):String = {
+
+    val k = "relation:" + service + ":" + uid
+    val relations = client.zrange(k, 0, -1)
+
+    if (relations.size() == 0) {
+      Serializer.serializeMultiRelations(new MultiRelations(List.empty[Relations]))
+    
+    } else {
+      
+      val last = relations.toList.last
+      last.split(":")(1)
+      
+    }
+  
   }
   
   def rules(uid:String):String = {
@@ -63,6 +117,43 @@ object RuleCache {
       
     }
   
+  }
+  
+  /**
+   * Get timestamp when job with 'uid' started
+   */
+  def starttime(uid:String):Long = {
+    
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
+      0
+    
+    } else {
+      
+      val first = jobs.iterator().next()
+      first.split(":")(0).toLong
+      
+    }
+     
+  }
+  
+  def status(uid:String):String = {
+
+    val k = "job:" + service + ":" + uid
+    val jobs = client.zrange(k, 0, -1)
+
+    if (jobs.size() == 0) {
+      null
+    
+    } else {
+      
+      val job = Serializer.deserializeJob(jobs.toList.last)
+      job.status
+      
+    }
+
   }
 
   /**
@@ -111,4 +202,5 @@ object RuleCache {
     intersect.size == itemset1.size
     
   }
+
 }

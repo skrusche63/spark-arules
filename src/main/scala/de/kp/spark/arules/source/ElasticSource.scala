@@ -32,7 +32,7 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
    * contribute to the transactions are specified by FieldSpec
    */
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
-
+    
     val query = params("query").asInstanceOf[String]
     val resource = params("resource").asInstanceOf[String]
 

@@ -19,14 +19,14 @@ package de.kp.spark.arules.actor
  */
 
 import akka.actor.Actor
-
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.arules.{Configuration,TopKNR}
 import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.util.{JobCache,RuleCache}
+
+import de.kp.spark.arules.redis.RedisCache
 
 class TopKNRActor extends Actor with SparkActor {
   
@@ -47,15 +47,36 @@ class TopKNRActor extends Actor with SparkActor {
 
       if (params != null) {
         /* Register status */
-        JobCache.add(uid,task,ARulesStatus.STARTED)
+        RedisCache.addStatus(uid,task,ARulesStatus.STARTED)
  
         try {
           
-          val dataset = new TransactionSource(sc).get(req.data)
-          findRules(uid,task,dataset,params)
+          val source = new TransactionSource(sc)
+          /*
+           * STEP #1: 
+           * Discover rules from the transactional data source
+           */
+          val dataset = source.get(req.data)
+          val rules = if (dataset != null) findRules(uid,task,dataset,params) else null
+          /*
+           * STEP #2: 
+           * Merge rules with transactional data source and build
+           * weighted relations thereby filtering those relations
+           * below a dynamically provided threshold
+           */
+          if (rules != null) {
+           
+            val related = source.related(req.data)               
+            if (related != null) {
+
+              val weight = req.data("weight").toDouble
+              findRelations(uid,task,related,rules,weight)
+           }
+            
+          }
 
         } catch {
-          case e:Exception => JobCache.add(uid,task,ARulesStatus.FAILURE)          
+          case e:Exception => RedisCache.addStatus(uid,task,ARulesStatus.FAILURE)          
         }
  
 
@@ -74,10 +95,41 @@ class TopKNRActor extends Actor with SparkActor {
     }
     
   }
- 
-  private def findRules(uid:String,task:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)) {
+  
+  private def findRelations(uid:String,task:String,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
 
-    JobCache.add(uid,task,ARulesStatus.DATASET)
+    val bcrules = sc.broadcast(rules)
+    val bcweight = sc.broadcast(weight)
+              
+    val relations = related.map(itemset => {
+                
+      val (site,user,items) = itemset
+      val relations = bcrules.value.map(rule => {
+        /*
+         * The weight is computed from the intersection ratio
+         */
+        val intersect = items.intersect(rule.antecedent)
+        val ratio = intersect.length.toDouble / items.length
+                  
+        new Relation(items,rule.consequent,rule.support,rule.confidence,ratio)
+                  
+      }).filter(r => r.weight > bcweight.value)
+                
+      new Relations(site,user,relations)
+                
+    }).collect()
+          
+    /* Put relations to cache for later requests */
+    RedisCache.addRelations(uid,new MultiRelations(relations.toList))
+          
+    /* Update cache */
+    RedisCache.addStatus(uid,task,ARulesStatus.FINISHED)
+    
+  }
+ 
+  private def findRules(uid:String,task:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
+
+    RedisCache.addStatus(uid,task,ARulesStatus.DATASET)
           
     val (k,minconf,delta) = params
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
@@ -92,11 +144,13 @@ class TopKNRActor extends Actor with SparkActor {
             
     })
           
-    /* Put rules to RuleCache */
-    RuleCache.add(uid,rules)
+    /* Put rules to cache */
+    RedisCache.addRules(uid,new Rules(rules))
           
-    /* Update JobCache */
-    JobCache.add(uid,task,ARulesStatus.FINISHED)
+    /* Update status */
+    RedisCache.addStatus(uid,task,ARulesStatus.RULES)
+    
+    rules
     
   }
   

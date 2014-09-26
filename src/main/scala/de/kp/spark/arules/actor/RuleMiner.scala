@@ -21,12 +21,14 @@ package de.kp.spark.arules.actor
 import akka.actor.{Actor,ActorLogging,ActorRef,Props}
 import akka.pattern.ask
 import akka.util.Timeout
+
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.util.{JobCache,RuleCache}
+
+import de.kp.spark.arules.redis.RedisCache
+
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-import org.apache.pig.builtin.TOMAP
 
 class RuleMiner extends Actor with ActorLogging {
 
@@ -68,7 +70,7 @@ class RuleMiner extends Actor with ActorLogging {
        
         case "status" => {
           
-          val resp = if (JobCache.exists(uid) == false) {           
+          val resp = if (RedisCache.taskExists(uid) == false) {           
             failure(req,Messages.TASK_DOES_NOT_EXIST(uid))           
           } else {            
             status(req)
@@ -108,7 +110,7 @@ class RuleMiner extends Actor with ActorLogging {
     val uid = req.data("uid")
     val data = Map("uid" -> uid)
                 
-    new ServiceResponse(req.service,req.task,data,JobCache.status(uid))	
+    new ServiceResponse(req.service,req.task,data,RedisCache.status(uid))	
 
   }
 
@@ -116,7 +118,7 @@ class RuleMiner extends Actor with ActorLogging {
 
     val uid = params("uid")
     
-    if (JobCache.exists(uid)) {            
+    if (RedisCache.taskExists(uid)) {            
       return Some(Messages.TASK_ALREADY_STARTED(uid))   
     }
 

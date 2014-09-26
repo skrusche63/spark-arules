@@ -40,31 +40,17 @@ case class JobDesc(
   service:String,task:String,status:String
 )
 
-case class Rule (
-  /*
-   * Antecedent itemset
-   */
-  antecedent:List[Int],
-  /*
-   * Consequent itemset
-   */
-  consequent:List[Int],
-  /**
-   * Support
-   */
-  support:Int,
-  /*
-   * Confidence
-   */
-  confidence:Double) extends RuleJSON {
-  
-  implicit val formats = Serialization.formats(ShortTypeHints(List()))
-  
-  def toJSON:String = write(this)
-  
-}
+case class Relation (
+  items:List[Int],related:List[Int],support:Int,confidence:Double,weight:Double)
 
-case class Rules (items:List[Rule])
+case class Rule (
+  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
+
+case class Relations(site:String,user:String,items:List[Relation])
+
+case class MultiRelations(items:List[Relations])
+
+case class Rules(items:List[Rule])
 
 object Serializer {
     
@@ -84,6 +70,17 @@ object Serializer {
   def serializeResponse(response:ServiceResponse):String = write(response)
   
   def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
+
+  /*
+   * Support for serialization and deserialization of relations
+   */
+  def serializeMultiRelations(relations:MultiRelations):String = write(relations)
+  
+  def serializeRelations(relations:Relations):String = write(relations)
+
+  def deserializeMultiRelations(relations:String):MultiRelations = read[MultiRelations](relations)
+
+  def deserializeRelations(relations:String):Relations = read[Relations](relations)
   
   /*
    * Support for serialization and deserialization of rules
@@ -143,6 +140,8 @@ object Messages {
   
   def TOP_KNR_MINING_STARTED(uid:String) = String.format("""Top-K non-redundant Association Rule Mining started for uid '%s'.""", uid)
 
+  def RELATIONS_DO_NOT_EXIST(uid:String):String = String.format("""The relations for uid '%s' do not exist.""", uid)
+
   def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
 
   def SOURCE_IS_UNKNOWN(uid:String,source:String):String = String.format("""Source '%s' is unknown for uid '%s'.""", source, uid)
@@ -154,10 +153,9 @@ object ARulesStatus {
   val DATASET:String = "dataset"
     
   val STARTED:String = "started"
-  val STOPPED:String = "stopped"
-    
   val FINISHED:String = "finished"
-  val RUNNING:String  = "running"
+  
+  val RULES:String = "rules"
   
   val FAILURE:String = "failure"
   val SUCCESS:String = "success"
