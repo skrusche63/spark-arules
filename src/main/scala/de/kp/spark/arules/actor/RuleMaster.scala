@@ -56,24 +56,23 @@ class RuleMaster extends Actor with ActorLogging {
 	  val origin = sender
 
 	  val deser = Serializer.deserializeRequest(req)
-	  val response = deser.task match {
+	  val response = deser.task.split(":")(0) match {
         /*
-         * Starting the association rule mining and ask for the 
-         * current status of the mining task
+         * Retrieve all the relations or rules discovered by a 
+         * previous mining task; relevant is the 'uid' of the 
+         * mining task to get the respective data
+         */
+        case "get" => ask(questor,deser).mapTo[ServiceResponse]
+        /*
+         * Starting the association rule mining
          */
         case "train"  => ask(miner,deser).mapTo[ServiceResponse]
+        /*
+         * Request the actual status of an association rule
+         * mining task; note, that get requests should only
+         * be invoked after having retrieved a FINISHED status
+         */
         case "status" => ask(miner,deser).mapTo[ServiceResponse]
-        /*
-         * Retrieve all the rules discovered by a previous mining
-         * task; relevant is the 'uid' of the mining task to get
-         * the respective rules
-         */
-        case "rules" => ask(questor,deser).mapTo[ServiceResponse]
-        /*
-         * Predicts on either the antecends or the consequents of
-         * previously mining association rules
-         */
-        case "predict" => ask(questor,deser).mapTo[ServiceResponse]
        
         case _ => {
 

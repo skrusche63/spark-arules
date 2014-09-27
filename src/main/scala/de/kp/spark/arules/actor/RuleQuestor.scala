@@ -44,7 +44,7 @@ class RuleQuestor extends Actor with ActorLogging {
          * consequents provided with this service request; the client
          * may then decide how to proceed with this information 
          */
-        case "associated" => {
+        case "get:associated" => {
 
           val resp = if (RedisCache.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
@@ -80,7 +80,7 @@ class RuleQuestor extends Actor with ActorLogging {
           
         }
          
-        case "relations" => {
+        case "get:relations" => {
           /*
            * This task retrieves all the relations detected
            * by a previously finished data mining task
@@ -101,9 +101,9 @@ class RuleQuestor extends Actor with ActorLogging {
            
         }
        
-        case "rules" => {
+        case "get:rule" => {
           /*
-           * This task retrieves all the association rules detected
+           * This request retrieves all the association rules detected
            * by a previously finished data mining task
            */
           val resp = if (RedisCache.rulesExist(uid) == false) {           
