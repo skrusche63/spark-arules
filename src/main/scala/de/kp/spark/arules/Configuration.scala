@@ -36,15 +36,6 @@ object Configuration {
     
   }
 
-  def cache():Int = {
-  
-    val cfg = config.getConfig("cache")
-    val maxentries = cfg.getInt("maxentries")
-    
-    maxentries
-    
-  }
-
   def elastic():HConf = {
   
     val cfg = config.getConfig("elastic")
