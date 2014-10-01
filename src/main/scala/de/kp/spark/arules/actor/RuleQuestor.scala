@@ -80,7 +80,7 @@ class RuleQuestor extends Actor with ActorLogging {
           
         }
          
-        case "get:relations" => {
+        case "get:relation" => {
           /*
            * This task retrieves all the relations detected
            * by a previously finished data mining task
