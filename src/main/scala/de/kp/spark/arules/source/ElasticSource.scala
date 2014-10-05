@@ -22,7 +22,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.arules.io.ElasticReader
-import de.kp.spark.arules.spec.FieldSpec
+import de.kp.spark.arules.spec.Fields
 
 class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
  
@@ -36,7 +36,8 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
     val query = params("query").asInstanceOf[String]
     val resource = params("resource").asInstanceOf[String]
 
-    val spec = sc.broadcast(FieldSpec.get)
+    val uid = params("uid").asInstanceOf[String]
+    val spec = sc.broadcast(Fields.get(uid))
 
     /* 
      * Connect to Elasticsearch and extract the following fields from the
@@ -80,7 +81,8 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
     val query = params("query").asInstanceOf[String]
     val resource = params("resource").asInstanceOf[String]
 
-    val spec = sc.broadcast(FieldSpec.get)
+    val uid = params("uid").asInstanceOf[String]
+    val spec = sc.broadcast(Fields.get(uid))
 
     /* 
      * Connect to Elasticsearch and extract the following fields from the

@@ -18,32 +18,44 @@ package de.kp.spark.arules.spec
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import de.kp.spark.arules.redis.RedisCache
+
 import scala.xml._
 import scala.collection.mutable.HashMap
 
-object FieldSpec {
+object Fields {
   
   val path = "fieldspec.xml"
-  val root:Elem = XML.load(getClass.getClassLoader.getResource(path))  
 
-  private val fields = HashMap.empty[String,(String,String)]
-  
-  load()
-  
-  private def load() {
+  def get(uid:String):Map[String,(String,String)] = {
+    
+    val fields = HashMap.empty[String,(String,String)]
 
-    for (field <- root \ "field") {
+    try {
+          
+      val root = if (RedisCache.metaExists(uid)) {      
+        XML.load(RedisCache.meta(uid))
+    
+      } else {
+        XML.load(getClass.getClassLoader.getResource(path))  
       
-      val _name  = (field \ "@name").toString
-      val _type  = (field \ "@type").toString
-
-      val _mapping = field.text
-      fields += _name -> (_mapping,_type) 
+     }
+   
+      for (field <- root \ "field") {
       
+        val _name  = (field \ "@name").toString
+        val _type  = (field \ "@type").toString
+
+        val _mapping = field.text
+        fields += _name -> (_mapping,_type) 
+      
+      }
+      
+    } catch {
+      case e:Exception => {}
     }
-
+    
+    fields.toMap
   }
-
-  def get = fields.toMap
 
 }

@@ -21,6 +21,7 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.io.JdbcReader
 
 /**
@@ -28,6 +29,23 @@ import de.kp.spark.arules.io.JdbcReader
  * data about fields and types on the server side for convenience.
  */
 class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
+   
+  protected val (url,database,user,password) = Configuration.mysql
+
+  private val LOG_ITEM_FIELDS = List(
+      "idsite",
+      "idvisitor",
+      "server_time",
+      "idorder",
+      /*
+       * idaction_xxx are references to unique entries into the piwik_log_action table, 
+       * i.e. two items with the same SKU do have the same idaction_sku; the idaction_sku
+       * may therefore directly be used as an item identifier
+       */
+      "idaction_sku",
+      "price",
+      "quantity",
+      "deleted")
 
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
     
@@ -39,7 +57,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
 
     val sql = query(database,site.toString,startdate,enddate)
     
-    val rawset = new JdbcReader(sc,site,sql).read(fields)    
+    val rawset = new JdbcReader(sc,site,sql).read(LOG_ITEM_FIELDS)    
     val rows = rawset.filter(row => (isDeleted(row) == false)).map(row => {
       
       val site = row("idsite").asInstanceOf[Long]
@@ -84,7 +102,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
 
     val sql = query(database,site.toString,startdate,enddate)
     
-    val rawset = new JdbcReader(sc,site,sql).read(fields)    
+    val rawset = new JdbcReader(sc,site,sql).read(LOG_ITEM_FIELDS)    
     val dataset = rawset.filter(row => (isDeleted(row) == false)).map(row => {
       
       val idsite = row("idsite").asInstanceOf[Long]

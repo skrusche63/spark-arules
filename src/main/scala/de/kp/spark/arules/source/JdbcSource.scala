@@ -24,7 +24,7 @@ import org.apache.spark.rdd.RDD
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.io.JdbcReader
 
-import de.kp.spark.arules.spec.FieldSpec
+import de.kp.spark.arules.spec.Fields
 
 /**
  * JdbcSource is a common connector to Jdbc databases; it uses a common
@@ -34,25 +34,21 @@ import de.kp.spark.arules.spec.FieldSpec
  * and also a customer state to specify a certain behavioral state.
  */
 class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
-
-  protected val MYSQL_DRIVER   = "com.mysql.jdbc.Driver"
-  protected val NUM_PARTITIONS = 1
-   
-  protected val (url,database,user,password) = Configuration.mysql
-  
-  protected val fieldspec = FieldSpec.get
-  protected val fields = fieldspec.map(kv => kv._2._1).toList
   
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
+    
+    val uid = params("uid").asInstanceOf[String]    
+    
+    val fieldspec = Fields.get(uid)
+    val fields = fieldspec.map(kv => kv._2._1).toList    
+    /*
+     * Convert field specification into broadcast variable
+     */
+    val spec = sc.broadcast(fieldspec)
     
     /* Retrieve site and query from params */
     val site = params("site").asInstanceOf[Int]
     val query = params("query").asInstanceOf[String]
-    
-    /*
-     * Convert field specification into broadcast variable
-     */
-    val spec = sc.broadcast(FieldSpec.get)
 
     val rawset = new JdbcReader(sc,site,query).read(fields)
     val dataset = rawset.map(data => {
@@ -88,15 +84,19 @@ class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
   }
    
   override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
+   
+    val uid = params("uid").asInstanceOf[String]    
+    
+    val fieldspec = Fields.get(uid)
+    val fields = fieldspec.map(kv => kv._2._1).toList    
+    /*
+     * Convert field specification into broadcast variable
+     */
+    val spec = sc.broadcast(fieldspec)
 
     /* Retrieve site and query from params */
     val site = params("site").asInstanceOf[Int]
     val query = params("query").asInstanceOf[String]
-    
-    /*
-     * Convert field specification into broadcast variable
-     */
-    val spec = sc.broadcast(FieldSpec.get)
 
     val rawset = new JdbcReader(sc,site,query).read(fields)
     val dataset = rawset.map(data => {
