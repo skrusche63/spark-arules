@@ -158,7 +158,7 @@ class TopKNRActor extends Actor with SparkActor {
       
     try {
       val k = req.data("k").toInt
-      val minconf = req.data("minconf")toDouble
+      val minconf = req.data("minconf").toDouble
         
       val delta = req.data("delta").toInt
       return (k,minconf,delta)
