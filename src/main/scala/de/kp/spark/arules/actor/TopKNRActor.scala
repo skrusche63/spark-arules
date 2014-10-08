@@ -18,20 +18,19 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import akka.actor.Actor
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import de.kp.spark.arules.{Configuration,TopKNR}
+import akka.actor.{Actor,ActorLogging}
+
+import de.kp.spark.arules.TopKNR
 import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.redis.RedisCache
 
-class TopKNRActor extends Actor with SparkActor {
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("TopKNRActor",Configuration.spark)
+class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
 
   def receive = {
     
@@ -82,14 +81,13 @@ class TopKNRActor extends Actor with SparkActor {
 
       }
       
-      sc.stop
       context.stop(self)
           
     }
     
     case _ => {
       
-      sc.stop
+      log.error("Unknown request.")
       context.stop(self)
       
     }

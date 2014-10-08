@@ -32,26 +32,23 @@ import de.kp.spark.arules.model._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
-class RuleMaster extends Actor with ActorLogging {
+class RuleMaster extends Actor with ActorLogging with SparkActor {
   
-  /* Load configuration for routers */
-  val (time,retries,workers) = Configuration.router   
+  /* Create Spark context */
+  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
+  
+  val (duration,retries,time) = Configuration.actor   
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
   }
-
-  val miner = context.actorOf(Props[RuleMiner])
-  val questor = context.actorOf(Props[RuleQuestor].withRouter(RoundRobinRouter(workers)))
   
   def receive = {
     
     case req:String => {
       
       implicit val ec = context.dispatcher
-
-      val duration = Configuration.actor      
-      implicit val timeout:Timeout = DurationInt(duration).second
+      implicit val timeout:Timeout = DurationInt(time).second
 	  	    
 	  val origin = sender
 
@@ -62,17 +59,17 @@ class RuleMaster extends Actor with ActorLogging {
          * previous mining task; relevant is the 'uid' of the 
          * mining task to get the respective data
          */
-        case "get" => ask(questor,deser).mapTo[ServiceResponse]
+        case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
         /*
          * Starting the association rule mining
          */
-        case "train"  => ask(miner,deser).mapTo[ServiceResponse]
+        case "train"  => ask(actor("miner"),deser).mapTo[ServiceResponse]
         /*
          * Request the actual status of an association rule
          * mining task; note, that get requests should only
          * be invoked after having retrieved a FINISHED status
          */
-        case "status" => ask(miner,deser).mapTo[ServiceResponse]
+        case "status" => ask(actor("miner"),deser).mapTo[ServiceResponse]
        
         case _ => {
 
@@ -92,14 +89,42 @@ class RuleMaster extends Actor with ActorLogging {
       
     }
   
-    case _ => {}
+    case _ => {
+
+      val origin = sender               
+      val msg = Messages.REQUEST_IS_UNKNOWN()          
+          
+      origin ! Serializer.serializeResponse(failure(null,msg))
+
+    }
     
+  }
+
+  private def actor(worker:String):ActorRef = {
+    
+    worker match {
+  
+      case "miner" => context.actorOf(Props(new RuleMiner(sc)))
+        
+      case "questor" => context.actorOf(Props(new RuleQuestor()))
+      
+      case _ => null
+      
+    }
+  
   }
 
   private def failure(req:ServiceRequest,message:String):ServiceResponse = {
     
-    val data = Map("uid" -> req.data("uid"), "message" -> message)
-    new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+    if (req == null) {
+      val data = Map("message" -> message)
+      new ServiceResponse("","",data,ARulesStatus.FAILURE)	
+      
+    } else {
+      val data = Map("uid" -> req.data("uid"), "message" -> message)
+      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+    
+    }
     
   }
 

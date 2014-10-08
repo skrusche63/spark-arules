@@ -126,6 +126,8 @@ object Messages {
       No antecedents or consequents are provided for uid '%s'.
     """.stripMargin, uid)
 
+  def REQUEST_IS_UNKNOWN():String = String.format("""Unknown request.""")
+
   def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
 
   def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)
