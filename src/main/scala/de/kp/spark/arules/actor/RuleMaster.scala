@@ -18,6 +18,7 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.apache.spark.SparkContext
 import akka.actor.{Actor,ActorLogging,ActorRef,Props}
 
 import akka.pattern.ask
@@ -32,10 +33,7 @@ import de.kp.spark.arules.model._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
-class RuleMaster extends Actor with ActorLogging with SparkActor {
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
+class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging {
   
   val (duration,retries,time) = Configuration.actor   
 

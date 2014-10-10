@@ -1,4 +1,4 @@
-package de.kp.spark.arules.actor
+package de.kp.spark.arules
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
  * 
  * This file is part of the Spark-ARULES project
@@ -21,7 +21,7 @@ package de.kp.spark.arules.actor
 import org.apache.spark.{SparkConf,SparkContext}
 import org.apache.spark.serializer.KryoSerializer
 
-trait SparkActor {
+trait SparkService {
   
   protected def createCtxLocal(name:String, props:Map[String,String]):SparkContext = {
 

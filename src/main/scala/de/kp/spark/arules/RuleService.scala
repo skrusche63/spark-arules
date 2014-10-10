@@ -44,12 +44,15 @@ object RuleService {
 
 }
 
-class RuleService(conf:String, name:String) {
+class RuleService(conf:String, name:String) extends SparkService {
 
   val system = ActorSystem(name, ConfigFactory.load(conf))
   sys.addShutdownHook(system.shutdown)
+  
+  /* Create Spark context */
+  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
 
-  val master = system.actorOf(Props[RuleMaster], name="arules-master")
+  val master = system.actorOf(Props(new RuleMaster(sc)), name="arules-master")
 
   def shutdown = system.shutdown()
   
