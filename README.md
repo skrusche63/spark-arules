@@ -13,10 +13,10 @@ For example, we have made good experience applying association rules to search q
 
 > If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -> [bovine spongiform encephalopathy].
 
-The Association Rule Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.
+The Association Analysis Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.
 
 
-The Association Rule Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of [Akka](http://akka.io) and [Spark](https://spark.apache.org/) and can be easily integrated in a reactive loose coupling environment.
+The Association Analysis Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of [Akka](http://akka.io) and [Spark](https://spark.apache.org/) and can be easily integrated in a reactive loose coupling environment.
 
 ---
 
@@ -128,7 +128,7 @@ Elasticsearch is one of the connectors actually supported. As many ecommerce sit
 
 ![Association Rules in Relational Databases](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png)
 
-Discovering hidden relations in multiple large-scale database tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
+Discovering hidden relations in multiple large-scale tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
 valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.
 
 Association Rule Mining in relational database tables is an appropriate means to detect overlooked data relations and thereby helps to make data management or adaptive to the data reality.
