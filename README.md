@@ -99,7 +99,7 @@ The increasing number of associated projects, such as [Spark SQL](https://spark.
 
 ### Data Connectors
 
-The Reactive Association Rule Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.
+The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.
 
 Below is a list of data sources that are already supported or will be supported in the near future:
 
@@ -109,7 +109,7 @@ Below is a list of data sources that are already supported or will be supported 
 
 A step towards analytics is the recently introduced combination with [Logstash](http://logstash.net/) to easily store logs and other time based event data from any system in a single place.
 
-The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
+The Association Analysis Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
 
 E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
 
@@ -124,7 +124,7 @@ Web Content Management.
 
 #### Relational Databases
 
-Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
+Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Analysis Engine also comes with a JDBC connector.
 
 ![Association Rules in Relational Databases](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png)
 
