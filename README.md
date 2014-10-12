@@ -1,6 +1,6 @@
 ![Dr.Krusche & Partner PartG](https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png)
 
-## Reactive Association Rule Engine
+## Reactive Association Analysis Engine
 
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:
@@ -127,6 +127,11 @@ Web Content Management.
 Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
 
 ![Association Rules in Relational Databases](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png)
+
+Discovering hidden relations in multiple large-scale database tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
+valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.
+
+Association Rule Mining in relational database tables is an appropriate means to detect overlooked data relations and thereby helps to make data management or adaptive to the data reality.
 
 ---
 
