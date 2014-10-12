@@ -126,6 +126,8 @@ Web Content Management.
 
 Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Rule Engine also comes with a JDBC connector.
 
+![Association Rules in Relational Databases](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png)
+
 ---
 
 ### Technology
