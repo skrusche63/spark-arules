@@ -2,6 +2,8 @@
 
 ## Reactive Association Analysis Engine
 
+##### Audience discoery & targeting, Cross-sell Analytics, Recommendations, Smart Data Management and more for Elasticsearch and other data sources.
+
 Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:
 
