@@ -4,11 +4,11 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Reactive Association Rule Engine : Knowledge discovery, data mining and real-time recommendations for Elasticsearch">
+    <meta name="description" content="Association Analysis Engine : Next-Generation Association Rule Mining">
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-    <title>Reactive Association Rule Engine</title>
+    <title>Association Analysis Engine</title>
   </head>
 
   <body>
@@ -18,8 +18,8 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/skrusche63/spark-arules">View on GitHub</a>
 
-          <h1 id="project_title">Reactive Association Rule Engine</h1>
-          <h2 id="project_tagline">Knowledge discovery, data mining and real-time recommendations for Elasticsearch</h2>
+          <h1 id="project_title">Association Analysis Engine</h1>
+          <h2 id="project_tagline">Next-Generation Association Rule Mining</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/skrusche63/spark-arules/zipball/master">Download this project as a .zip file</a>
@@ -34,7 +34,7 @@
         <p><img src="https://raw.github.com/skrusche63/spark-elastic/master/images/dr-kruscheundpartner.png" alt="Dr.Krusche &amp; Partner PartG"></p>
 
 <h2>
-<a name="reactive-association-rule-engine" class="anchor" href="#reactive-association-rule-engine"><span class="octicon octicon-link"></span></a>Reactive Association Rule Engine</h2>
+<a name="reactive-association-analysis-engine" class="anchor" href="#reactive-association-analysis-engine"><span class="octicon octicon-link"></span></a>Reactive Association Analysis Engine</h2>
 
 <p>Association rule mining is a wide-spread technique to determine hidden interesting relations between items in large-scale 
 transaction databases. This technique is often applied to data recorded by point-of-sale systems in supermarkets or ecommerce web sites and is able to determine associations of the following kind:</p>
@@ -51,11 +51,49 @@ transaction databases. This technique is often applied to data recorded by point
 <p>If a query contains 'cattle' and 'neurological disorder', then this query may be extended by 'bovine spongiform encephalopathy' using the rule [cattle, neurological disorder] -&gt; [bovine spongiform encephalopathy].</p>
 </blockquote>
 
-<p>The Association Rule Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.</p>
+<p>The Association Analysis Engine implements effective algorithms to discovery the most relevant hidden relations in large-scale datasets thereby avoiding the well-known threshold problems.</p>
 
-<p>The Association Rule Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of <a href="http://akka.io">Akka</a> and <a href="https://spark.apache.org/">Spark</a> and can be easily integrated in a reactive loose coupling environment.</p>
+<p>The Association Analysis Engine supports rule discovery and also real-time recommendations based on association rules. The engine is implemented as a micro service on top of <a href="http://akka.io">Akka</a> and <a href="https://spark.apache.org/">Spark</a> and can be easily integrated in a reactive loose coupling environment.</p>
 
-<hr><h3>
+<hr>
+
+<h3>
+<a name="architecture" class="anchor" href="#architecture"><span class="octicon octicon-link"></span></a>Architecture</h3>
+
+<p><img src="https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/Association-Rules-Architecture.png" alt="Association Rules Service Architecture"></p>
+
+<hr>
+
+<h3>
+<a name="use-cases" class="anchor" href="#use-cases"><span class="octicon octicon-link"></span></a>Use Cases</h3>
+
+<p>Association Rule Mining is a wide-spread method that is used in many application areas. Here we describe selected use case that are relevant for ecommerce sites, and we certainly do not claim that the list of use cases is complete.</p>
+
+<h5>
+<a name="discounting--pricing" class="anchor" href="#discounting--pricing"><span class="octicon octicon-link"></span></a>Discounting &amp; Pricing</h5>
+
+<p>Discounting &amp; promotional pricing has to ensure that the right discounting is offered to the right product. Knowledge about products that are often purchased together is important here: It helps to avoid simultaneous discounting of products that are in any case often sold together. It also helps to decide which products have to be discouunted to push sales of products.</p>
+
+<p>The knowledge about products that are frequently purchased together also help to decide which other product can be offered as a bonus to customers that bought another product, e.g. to increase customer satisfaction.</p>
+
+<h5>
+<a name="dynamic-product-catalogs" class="anchor" href="#dynamic-product-catalogs"><span class="octicon octicon-link"></span></a>Dynamic Product Catalogs</h5>
+
+<p>Knowing products (or categories) that are frequently purchased together helps to dynamically adapt product catalogs to actual behavior and needs of customers by simply grouping these products on a single catalog page.</p>
+
+<h5>
+<a name="product-recommendation" class="anchor" href="#product-recommendation"><span class="octicon octicon-link"></span></a>Product Recommendation</h5>
+
+<p>Detecting product bundles in the customers previous purchase behavior is an imported information to increase cross-selling, and supports features such as "customer who have bought the product a certain customer is actually looking at also bought these products".</p>
+
+<h5>
+<a name="purchase-prediction" class="anchor" href="#purchase-prediction"><span class="octicon octicon-link"></span></a>Purchase Prediction</h5>
+
+<p>Discovering products that are frequently bought together helps to predict which products will be probably bought next.</p>
+
+<hr>
+
+<h3>
 <a name="top-k-non-redundant-association-rules" class="anchor" href="#top-k-non-redundant-association-rules"><span class="octicon octicon-link"></span></a>Top-K (Non Redundant) Association Rules</h3>
 
 <p>Finding interesting associations between items in transaction databases is a fundamental data mining task. Finding association rules is 
@@ -64,7 +102,9 @@ usually accompanied by the following control parameters:</p>
 <ul>
 <li><p><strong>Support</strong>: The percentage of transactions of the database where the rules occurs.</p></li>
 <li><p><strong>Confidence</strong>: The support of the rule divided by the support of its <em>antecedent</em>.</p></li>
-</ul><p>The goal of association rule mining then is to discover all rules that have a support and confidence that is higher to user-defined thresholds 
+</ul>
+
+<p>The goal of association rule mining then is to discover all rules that have a support and confidence that is higher to user-defined thresholds 
 <em>minimum support</em> and <em>minimum confidence</em>. The challenge is choose the right thresholds with respect to the considered transaction database.</p>
 
 <p>This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job. The problem is especially associated with <em>minimum support</em>:</p>
@@ -81,14 +121,18 @@ This can generate a huge amount of results, and the mining task may become very 
 
 <p>We adapted Viger's original implementation and made his <strong>Top-K</strong> and <strong>Top-K Non Redundant</strong> algorithms available for Spark.</p>
 
-<hr><h3>
+<hr>
+
+<h3>
 <a name="akka" class="anchor" href="#akka"><span class="octicon octicon-link"></span></a>Akka</h3>
 
 <p>Akka is a toolkit to build concurrent scalable applications, using the <a href="http://en.wikipedia.org/wiki/Actor_model">Actor Model</a>. Akka comes with a feature called <em>Akka Remoting</em>, which easily enables to setup a communication between software components in a peer-to-peer fashion.</p>
 
 <p>Akka and Akka Remoting are an appropriate means to establish a communication between prior independent software components - easy and fast.</p>
 
-<hr><h3>
+<hr>
+
+<h3>
 <a name="spark" class="anchor" href="#spark"><span class="octicon octicon-link"></span></a>Spark</h3>
 
 <p>From the <a href="https://spark.apache.org/">Apache Spark</a> website:</p>
@@ -99,18 +143,52 @@ This can generate a huge amount of results, and the mining task may become very 
 
 <p>The increasing number of associated projects, such as <a href="https://spark.apache.org/sql/">Spark SQL</a> and <a href="https://spark.apache.org/streaming/">Spark Streaming</a>, enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.</p>
 
-<hr><h3>
-<a name="elasticsearch" class="anchor" href="#elasticsearch"><span class="octicon octicon-link"></span></a>Elasticsearch</h3>
+<hr>
+
+<h3>
+<a name="data-connectors" class="anchor" href="#data-connectors"><span class="octicon octicon-link"></span></a>Data Connectors</h3>
+
+<p>The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.</p>
+
+<p>Below is a list of data sources that are already supported or will be supported in the near future:</p>
+
+<h4>
+<a name="elasticsearch" class="anchor" href="#elasticsearch"><span class="octicon octicon-link"></span></a>Elasticsearch</h4>
 
 <p><a href="http://www.elasticsearch.org">Elasticsearch</a> is a flexible and powerful distributed real-time search and analytics engine. Besides linguistic and semantic enrichment, for data in a search index there is an increasing demand to apply analytics, knowledge discovery &amp; data mining, and even predictive analytics to gain deeper insights into the data and further increase their business value.</p>
 
 <p>A step towards analytics is the recently introduced combination with <a href="http://logstash.net/">Logstash</a> to easily store logs and other time based event data from any system in a single place.</p>
 
-<p>The Association Rule Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. </p>
+<p>The Association Analysis Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. </p>
 
-<p>E.g. Elasticsearch may be used to support Product Search for an Ecommerce Platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. </p>
+<p>E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. </p>
 
-<hr><h3>
+<h4>
+<a name="piwik-analytics" class="anchor" href="#piwik-analytics"><span class="octicon octicon-link"></span></a>Piwik Analytics</h4>
+
+<p><a href="http://piwik.org">Piwik Analytics</a> is the leading and widely used open source web analytics platform, and is an excellent starting point to move into the world of dynamic catalogs, product recommendations, purchase predictions and more.</p>
+
+<h4>
+<a name="pimcore-coming-soon" class="anchor" href="#pimcore-coming-soon"><span class="octicon octicon-link"></span></a>Pimcore (coming soon)</h4>
+
+<p><a href="http://pimcore.org">Pimcore</a> is an open source multi-channel experience and engagement management platform and contains a variety of integrated applications such as Digital Asset Management, Ecommerce Framework, Marketing &amp; Campaign Management, Multi-Channel &amp; Web-to-Print, Product Information Management, Targeting &amp; Personalization and
+Web Content Management.</p>
+
+<h4>
+<a name="relational-databases" class="anchor" href="#relational-databases"><span class="octicon octicon-link"></span></a>Relational Databases</h4>
+
+<p>Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Analysis Engine also comes with a JDBC connector.</p>
+
+<p><img src="https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png" alt="Association Rules in Relational Databases"></p>
+
+<p>Discovering hidden relations in multiple large-scale tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
+valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.</p>
+
+<p>Association Rule Mining in relational database tables is an appropriate means to detect overlooked data relations and thereby helps to make data management or adaptive to the data reality.</p>
+
+<hr>
+
+<h3>
 <a name="technology" class="anchor" href="#technology"><span class="octicon octicon-link"></span></a>Technology</h3>
 
 <ul>
@@ -119,6 +197,7 @@ This can generate a huge amount of results, and the mining task may become very 
 <li>Elasticsearch</li>
 <li>Spark</li>
 <li>Spark Streaming</li>
+<li>Spray</li>
 </ul>
       </section>
     </div>
@@ -126,7 +205,7 @@ This can generate a huge amount of results, and the mining task may become very 
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <p class="copyright">Reactive Association Rule Engine maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
+        <p class="copyright">Association Analysis Engine maintained by <a href="https://github.com/skrusche63">skrusche63</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
