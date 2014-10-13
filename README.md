@@ -34,7 +34,7 @@ Association Rule Mining is a wide-spread method that is used in many application
 
 ##### Data Management
 
-Database tables and their relations describe a more or less decaying data perspective that reflect built-time information requirements. Valuable data associations that emerge during the life-time of a database backed system remain out of scope.
+Customer, product or content profiles and their relations describe a more or less decaying data perspective that reflect built-time information requirements. Valuable data associations that emerge during the life-time of a database backed system remain out of scope.
 
 Association Rule Mining in large-scale tables even across databases help detects these hidden associations and helps to make data management more adaptive and responsive to data reality.
 
