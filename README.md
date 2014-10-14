@@ -32,6 +32,12 @@ The Association Analysis Engine supports rule discovery and also real-time recom
 
 Association Rule Mining is a wide-spread method that is used in many application areas. Here we describe selected use case that are relevant for ecommerce sites, and we certainly do not claim that the list of use cases is complete.
 
+##### Data Management
+
+Customer, product or content profiles and their relations describe a more or less decaying data perspective that reflect built-time information requirements. Valuable data associations that emerge during the life-time of a database backed system remain out of scope.
+
+Association Rule Mining in large-scale tables even across databases help detects these hidden associations and helps to make data management more adaptive and responsive to data reality.
+
 ##### Discounting & Pricing
 
 Discounting & promotional pricing has to ensure that the right discounting is offered to the right product. Knowledge about products that are often purchased together is important here: It helps to avoid simultaneous discounting of products that are in any case often sold together. It also helps to decide which products have to be discouunted to push sales of products.
