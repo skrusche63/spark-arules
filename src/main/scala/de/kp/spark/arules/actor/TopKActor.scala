@@ -94,6 +94,12 @@ class TopKActor(@transient val sc:SparkContext) extends Actor with ActorLogging 
     
   }
   
+  /**
+   * For every (site,user) pair and every discovered association rule, 
+   * determine the 'antecedent' intersection ratio and filter those
+   * above a user defined threshold, and restrict to those relations,
+   * where the transaction 'items' do not intersect with the 'consequents' 
+   */  
   private def findRelations(uid:String,task:String,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
 
     val bcrules = sc.broadcast(rules)
@@ -103,15 +109,17 @@ class TopKActor(@transient val sc:SparkContext) extends Actor with ActorLogging 
                 
       val (site,user,items) = itemset
       val relations = bcrules.value.map(rule => {
-        /*
-         * The weight is computed from the intersection ratio
-         */
+
         val intersect = items.intersect(rule.antecedent)
         val ratio = intersect.length.toDouble / items.length
                   
         new Relation(items,rule.consequent,rule.support,rule.confidence,ratio)
-                  
-      }).filter(r => r.weight > bcweight.value)
+        /*
+         * Restrict to relations, where a) the intersection ratio is above the
+         * externally provided threshold ('weight') and b) where no items also
+         * appear as consequents of the respective rules
+         */
+      }).filter(r => (r.weight > bcweight.value) && (r.items.intersect(r.related).size == 0))
                 
       new Relations(site,user,relations)
                 
