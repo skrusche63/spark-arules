@@ -24,12 +24,6 @@ The Association Analysis Engine supports rule discovery and also real-time recom
 
 ---
 
-### Architecture
-
-![Association Rules Service Architecture](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/Association-Rules-Architecture.png)
-
----
-
 ### Use Cases
 
 Association Rule Mining is a wide-spread method that is used in many application areas. Here we describe selected use case that are relevant for ecommerce sites, and we certainly do not claim that the list of use cases is complete.
@@ -107,7 +101,7 @@ The increasing number of associated projects, such as [Spark SQL](https://spark.
 
 ---
 
-### Data Connectors
+### Data Sources
 
 The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.
 
@@ -121,7 +115,7 @@ A step towards analytics is the recently introduced combination with [Logstash](
 
 The Association Analysis Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
 
-E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Rule Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
+E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Analysis Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
 
 #### Piwik Analytics
 
@@ -142,6 +136,18 @@ Discovering hidden relations in multiple large-scale tables even across database
 valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.
 
 Association Rule Mining in relational database tables is an appropriate means to detect overlooked data relations and thereby helps to make data management or adaptive to the data reality.
+
+---
+
+### Data Sinks
+
+#### Elasticsearch
+
+The Association Analysis Engine writes discovered rules to an Elasticsearch index. This ensures that these rules e.g. may directly be used for product recommendations delivered with appropriate product search results.
+
+#### Redis
+
+[Redis](http://redis.io) is open source and an advanced key-value cache and store, often referred to as a distributed data structure server. The Association Analysis Engine writes discovered rules to a Redis instance as a multi-purpose serving layer for software enrichments that are not equipped with Elasticsearch.
 
 ---
 
