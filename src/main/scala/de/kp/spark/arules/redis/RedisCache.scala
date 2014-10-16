@@ -27,33 +27,11 @@ object RedisCache {
 
   val client  = RedisClient()
   val service = "arules"
-
-  def addRelations(uid:String, relations:MultiRelations) {
-   
-    val now = new Date()
-    val timestamp = now.getTime()
-    
-    val k = "relation:" + service + ":" + uid
-    val v = "" + timestamp + ":" + Serializer.serializeMultiRelations(relations)
-    
-    client.zadd(k,timestamp,v)
-    
-  }
-
-  def addRules(uid:String, rules:Rules) {
-   
-    val now = new Date()
-    val timestamp = now.getTime()
-    
-    val k = "rule:" + service + ":" + uid
-    val v = "" + timestamp + ":" + Serializer.serializeRules(rules)
-    
-    client.zadd(k,timestamp,v)
-    
-  }
   
-  def addStatus(uid:String, task:String, status:String) {
+  def addStatus(req:ServiceRequest,status:String) {
    
+    val (uid,task) = (req.data("uid"),req.task)
+    
     val now = new Date()
     val timestamp = now.getTime()
     
@@ -67,20 +45,6 @@ object RedisCache {
   def metaExists(uid:String):Boolean = {
 
     val k = "meta:" + uid
-    client.exists(k)
-    
-  }
- 
-  def relationsExist(uid:String):Boolean = {
-
-    val k = "relation:" + service + ":" + uid
-    client.exists(k)
-    
-  }
-   
-  def rulesExist(uid:String):Boolean = {
-
-    val k = "rule:" + service + ":" + uid
     client.exists(k)
     
   }
@@ -106,40 +70,6 @@ object RedisCache {
       
     }
 
-  }
-  
-  def relations(uid:String):String = {
-
-    val k = "relation:" + service + ":" + uid
-    val relations = client.zrange(k, 0, -1)
-
-    if (relations.size() == 0) {
-      Serializer.serializeMultiRelations(new MultiRelations(List.empty[Relations]))
-    
-    } else {
-      
-      val last = relations.toList.last
-      last.split(":")(1)
-      
-    }
-  
-  }
-  
-  def rules(uid:String):String = {
-
-    val k = "rule:" + service + ":" + uid
-    val rules = client.zrange(k, 0, -1)
-
-    if (rules.size() == 0) {
-      Serializer.serializeRules(new Rules(List.empty[Rule]))
-    
-    } else {
-      
-      val last = rules.toList.last
-      last.split(":")(1)
-      
-    }
-  
   }
   
   /**
@@ -177,53 +107,6 @@ object RedisCache {
       
     }
 
-  }
-
-  /**
-   * Retrieve those rules, where the antecedents match
-   * the provided ones
-   */
-  def rulesByAntecedent(uid:String, antecedent:List[Int]):String = {
-  
-    /* Restrict to those rules, that match the antecedents */
-    val items = rulesAsList(uid).filter(rule => isEqual(rule.antecedent,antecedent))
-    Serializer.serializeRules(new Rules(items))
-    
-  } 
-  /**
-   * Retrieve those rules, where the consequents match
-   * the provided ones
-   */
-  def rulesByConsequent(uid:String, consequent:List[Int]):String = {
-  
-    /* Restrict to those rules, that match the consequents */
-    val items = rulesAsList(uid).filter(rule => isEqual(rule.consequent,consequent))
-    Serializer.serializeRules(new Rules(items))
-
-  } 
-  
-  private def rulesAsList(uid:String):List[Rule] = {
-
-    val k = "rule:" + service + ":" + uid
-    val rules = client.zrange(k, 0, -1)
-
-    if (rules.size() == 0) {
-      List.empty[Rule]
-    
-    } else {
-      
-      val last = rules.toList.last
-      Serializer.deserializeRules(last.split(":")(1)).items
-      
-    }
-  
-  }
-  
-  private def isEqual(itemset1:List[Int],itemset2:List[Int]):Boolean = {
-    
-    val intersect = itemset1.intersect(itemset2)
-    intersect.size == itemset1.size
-    
   }
 
 }

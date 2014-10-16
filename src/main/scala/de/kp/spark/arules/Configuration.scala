@@ -47,9 +47,6 @@ object Configuration {
     conf.set("es.nodes",cfg.getString("es.nodes"))
     conf.set("es.port",cfg.getString("es.port"))
 
-    conf.set("es.resource", cfg.getString("es.resource"))                
-    conf.set("es.query", cfg.getString("es.query"))                          
- 
     conf
     
   }

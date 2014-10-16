@@ -23,13 +23,16 @@ import akka.actor.{Actor,ActorLogging}
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
-import de.kp.spark.arules.redis.RedisCache
-
-import scala.collection.JavaConversions._
+import de.kp.spark.arules.sink.RedisSink
 
 class RuleQuestor extends Actor with ActorLogging {
 
   implicit val ec = context.dispatcher
+  /*
+   * The Questor retrieves relations and rules from the internal 
+   * Redis instance that is used as a service sink 
+   */
+  val sink = new RedisSink()
   
   def receive = {
 
@@ -46,7 +49,7 @@ class RuleQuestor extends Actor with ActorLogging {
          */
         case "get:associated" => {
 
-          val resp = if (RedisCache.rulesExist(uid) == false) {           
+          val resp = if (sink.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -61,11 +64,11 @@ class RuleQuestor extends Actor with ActorLogging {
             
                val rules = (if (antecedent != null) {
                  val items = antecedent.split(",").map(_.toInt).toList
-                 RedisCache.rulesByAntecedent(uid,items)
+                 sink.rulesByAntecedent(uid,items)
                
                } else {
                  val items = consequent.split(",").map(_.toInt).toList
-                 RedisCache.rulesByConsequent(uid,items)
+                 sink.rulesByConsequent(uid,items)
                  
                })
                
@@ -86,12 +89,12 @@ class RuleQuestor extends Actor with ActorLogging {
            * This task retrieves all the relations detected
            * by a previously finished data mining task
            */
-          val resp = if (RedisCache.relationsExist(uid) == false) {           
+          val resp = if (sink.relationsExist(uid) == false) {           
            failure(req, Messages.RELATIONS_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val relations = RedisCache.relations(uid)
+            val relations = sink.relations(uid)
 
             val data = Map("uid" -> uid, "relations" -> relations)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
@@ -108,12 +111,12 @@ class RuleQuestor extends Actor with ActorLogging {
            * This request retrieves all the association rules detected
            * by a previously finished data mining task
            */
-          val resp = if (RedisCache.rulesExist(uid) == false) {           
+          val resp = if (sink.rulesExist(uid) == false) {           
            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val rules = RedisCache.rules(uid)
+            val rules = sink.rules(uid)
 
             val data = Map("uid" -> uid, "rules" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)

@@ -29,15 +29,13 @@ import de.kp.spark.arules.source.TransactionSource
 import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.redis.RedisCache
+import de.kp.spark.arules.sink.{ElasticSink,RedisSink}
 
 class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
 
   def receive = {
     
     case req:ServiceRequest => {
-
-      val uid = req.data("uid")     
-      val task = req.task
 
       val params = properties(req)
 
@@ -46,7 +44,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
 
       if (params != null) {
         /* Register status */
-        RedisCache.addStatus(uid,task,ARulesStatus.STARTED)
+        RedisCache.addStatus(req,ARulesStatus.STARTED)
  
         try {
           
@@ -56,7 +54,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
            * Discover rules from the transactional data source
            */
           val dataset = source.get(req.data)
-          val rules = if (dataset != null) findRules(uid,task,dataset,params) else null
+          val rules = if (dataset != null) findRules(req,dataset,params) else null
           /*
            * STEP #2: 
            * Merge rules with transactional data source and build
@@ -69,13 +67,13 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
             if (related != null) {
 
               val weight = req.data("weight").toDouble
-              findRelations(uid,task,related,rules,weight)
+              findRelations(req,related,rules,weight)
            }
             
           }
 
         } catch {
-          case e:Exception => RedisCache.addStatus(uid,task,ARulesStatus.FAILURE)          
+          case e:Exception => RedisCache.addStatus(req,ARulesStatus.FAILURE)          
         }
  
 
@@ -100,7 +98,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
    * above a user defined threshold, and restrict to those relations,
    * where the transaction 'items' do not intersect with the 'consequents' 
    */  
-  private def findRelations(uid:String,task:String,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
+  private def findRelations(req:ServiceRequest,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
 
     val bcrules = sc.broadcast(rules)
     val bcweight = sc.broadcast(weight)
@@ -127,17 +125,28 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
                 
     }).collect()
           
-    /* Put relations to cache for later requests */
-    RedisCache.addRelations(uid,new MultiRelations(relations.toList))
+    saveRelations(req,new MultiRelations(relations.toList))
           
     /* Update cache */
-    RedisCache.addStatus(uid,task,ARulesStatus.FINISHED)
+    RedisCache.addStatus(req,ARulesStatus.FINISHED)
+    
+  }
+  
+  /**
+   * (Multi-)Relations are actually registered in an internal Redis instance
+   * only; note, that is different from rules, which are also indexed in an
+   * Elasticsearch index
+   */
+  private def saveRelations(req:ServiceRequest,relations:MultiRelations) {
+
+    val sink = new RedisSink()
+    sink.addRelations(req,relations)
     
   }
  
-  private def findRules(uid:String,task:String,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
+  private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
 
-    RedisCache.addStatus(uid,task,ARulesStatus.DATASET)
+    RedisCache.addStatus(req,ARulesStatus.DATASET)
           
     val (k,minconf,delta) = params
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
@@ -152,13 +161,26 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
             
     })
           
-    /* Put rules to cache */
-    RedisCache.addRules(uid,new Rules(rules))
+    saveRules(req,new Rules(rules))
           
     /* Update status */
-    RedisCache.addStatus(uid,task,ARulesStatus.RULES)
+    RedisCache.addStatus(req,ARulesStatus.RULES)
     
     rules
+    
+  }
+
+  /**
+   * Rules are actually registered in an internal Redis instance as well
+   * as in an Elasticsearch index
+   */
+  private def saveRules(req:ServiceRequest,rules:Rules) {
+    
+    val redis = new RedisSink()
+    redis.addRules(req,rules)
+    
+    val elastic = new ElasticSink()
+    elastic.addRules(req,rules)
     
   }
   

@@ -28,12 +28,12 @@ import de.kp.spark.arules.Configuration
 import org.elasticsearch.hadoop.mr.EsInputFormat
 import scala.collection.JavaConversions._
 
-class ElasticReader(@transient sc:SparkContext,resource:String,query:String) {
+class ElasticReader(@transient sc:SparkContext,index:String,mapping:String,query:String) {
           
   private val conf = Configuration.elastic
 
   conf.set("es.query",query)
-  conf.set("es.resource",resource)
+  conf.set("es.resource",(index + "/" + mapping))
   
   def read():RDD[Map[String,String]] = {
 

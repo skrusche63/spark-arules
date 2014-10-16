@@ -33,9 +33,11 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
    */
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
     
+    val index = params("index").asInstanceOf[String]
+    val mapping = params("type").asInstanceOf[String]
+    
     val query = params("query").asInstanceOf[String]
-    val resource = params("resource").asInstanceOf[String]
-
+ 
     val uid = params("uid").asInstanceOf[String]
     val spec = sc.broadcast(Fields.get(uid))
 
@@ -43,7 +45,7 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
      * Connect to Elasticsearch and extract the following fields from the
      * respective search index: site, user, group and item
      */
-    val rawset = new ElasticReader(sc,resource,query).read
+    val rawset = new ElasticReader(sc,index,mapping,query).read
     val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1)
@@ -71,15 +73,17 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
     
     }).coalesce(1)
 
-    val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
-    ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
+    val transactions = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
+    ids.zip(transactions).map(valu => (valu._2.toInt,valu._1)).cache()
 
   }
 
   def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
-
+    
+    val index = params("index").asInstanceOf[String]
+    val mapping = params("type").asInstanceOf[String]
+    
     val query = params("query").asInstanceOf[String]
-    val resource = params("resource").asInstanceOf[String]
 
     val uid = params("uid").asInstanceOf[String]
     val spec = sc.broadcast(Fields.get(uid))
@@ -88,7 +92,7 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
      * Connect to Elasticsearch and extract the following fields from the
      * respective search index: site, user, group and item
      */
-    val rawset = new ElasticReader(sc,resource,query).read
+    val rawset = new ElasticReader(sc,index,mapping,query).read
     val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1)
