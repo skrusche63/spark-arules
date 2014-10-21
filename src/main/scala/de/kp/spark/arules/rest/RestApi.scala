@@ -77,7 +77,14 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	      ctx => doStatus(ctx)
 	    }
 	  }
-    } 
+    }  ~ 
+    path("track") {
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrack(ctx)
+	    }
+	  }
+    }  
   }
 
   private def doGet[T](ctx:RequestContext,subject:String) = {
@@ -92,12 +99,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	}
     
   }
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"rule","track")
 
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"rule","train")
 
   private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"rule","status")
   
-  private def doRequest[T](ctx:RequestContext,service:String,task:String="train") = {
+  private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      
     val request = new ServiceRequest(service,task,getRequest(ctx))
     implicit val timeout:Timeout = DurationInt(time).second

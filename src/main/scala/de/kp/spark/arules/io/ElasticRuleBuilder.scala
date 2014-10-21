@@ -20,48 +20,9 @@ package de.kp.spark.arules.io
 
 import org.elasticsearch.common.xcontent.{XContentBuilder,XContentFactory}
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable.HashMap
-case class Rule (
-  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
+class ElasticRuleBuilder {
 
-object ElasticBuilderFactory {
-  /*
-   * Definition of supported rule parameters
-   */
-  val TIMESTAMP_FIELD:String = "timestamp"
-
-  /*
-   * The unique identifier of the mining task that created the
-   * respective rules
-   */
-  val UID_FIELD:String = "uid"
-  
-  /*
-   * This is a relative identifier with respect to the timestamp
-   * to specify which antecendents refer to the same association
-   * rule
-   */
-  val RULE_FIELD:String = "rule"
-  /* 
-   * Antecedent specifies a SINGLE item reference from the respective
-   * association rule; i.e. a single association rule is mapped onto
-   * a set of index entries. This mechanism ensures that association
-   * rules may be directly used with respect to item related search  
-   */
-  val ANTECEDENT_FIELD:String = "antecedent"
-  val CONSEQUENT_FIELD:String = "consequent"
-
-  val SUPPORT_FIELD:String = "support"
-  val CONFIDENCE_FIELD:String = "confidence"
-  /*
-   * Weight specifies the ratio of 1 and the total number of antencents 
-   * in the discovered rule; as the antecedent field in the search index
-   * holds a SINGLE item reference (this may differ from the respective
-   * associatoion rule), we also provide this ratio as a score parameter
-   * to rank antecedents with respect to their weight.
-   */
-  val WEIGHT_FIELD:String = "weight"
+  import de.kp.spark.arules.io.ElasticBuilderFactory._
   
   def createBuilder(mapping:String):XContentBuilder = {
     /*
@@ -126,5 +87,5 @@ object ElasticBuilderFactory {
     builder
 
   }
-  
+
 }

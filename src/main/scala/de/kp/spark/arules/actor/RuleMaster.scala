@@ -58,15 +58,19 @@ class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging
          */
         case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
         /*
-         * Starting the association rule mining
-         */
-        case "train"  => ask(actor("miner"),deser).mapTo[ServiceResponse]
-        /*
          * Request the actual status of an association rule
          * mining task; note, that get requests should only
          * be invoked after having retrieved a FINISHED status
          */
         case "status" => ask(actor("miner"),deser).mapTo[ServiceResponse]
+        /*
+         * Start the association rule mining
+         */
+        case "train"  => ask(actor("miner"),deser).mapTo[ServiceResponse]
+        /*
+         * Track item for later association rule mining
+         */
+        case "track"  => ask(actor("tracker"),deser).mapTo[ServiceResponse]
        
         case _ => {
 
@@ -104,6 +108,8 @@ class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging
       case "miner" => context.actorOf(Props(new RuleMiner(sc)))
         
       case "questor" => context.actorOf(Props(new RuleQuestor()))
+   
+      case "tracker" => context.actorOf(Props(new RuleMiner(sc)))
       
       case _ => null
       

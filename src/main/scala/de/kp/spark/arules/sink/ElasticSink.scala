@@ -31,15 +31,14 @@ class ElasticSink {
   def addRules(req:ServiceRequest,rules:Rules) {
 
     val uid = req.data("uid")
-    
-    val index   = req.data("index")
-    val mapping = req.data("type")
-    
     /*
-     * Determine timestamp for the actual
-     * set of rules to be indexed
+     * Elasticsearch is used as a source and also as a sink; this implies
+     * that the respective index and mapping must be distinguished
      */
-    val builder = EBF.createBuilder(mapping)
+    val index   = req.data("sink.index")
+    val mapping = req.data("sink.type")
+    
+    val builder = EBF.getBuilder("rule",mapping)
     val writer = new ElasticWriter()
     
     /* Prepare index and mapping for write */
@@ -53,6 +52,9 @@ class ElasticSink {
       
     }
     
+    /*
+     * Determine timestamp for the actual set of rules to be indexed
+     */
     val now = new Date()
     val timestamp = now.getTime()
    

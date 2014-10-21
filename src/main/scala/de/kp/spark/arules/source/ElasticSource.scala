@@ -32,11 +32,15 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
    * contribute to the transactions are specified by FieldSpec
    */
   override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
+    /*
+     * Elasticsearch is used as a data source as well as a data sink;
+     * this implies that the respective indexes and mappings have to
+     * be distinguished
+     */
+    val index = params("source.index").asInstanceOf[String]
+    val mapping = params("source.type").asInstanceOf[String]
     
-    val index = params("index").asInstanceOf[String]
-    val mapping = params("type").asInstanceOf[String]
-    
-    val query = params("query").asInstanceOf[String]
+    val query = params("source.query").asInstanceOf[String]
  
     val uid = params("uid").asInstanceOf[String]
     val spec = sc.broadcast(Fields.get(uid))
