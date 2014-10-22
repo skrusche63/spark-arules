@@ -51,7 +51,7 @@ class RuleTracker extends Actor with ActorLogging {
         val index   = req.data("source.index")
         val mapping = req.data("source.type")
     
-        val builder = EBF.getBuilder("rule",mapping)
+        val builder = EBF.getBuilder("item",mapping)
         val writer = new ElasticWriter()
     
         /* Prepare index and mapping for write */

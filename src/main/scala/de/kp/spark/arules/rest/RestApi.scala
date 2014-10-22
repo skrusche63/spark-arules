@@ -57,13 +57,6 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 
   private def routes:Route = {
 
-    path("train") {
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doTrain(ctx)
-	    }
-	  }
-    }  ~ 
     path("get" / Segment) {subject => 
 	  post {
 	    respondWithStatus(OK) {
@@ -84,7 +77,14 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	      ctx => doTrack(ctx)
 	    }
 	  }
-    }  
+    }  ~  
+    path("train") {
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doTrain(ctx)
+	    }
+	  }
+    }
   }
 
   private def doGet[T](ctx:RequestContext,subject:String) = {
