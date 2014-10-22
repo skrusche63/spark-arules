@@ -109,7 +109,7 @@ class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging
         
       case "questor" => context.actorOf(Props(new RuleQuestor()))
    
-      case "tracker" => context.actorOf(Props(new RuleMiner(sc)))
+      case "tracker" => context.actorOf(Props(new RuleTracker()))
       
       case _ => null
       
