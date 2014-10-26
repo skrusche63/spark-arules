@@ -6,7 +6,7 @@
 
 ![Association Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules-overview.png)
 
-The Association Analysis Engines is one of the nine members of the open ensemble and is built to support association rule mining with a new and redefined 
+The Association Analysis Engine is one of the nine members of the open ensemble and is built to support association rule mining with a new and redefined 
 mining algorithm. The approach overcomes the well-known "threshold problem" and makes it a lot easier to directly leverage the resulting content and product rules.
 
 The use cases are endless and only restricted by imagination:
