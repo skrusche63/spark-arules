@@ -132,8 +132,6 @@ Web Content Management.
 
 Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Analysis Engine also comes with a JDBC connector.
 
-![Association Rules in Relational Databases](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules.png)
-
 Discovering hidden relations in multiple large-scale tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
 valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.
 
