@@ -91,19 +91,34 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    
 	subject match {
 
-	  case "relations" => doRequest(ctx,"rule","get:relation")
-	  case "rules" => doRequest(ctx,"rule","get:rule")
+	  /*
+	   * Followers characterize association rules where externally
+	   * provided antecedents or consequents match with discovered
+	   * association rules
+	   */
+	  case "followers" => doRequest(ctx,"association","get:followers")
+      /*
+       * Items characterize those association rules where the discovered
+       * antecedents (within the rules) match with the items of the last
+       * transaction
+       */
+	  case "items" => doRequest(ctx,"association","get:items")
+	  /*
+	   * Rules characterize the discovered association rules without
+	   * any data aggregation or transformation
+	   */
+	  case "rules" => doRequest(ctx,"association","get:rules")
 	      
 	  case _ => {}
 
 	}
     
   }
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"rule","track")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"association","track")
 
-  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"rule","train")
+  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"association","train")
 
-  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"rule","status")
+  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"association","status")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      

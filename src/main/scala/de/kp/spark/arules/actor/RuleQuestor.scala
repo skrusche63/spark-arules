@@ -47,7 +47,7 @@ class RuleQuestor extends Actor with ActorLogging {
          * consequents provided with this service request; the client
          * may then decide how to proceed with this information 
          */
-        case "get:associated" => {
+        case "get:followers" => {
 
           val resp = if (sink.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
@@ -72,7 +72,7 @@ class RuleQuestor extends Actor with ActorLogging {
                  
                })
                
-               val data = Map("uid" -> uid, "rules" -> rules)
+               val data = Map("uid" -> uid, "followers" -> rules)
                new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
@@ -84,9 +84,9 @@ class RuleQuestor extends Actor with ActorLogging {
           
         }
          
-        case "get:relation" => {
+        case "get:items" => {
           /*
-           * This task retrieves all the relations detected
+           * This task retrieves all the relation rules detected
            * by a previously finished data mining task
            */
           val resp = if (sink.relationsExist(uid) == false) {           
@@ -96,7 +96,7 @@ class RuleQuestor extends Actor with ActorLogging {
             
             val relations = sink.relations(uid)
 
-            val data = Map("uid" -> uid, "relations" -> relations)            
+            val data = Map("uid" -> uid, "items" -> relations)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
@@ -106,7 +106,7 @@ class RuleQuestor extends Actor with ActorLogging {
            
         }
        
-        case "get:rule" => {
+        case "get:rules" => {
           /*
            * This request retrieves all the association rules detected
            * by a previously finished data mining task
