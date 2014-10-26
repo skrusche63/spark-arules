@@ -110,9 +110,7 @@ The increasing number of associated projects, such as [Spark SQL](https://spark.
 
 ### Data Sources
 
-The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources to discover content, product, service or state rules. Content rules specify which e.g. articles from online publishers are often read or viewed together, whereas product and service rules provide valuable insights for retailers. States are short for customer states used to describe customer behavior, and state rules specify which frequent behavioral patterns customers show.
-
-Below is a list of data sources that are already supported or will be supported in the near future:
+The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources. Below is a list of data sources that are already supported or will be supported in the near future:
 
 #### Elasticsearch
 
@@ -161,6 +159,7 @@ The Association Analysis Engine writes discovered rules to an Elasticsearch inde
 * Akka
 * Akka Remoting
 * Elasticsearch
+* Redis
 * Spark
 * Spark Streaming
 * Spray
