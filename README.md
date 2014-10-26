@@ -4,6 +4,11 @@
 
 ## Reactive Association Analysis Engine
 
+The Association Analysis Engines is one of the nine members of the open ensemble and is built to support association rule mining with a new and redefined 
+mining algorithm. The approach overcomes the well-known "threshold problem" and makes it a lot easier to directly leverage the resulting content and product rules.
+
+The use cases are endless and only restricted by imagination:
+
 ##### Audience discovery & targeting, Cross-sell Analytics, Recommendations, Smart Data Management and more for Elasticsearch and other data sources.
 
 ![Association Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules-overview.png)
@@ -26,7 +31,7 @@ The Association Analysis Engine supports rule discovery and also real-time recom
 
 ---
 
-### Use Cases
+### Examples
 
 Association Rule Mining is a wide-spread method that is used in many application areas. Here we describe selected use case that are relevant for ecommerce sites, and we certainly do not claim that the list of use cases is complete.
 
