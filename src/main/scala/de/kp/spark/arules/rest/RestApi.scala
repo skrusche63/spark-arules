@@ -38,7 +38,7 @@ import scala.concurrent.duration.DurationInt
 import scala.util.parsing.json._
 
 import de.kp.spark.arules.Configuration
-import de.kp.spark.arules.actor.RuleMaster
+import de.kp.spark.arules.actor.{RuleMaster}
 import de.kp.spark.arules.model._
 
 class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkContext) extends HttpService with Directives {
@@ -61,6 +61,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doGet(ctx,subject)
+	    }
+	  }
+    }  ~ 
+    path("register") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doRegister(ctx)
 	    }
 	  }
     }  ~ 
@@ -114,6 +121,9 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	}
     
   }
+  
+  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"association","register")
+  
   private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"association","track")
 
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"association","train")

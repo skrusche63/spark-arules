@@ -58,6 +58,10 @@ class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging
          */
         case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
         /*
+         * Request to register field specification
+         */
+        case "register"  => ask(actor("registrar"),deser).mapTo[ServiceResponse]
+        /*
          * Request the actual status of an association rule
          * mining task; note, that get requests should only
          * be invoked after having retrieved a FINISHED status
@@ -108,6 +112,8 @@ class RuleMaster(@transient val sc:SparkContext) extends Actor with ActorLogging
       case "miner" => context.actorOf(Props(new RuleMiner(sc)))
         
       case "questor" => context.actorOf(Props(new RuleQuestor()))
+        
+      case "registrar" => context.actorOf(Props(new RuleRegistrar()))
    
       case "tracker" => context.actorOf(Props(new RuleTracker()))
       

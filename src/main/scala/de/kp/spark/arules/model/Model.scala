@@ -31,7 +31,15 @@ case class ServiceRequest(
 case class ServiceResponse(
   service:String,task:String,data:Map[String,String],status:String
 )
-
+/*
+ * The Field and Fields classes are used to specify the fields with
+ * respect to the data source provided, that have to be mapped onto
+ * site,timestamp,user,group,item
+ */
+case class Field(
+  name:String,datatype:String,value:String
+)
+case class Fields(items:List[Field])
 /*
  * Service requests are mapped onto job descriptions and are stored
  * in a Redis instance
@@ -55,6 +63,10 @@ case class Rules(items:List[Rule])
 object Serializer {
     
   implicit val formats = Serialization.formats(NoTypeHints)
+  
+  def serializeFields(fields:Fields):String = write(fields)
+  
+  def deserializeFields(fields:String):Fields = read[Fields](fields)
 
   /*
    * Support for serialization and deserialization of job descriptions

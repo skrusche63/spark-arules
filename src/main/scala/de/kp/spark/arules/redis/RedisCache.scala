@@ -27,6 +27,18 @@ object RedisCache {
 
   val client  = RedisClient()
   val service = "arules"
+
+  def addFields(req:ServiceRequest,fields:Fields) {
+    
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "fields:" + service + ":" + req.data("uid")
+    val v = "" + timestamp + ":" + Serializer.serializeFields(fields)
+    
+    client.zadd(k,timestamp,v)
+    
+  }
   
   def addStatus(req:ServiceRequest,status:String) {
    
@@ -39,6 +51,13 @@ object RedisCache {
     val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
     
     client.zadd(k,timestamp,v)
+    
+  }
+
+  def fieldsExist(uid:String):Boolean = {
+
+    val k = "fields:" + service + ":" + uid
+    client.exists(k)
     
   }
   
@@ -54,6 +73,23 @@ object RedisCache {
     val k = "job:" + service + ":" + uid
     client.exists(k)
     
+  }
+  
+  def fields(uid:String):Fields = {
+
+    val k = "fields:" + service + ":" + uid
+    val metas = client.zrange(k, 0, -1)
+
+    if (metas.size() == 0) {
+      new Fields(List.empty[Field])
+    
+    } else {
+      
+      val fields = metas.toList.last
+      Serializer.deserializeFields(fields)
+      
+    }
+
   }
   
   def meta(uid:String):String = {
