@@ -26,14 +26,13 @@ import scala.collection.JavaConversions._
 object RedisCache {
 
   val client  = RedisClient()
-  val service = "arules"
 
   def addFields(req:ServiceRequest,fields:Fields) {
     
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "fields:" + service + ":" + req.data("uid")
+    val k = "fields:" + req.service + ":" + req.data("uid")
     val v = "" + timestamp + ":" + Serializer.serializeFields(fields)
     
     client.zadd(k,timestamp,v)
@@ -47,8 +46,8 @@ object RedisCache {
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "job:" + service + ":" + uid
-    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(service,task,status))
+    val k = "job:" + req.service + ":" + uid
+    val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(req.service,task,status))
     
     client.zadd(k,timestamp,v)
     
@@ -56,21 +55,21 @@ object RedisCache {
 
   def fieldsExist(uid:String):Boolean = {
 
-    val k = "fields:" + service + ":" + uid
+    val k = "fields:association:" + uid
     client.exists(k)
     
   }
   
   def taskExists(uid:String):Boolean = {
 
-    val k = "job:" + service + ":" + uid
+    val k = "job:association:" + uid
     client.exists(k)
     
   }
   
   def fields(uid:String):Fields = {
 
-    val k = "fields:" + service + ":" + uid
+    val k = "fields:association:" + uid
     val metas = client.zrange(k, 0, -1)
 
     if (metas.size() == 0) {
@@ -90,7 +89,7 @@ object RedisCache {
    */
   def starttime(uid:String):Long = {
     
-    val k = "job:" + service + ":" + uid
+    val k = "job:association:" + uid
     val jobs = client.zrange(k, 0, -1)
 
     if (jobs.size() == 0) {
@@ -107,7 +106,7 @@ object RedisCache {
   
   def status(uid:String):String = {
 
-    val k = "job:" + service + ":" + uid
+    val k = "job:association:" + uid
     val jobs = client.zrange(k, 0, -1)
 
     if (jobs.size() == 0) {
