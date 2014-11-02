@@ -18,14 +18,12 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import akka.actor.{Actor,ActorLogging}
-
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.sink.RedisSink
 
-class RuleQuestor extends Actor with ActorLogging {
+class RuleQuestor extends BaseActor {
 
   implicit val ec = context.dispatcher
   /*
@@ -151,20 +149,6 @@ class RuleQuestor extends Actor with ActorLogging {
 
     }
   
-  }
-
-  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
-    
-    if (req == null) {
-      val data = Map("message" -> message)
-      new ServiceResponse("","",data,ARulesStatus.FAILURE)	
-      
-    } else {
-      val data = Map("uid" -> req.data("uid"), "message" -> message)
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
-    
-    }
-    
   }
   
 }

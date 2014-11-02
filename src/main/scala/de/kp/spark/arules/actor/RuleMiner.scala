@@ -20,7 +20,7 @@ package de.kp.spark.arules.actor
 
 import org.apache.spark.SparkContext
 
-import akka.actor.{Actor,ActorLogging,ActorRef,Props}
+import akka.actor.{ActorRef,Props}
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -32,7 +32,7 @@ import de.kp.spark.arules.redis.RedisCache
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class RuleMiner(@transient val sc:SparkContext) extends Actor with ActorLogging {
+class RuleMiner(@transient val sc:SparkContext) extends BaseActor {
 
   implicit val ec = context.dispatcher
   
@@ -186,20 +186,6 @@ class RuleMiner(@transient val sc:SparkContext) extends Actor with ActorLogging 
      context.actorOf(Props(new TopKNRActor(sc)))
     }
   
-  }
-
-  private def failure(req:ServiceRequest,message:String):ServiceResponse = {
-    
-    if (req == null) {
-      val data = Map("message" -> message)
-      new ServiceResponse("","",data,ARulesStatus.FAILURE)	
-      
-    } else {
-      val data = Map("uid" -> req.data("uid"), "message" -> message)
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
-    
-    }
-    
   }
   
 }
