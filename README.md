@@ -148,6 +148,10 @@ Association Rule Mining in relational database tables is an appropriate means to
 
 The Association Analysis Engine writes discovered rules to an Elasticsearch index. This ensures that these rules e.g. may directly be used for product recommendations delivered with appropriate product search results.
 
+#### JDBC
+
+The Association Analysis Engine writes discovered rules to a JDBC database. This ensures that these rules e.g. may directly be used with SQL statements that query the database for product placements.
+
 #### Redis
 
 [Redis](http://redis.io) is open source and an advanced key-value cache and store, often referred to as a distributed data structure server. The Association Analysis Engine writes discovered rules to a Redis instance as a multi-purpose serving layer for software enrichments that are not equipped with Elasticsearch.
