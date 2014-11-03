@@ -104,17 +104,40 @@ object Serializer {
 }
 
 object Algorithms {
-  /* The value of the algorithms actually supported */
+  /*
+   * Association Analysis supports two different mining algorithms:
+   * TOPK and TOPKNR; both algorithms have a strong focus on the top
+   * rules and avoid the so called "threshold" problem. This makes it
+   * a lot easier to directly use the mining results.
+   */
   val TOPK:String   = "TOPK"
-  val TOPKNR:String = "TOPKNR"  
+  val TOPKNR:String = "TOPKNR"
+    
+  private val algorithms = List(TOPK,TOPKNR)
+  def isAlgorithm(algorithm:String):Boolean = algorithms.contains(algorithm)
+  
 }
 
 object Sources {
-  /* The names of the data source actually supported */
+
   val FILE:String    = "FILE"
   val ELASTIC:String = "ELASTIC" 
   val JDBC:String    = "JDBC"    
   val PIWIK:String   = "PIWIK"    
+  
+  private val sources = List(FILE,ELASTIC,JDBC,PIWIK)
+  def isSource(source:String):Boolean = sources.contains(source)
+  
+}
+
+object Sinks {
+  
+  val ELASTIC:String = "ELASTIC"
+  val JDBC:String    = "JDBC"
+    
+  private val sinks = List(ELASTIC,JDBC)
+  def isSink(sink:String):Boolean = sinks.contains(sink)
+  
 }
 
 object Messages {
@@ -145,14 +168,10 @@ object Messages {
   def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)
 
   def TASK_IS_UNKNOWN(uid:String,task:String):String = String.format("""The task '%s' is unknown for uid '%s'.""", task, uid)
-  
-  def TOP_K_MISSING_PARAMETERS(uid:String):String = String.format("""Top-K parameter k or minconf is missing for uid '%s'.""", uid)
-  
-  def TOP_KNR_MISSING_PARAMETERS(uid:String):String = String.format("""Top-K parameter k, minconf or delta is missing for uid '%s'.""", uid)
 
-  def TOP_K_MINING_STARTED(uid:String) = String.format("""Top-K Association Rule Mining started for uid '%s'.""", uid)
+  def MINING_STARTED(uid:String) = String.format("""Association rule mining started for uid '%s'.""", uid)
   
-  def TOP_KNR_MINING_STARTED(uid:String) = String.format("""Top-K non-redundant Association Rule Mining started for uid '%s'.""", uid)
+  def MISSING_PARAMETERS(uid:String):String = String.format("""Missing parameters for uid '%s'.""", uid)
 
   def RELATIONS_DO_NOT_EXIST(uid:String):String = String.format("""The relations for uid '%s' do not exist.""", uid)
 

@@ -21,17 +21,13 @@ package de.kp.spark.arules.actor
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import akka.actor.{Actor,ActorLogging}
-
 import de.kp.spark.arules.TopKNR
 import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
-
 import de.kp.spark.arules.redis.RedisCache
-import de.kp.spark.arules.sink.{ElasticSink,RedisSink}
 
-class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLogging {
+class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
 
   def receive = {
     
@@ -131,18 +127,6 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
     RedisCache.addStatus(req,ARulesStatus.FINISHED)
     
   }
-  
-  /**
-   * (Multi-)Relations are actually registered in an internal Redis instance
-   * only; note, that is different from rules, which are also indexed in an
-   * Elasticsearch index
-   */
-  private def saveRelations(req:ServiceRequest,relations:MultiRelations) {
-
-    val sink = new RedisSink()
-    sink.addRelations(req,relations)
-    
-  }
  
   private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
 
@@ -169,20 +153,6 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
     rules
     
   }
-
-  /**
-   * Rules are actually registered in an internal Redis instance as well
-   * as in an Elasticsearch index
-   */
-  private def saveRules(req:ServiceRequest,rules:Rules) {
-    
-    val redis = new RedisSink()
-    redis.addRules(req,rules)
-    
-    val elastic = new ElasticSink()
-    elastic.addRules(req,rules)
-    
-  }
   
   private def properties(req:ServiceRequest):(Int,Double,Int) = {
       
@@ -199,22 +169,6 @@ class TopKNRActor(@transient val sc:SparkContext) extends Actor with ActorLoggin
       }
     }
     
-  }
-  
-  private def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
-    
-    val uid = req.data("uid")
-    
-    if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> Messages.TOP_KNR_MISSING_PARAMETERS(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
-  
-    } else {
-      val data = Map("uid" -> uid, "message" -> Messages.TOP_KNR_MINING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
-  
-    }
-
   }
   
 }
