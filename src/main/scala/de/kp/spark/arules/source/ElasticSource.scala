@@ -37,10 +37,10 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
      * this implies that the respective indexes and mappings have to
      * be distinguished
      */
-    val index = params("source.index").asInstanceOf[String]
-    val mapping = params("source.type").asInstanceOf[String]
+    val index = params("src.index").asInstanceOf[String]
+    val mapping = params("src.type").asInstanceOf[String]
     
-    val query = params("source.query").asInstanceOf[String]
+    val query = params("query").asInstanceOf[String]
  
     val uid = params("uid").asInstanceOf[String]
     val spec = sc.broadcast(Fields.get(uid))
@@ -84,8 +84,8 @@ class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
 
   def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
     
-    val index = params("index").asInstanceOf[String]
-    val mapping = params("type").asInstanceOf[String]
+    val index = params("src.index").asInstanceOf[String]
+    val mapping = params("src.type").asInstanceOf[String]
     
     val query = params("query").asInstanceOf[String]
 

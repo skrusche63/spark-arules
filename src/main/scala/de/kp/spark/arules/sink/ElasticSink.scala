@@ -32,8 +32,8 @@ class ElasticSink {
 
     val uid = req.data("uid")
 
-    val index   = req.data("index")
-    val mapping = req.data("type")
+    val index   = req.data("dst.index")
+    val mapping = req.data("dst.type")
     
     val builder = EBF.getBuilder("rule",mapping)
     val writer = new ElasticWriter()
