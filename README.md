@@ -81,7 +81,7 @@ This generates too few results and valuable information may be omitted.
 **Threshold is set too low**: 
 This can generate a huge amount of results, and the mining task may become very slow.
 
-The dependency of association rule algorithms on *minimum confidence* makes it almost impossible to "automate" association rule mining or use it streaming data sources.
+The dependency of association rule algorithms on *minimum support* makes it almost impossible to "automate" association rule mining or use it streaming data sources.
 
 In 2012, [Philippe-Fournier Viger](http://www.philippe-fournier-viger.com/) redefined the problem of association mining as **Top-K Association Rule Mining**. The proposed algorithm only depends on the parameters *k*, the number of rules to be generated, and *minimum confidence*. For more information, continue to read [here](http://www.philippe-fournier-viger.com/spmf/top_k_non_redundant_association_rules.pdf).
 
