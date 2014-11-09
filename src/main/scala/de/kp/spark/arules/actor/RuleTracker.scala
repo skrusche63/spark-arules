@@ -43,13 +43,9 @@ class RuleTracker extends Actor with ActorLogging {
       origin ! Serializer.serializeResponse(response)
 
       try {
-        /*
-         * Elasticsearch is used as a source and also as a sink; this implies
-         * that the respective index and mapping must be distinguished; the source
-         * index and mapping used here is the same as for ElasticSource
-         */
-        val index   = req.data("source.index")
-        val mapping = req.data("source.type")
+
+        val index   = req.data("index")
+        val mapping = req.data("type")
     
         val builder = EBF.getBuilder("item",mapping)
         val writer = new ElasticWriter()
