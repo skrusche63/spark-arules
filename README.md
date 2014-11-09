@@ -70,10 +70,10 @@ usually accompanied by the following control parameters:
 
 * **Confidence**: The support of the rule divided by the support of its *antecedent*.
 
-The goal of association rule mining then is to discover all rules that have a support and confidence that is higher to user-defined thresholds 
+The goal of association rule mining is to discover all rules that have a support and confidence above user-defined thresholds, 
 *minimum support* and *minimum confidence*. The challenge is choose the right thresholds with respect to the considered transaction database.
 
-This is a major problem, as one usually has limited resources for analyzing the mining results, and fine tuning of the thresholds is time-consuming job. The problem is especially associated with *minimum support*:
+This is a major problem, as one usually has limited resources to analyze the mining results, and fine tuning of the thresholds is time-consuming job. The problem is especially associated with *minimum support*:
 
 **Threshold is set too high**: 
 This generates too few results and valuable information may be omitted.
