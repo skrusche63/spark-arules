@@ -52,7 +52,7 @@ class RuleQuestor extends BaseActor {
                val items = req.data("items").split(",").map(_.toInt).toList
                val rules = sink.rulesByAntecedent(uid,items)
                
-               val data = Map("uid" -> uid, "rules" -> rules)
+               val data = Map("uid" -> uid, "rule" -> rules)
                new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
@@ -79,7 +79,7 @@ class RuleQuestor extends BaseActor {
                val items = req.data("items").split(",").map(_.toInt).toList
                val rules = sink.rulesByConsequent(uid,items)
                
-               val data = Map("uid" -> uid, "rules" -> rules)
+               val data = Map("uid" -> uid, "rule" -> rules)
                new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
@@ -100,7 +100,7 @@ class RuleQuestor extends BaseActor {
             
             val relations = sink.relations(uid)
 
-            val data = Map("uid" -> uid, "rules" -> relations)            
+            val data = Map("uid" -> uid, "transaction" -> relations)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
@@ -119,7 +119,7 @@ class RuleQuestor extends BaseActor {
             
             val rules = sink.rules(uid)
 
-            val data = Map("uid" -> uid, "rules" -> rules)            
+            val data = Map("uid" -> uid, "rule" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
