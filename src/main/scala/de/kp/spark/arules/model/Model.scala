@@ -65,23 +65,15 @@ object Serializer {
   implicit val formats = Serialization.formats(NoTypeHints)
   
   def serializeFields(fields:Fields):String = write(fields)
-  
   def deserializeFields(fields:String):Fields = read[Fields](fields)
 
-  /*
-   * Support for serialization and deserialization of job descriptions
-   */
   def serializeJob(job:JobDesc):String = write(job)
-
   def deserializeJob(job:String):JobDesc = read[JobDesc](job)
   
-  /*
-   * Support for serialization of a service response and deserialization
-   * of a certain serice request
-   */
   def serializeResponse(response:ServiceResponse):String = write(response)
   
   def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
+  def serializeRequest(request:ServiceRequest):String = write(request)
 
   /*
    * Support for serialization and deserialization of relations

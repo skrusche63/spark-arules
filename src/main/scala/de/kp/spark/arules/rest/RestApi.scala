@@ -91,6 +91,19 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	      ctx => doTrain(ctx)
 	    }
 	  }
+    }  ~ 
+    pathPrefix("web") {
+      /*
+       * 'web' is the prefix for static public content that is
+       * served from a web browser and provides a minimalistic
+       * web UI for this prediction server
+       */
+      implicit val actorContext = actorRefFactory
+      get {
+	    respondWithStatus(OK) {
+	      getFromResourceDirectory("public")
+	    }
+      }
     }
   }
 

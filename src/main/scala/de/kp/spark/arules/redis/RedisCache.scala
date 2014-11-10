@@ -26,16 +26,33 @@ import scala.collection.JavaConversions._
 object RedisCache {
 
   val client  = RedisClient()
-
+  
   def addFields(req:ServiceRequest,fields:Fields) {
     
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "fields:" + req.service + ":" + req.data("uid")
+    val k = "fields:association:" + req.data("uid")
     val v = "" + timestamp + ":" + Serializer.serializeFields(fields)
     
     client.zadd(k,timestamp,v)
+    
+  }
+
+  /**
+   * The Redis instance is used to register all requests that have been made
+   * in the sense of a log server; order to be able to build timelines and
+   * inform users about the processing history
+   */
+  def addRequest(req:ServiceRequest) {
+    
+    val now = new Date()
+    val timestamp = now.getTime()
+    
+    val k = "request:association"
+    val v = "" + timestamp + ":" + Serializer.serializeRequest(req)
+    
+    client.lpush(k,v)
     
   }
   
@@ -46,7 +63,7 @@ object RedisCache {
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "job:" + req.service + ":" + uid
+    val k = "job:association:" + uid
     val v = "" + timestamp + ":" + Serializer.serializeJob(JobDesc(req.service,task,status))
     
     client.zadd(k,timestamp,v)
@@ -67,6 +84,11 @@ object RedisCache {
     
   }
   
+  /**
+   * Retrieve the field descriptions from the 
+   * Redis instance with respect to a certain 
+   * unique task identifier
+   */
   def fields(uid:String):Fields = {
 
     val k = "fields:association:" + uid
@@ -83,6 +105,34 @@ object RedisCache {
     }
 
   }
+  
+  /**
+   * Retrieve the total number of requests registered
+   * with the Redis instance
+   */
+  def requestsTotal():Long = {
+
+    val k = "request:association"
+    if (client.exists(k)) client.llen(k) else 0
+    
+  }
+  /**
+   * Retrieve a slice of requests from the Redis instance
+   */
+  def requests(start:Long,end:Long):List[(Long,ServiceRequest)] = {
+    
+    val k = "request:association"
+    val requests = client.lrange(k, start, end)
+    
+    requests.map(request => {
+      
+      val Array(ts,req) = request.split(":")
+      (ts.toLong,Serializer.deserializeRequest(req))
+      
+    }).toList
+    
+  }
+
   
   /**
    * Get timestamp when job with 'uid' started
