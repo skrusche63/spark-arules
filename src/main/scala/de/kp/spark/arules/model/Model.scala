@@ -152,14 +152,7 @@ object Messages {
 
   def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
 
-  /*
-   * Predict request have to provide either antecedents or consequents 
-   * that will be used as match criteria against discovered rules
-   */
-  def NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid:String):String = 
-    String.format("""
-      No antecedents or consequents are provided for uid '%s'.
-    """.stripMargin, uid)
+  def NO_ITEMS_PROVIDED(uid:String):String = String.format("""No items are provided for uid '%s'.""", uid)
 
   def REQUEST_IS_UNKNOWN():String = String.format("""Unknown request.""")
 

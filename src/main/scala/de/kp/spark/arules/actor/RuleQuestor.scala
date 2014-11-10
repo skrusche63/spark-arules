@@ -26,10 +26,6 @@ import de.kp.spark.arules.sink.RedisSink
 class RuleQuestor extends BaseActor {
 
   implicit val ec = context.dispatcher
-  /*
-   * The Questor retrieves relations and rules from the internal 
-   * Redis instance that is used as a service sink 
-   */
   val sink = new RedisSink()
   
   def receive = {
@@ -40,37 +36,50 @@ class RuleQuestor extends BaseActor {
       val uid = req.data("uid")
 
       req.task match {
-        /*
-         * This task retrieves all rules that match the antecendents or
-         * consequents provided with this service request; the client
-         * may then decide how to proceed with this information 
-         */
-        case "get:followers" => {
+
+        case "get:antecedent" => {
 
           val resp = if (sink.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
              
-            val antecedent = req.data.getOrElse("antecedent", null) 
-            val consequent = req.data.getOrElse("consequent", null)            
-
-            if (antecedent == null && consequent == null) {
-               failure(req,Messages.NO_ANTECEDENTS_OR_CONSEQUENTS_PROVIDED(uid))
+            if (req.data.contains("items") == false) {
+               failure(req,Messages.NO_ITEMS_PROVIDED(uid))
              
              } else {
             
-               val rules = (if (antecedent != null) {
-                 val items = antecedent.split(",").map(_.toInt).toList
-                 sink.rulesByAntecedent(uid,items)
+               val items = req.data("items").split(",").map(_.toInt).toList
+               val rules = sink.rulesByAntecedent(uid,items)
                
-               } else {
-                 val items = consequent.split(",").map(_.toInt).toList
-                 sink.rulesByConsequent(uid,items)
-                 
-               })
+               val data = Map("uid" -> uid, "rules" -> rules)
+               new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+             
+             }
+            
+          }
+           
+          origin ! Serializer.serializeResponse(resp)
+          context.stop(self)
+          
+        }
+        
+        case "get:consequent" => {
+
+          val resp = if (sink.rulesExist(uid) == false) {           
+            failure(req,Messages.RULES_DO_NOT_EXIST(uid))
+            
+          } else {    
+
+            if (req.data.contains("items") == false) {
+               failure(req,Messages.NO_ITEMS_PROVIDED(uid))
+             
+             } else {
+            
+               val items = req.data("items").split(",").map(_.toInt).toList
+               val rules = sink.rulesByConsequent(uid,items)
                
-               val data = Map("uid" -> uid, "followers" -> rules)
+               val data = Map("uid" -> uid, "rules" -> rules)
                new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
              
              }
@@ -82,11 +91,8 @@ class RuleQuestor extends BaseActor {
           
         }
          
-        case "get:items" => {
-          /*
-           * This task retrieves all the relation rules detected
-           * by a previously finished data mining task
-           */
+        case "get:transaction" => {
+
           val resp = if (sink.relationsExist(uid) == false) {           
            failure(req, Messages.RELATIONS_DO_NOT_EXIST(uid))
             
@@ -94,7 +100,7 @@ class RuleQuestor extends BaseActor {
             
             val relations = sink.relations(uid)
 
-            val data = Map("uid" -> uid, "items" -> relations)            
+            val data = Map("uid" -> uid, "rules" -> relations)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
@@ -104,11 +110,8 @@ class RuleQuestor extends BaseActor {
            
         }
        
-        case "get:rules" => {
-          /*
-           * This request retrieves all the association rules detected
-           * by a previously finished data mining task
-           */
+        case "get:rule" => {
+
           val resp = if (sink.rulesExist(uid) == false) {           
            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             

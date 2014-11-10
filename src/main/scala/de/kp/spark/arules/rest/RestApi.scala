@@ -99,22 +99,26 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	subject match {
 
 	  /*
-	   * Followers characterize association rules where externally
-	   * provided antecedents or consequents match with discovered
-	   * association rules
+	   * 'antecedent' retrieves those association rules where an externally
+	   * provided itemset matches the antecedent part of the association rules
 	   */
-	  case "followers" => doRequest(ctx,"association","get:followers")
+	  case "antecedent" => doRequest(ctx,"association","get:antecedent")
+	  /*
+	   * 'consequent' retrieves those association rules where an externally
+	   * provided itemset matches the consequent part of the association rules
+	   */
+	  case "consequent" => doRequest(ctx,"association","get:consequent")
       /*
-       * Items characterize those association rules where the discovered
-       * antecedents (within the rules) match with the items of the last
+       * 'transaction' retrieves those association rules where the discovered
+       * antecedent part (within the rules) matches items of the last
        * transaction
        */
-	  case "items" => doRequest(ctx,"association","get:items")
+	  case "transaction" => doRequest(ctx,"association","get:transaction")
 	  /*
-	   * Rules characterize the discovered association rules without
-	   * any data aggregation or transformation
+	   * 'rule' retrieves the discovered association rules without any data 
+	   * aggregation or transformation
 	   */
-	  case "rules" => doRequest(ctx,"association","get:rules")
+	  case "rule" => doRequest(ctx,"association","get:rule")
 	      
 	  case _ => {}
 
