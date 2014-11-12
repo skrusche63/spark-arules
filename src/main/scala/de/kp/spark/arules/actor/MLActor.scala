@@ -20,6 +20,8 @@ package de.kp.spark.arules.actor
 
 import akka.actor.{Actor,ActorLogging}
 
+import de.kp.spark.arules.RemoteContext
+
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
 
@@ -96,6 +98,21 @@ abstract class MLActor extends Actor with ActorLogging {
       case _ => {/* do nothing */}
       
     }
+    
+  }
+
+  /**
+   * Notify all registered listeners about a certain status
+   */
+  protected def notify(req:ServiceRequest,status:String) {
+
+    /* Build message */
+    val data = Map("uid" -> req.data("uid"))
+    val response = new ServiceResponse(req.service,req.task,data,status)	
+    
+    /* Notify listeners */
+    val message = Serializer.serializeResponse(response)    
+    RemoteContext.notify(message)
     
   }
 

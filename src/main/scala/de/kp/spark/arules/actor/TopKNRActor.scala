@@ -125,6 +125,9 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
           
     /* Update cache */
     RedisCache.addStatus(req,ARulesStatus.FINISHED)
+
+    /* Notify potential listeners */
+    notify(req,ARulesStatus.FINISHED)
     
   }
  
