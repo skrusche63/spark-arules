@@ -58,7 +58,14 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
          */
         case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
         /*
-         * Request to register field specification
+         * Request to prepare the Elasticsearch index for subsequent
+         * tracking events; this is an event invoked by the admin
+         * interface
+         */
+        case "index" => ask(actor("indexer"),deser).mapTo[ServiceResponse]
+        /*
+         * Request to register the field specification, that determines
+         * which data source fields map onto the internal format used
          */
         case "register"  => ask(actor("registrar"),deser).mapTo[ServiceResponse]
         /*
@@ -108,6 +115,8 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
   private def actor(worker:String):ActorRef = {
     
     worker match {
+  
+      case "indxer" => context.actorOf(Props(new RuleIndexer()))
   
       case "miner" => context.actorOf(Props(new RuleMiner(sc)))
         

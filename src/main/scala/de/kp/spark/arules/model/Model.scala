@@ -168,6 +168,8 @@ object Messages {
   def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
 
   def SOURCE_IS_UNKNOWN(uid:String,source:String):String = String.format("""Source '%s' is unknown for uid '%s'.""", source, uid)
+
+  def SEARCH_INDEX_CREATED(uid:String):String = String.format("""Search index created for uid '%s'.""", uid)
  
   def TRACKED_ITEM_RECEIVED(uid:String):String = String.format("""Tracked item received for uid '%s'.""", uid)
  

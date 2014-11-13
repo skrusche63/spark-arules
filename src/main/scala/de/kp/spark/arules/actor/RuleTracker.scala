@@ -47,16 +47,14 @@ class RuleTracker extends Actor with ActorLogging {
         val index   = req.data("index")
         val mapping = req.data("type")
     
-        val builder = EBF.getBuilder("item",mapping)
         val writer = new ElasticWriter()
-    
-        /* Prepare index and mapping for write */
-        val readyToWrite = writer.open(index,mapping,builder)
+        
+        val readyToWrite = writer.open(index,mapping)
         if (readyToWrite == false) {
       
           writer.close()
       
-          val msg = String.format("""Opening index '%s' and maping '%s' for write failed.""",index,mapping)
+          val msg = String.format("""Opening index '%s' and mapping '%s' for write failed.""",index,mapping)
           throw new Exception(msg)
       
         } else {

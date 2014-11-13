@@ -64,6 +64,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~ 
+    path("index") { 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doIndex(ctx)
+	    }
+	  }
+    }  ~ 
     path("register") { 
 	  post {
 	    respondWithStatus(OK) {
@@ -138,14 +145,16 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	}
     
   }
+
+  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,"association","index")
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"association","register")
+
+  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"association","status")
   
   private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"association","track")
 
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"association","train")
-
-  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"association","status")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      

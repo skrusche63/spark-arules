@@ -21,7 +21,7 @@ package de.kp.spark.arules.sink
 import java.util.{Date,UUID}
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF,ElasticWriter}
+import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF,ElasticIndexer,ElasticWriter}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
@@ -35,16 +35,28 @@ class ElasticSink {
     val index   = req.data("dst.index")
     val mapping = req.data("dst.type")
     
+    /* Prepare index and mapping for write */    
     val builder = EBF.getBuilder("rule",mapping)
+    val indexer = new ElasticIndexer()
+    
+    /* 
+     * If index and mapping already existing
+     * no actions taken by the indexer
+     */
+    indexer.create(index,mapping,builder)
+    indexer.close()
+    
+    /*
+     * Write to index
+     */
     val writer = new ElasticWriter()
     
-    /* Prepare index and mapping for write */
-    val readyToWrite = writer.open(index,mapping,builder)
+    val readyToWrite = writer.open(index,mapping)
     if (readyToWrite == false) {
       
       writer.close()
       
-      val msg = String.format("""Opening index '%s' and maping '%s' for write failed.""",index,mapping)
+      val msg = String.format("""Opening index '%s' and mapping '%s' for write failed.""",index,mapping)
       throw new Exception(msg)
       
     }
