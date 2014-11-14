@@ -2,9 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>spark-arules</groupId>
   <artifactId>spark-arules</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>Spark-ARULES</name>
-  <description>A Reactive Association Analysis Engine on the shoulders of open source giants such as Apache Spark, Akka and Spray.</description>
+  <description>Reactive Association Analysis engine of Predictiveworks.</description>
   <inceptionYear>2010</inceptionYear>
   <licenses>
     <license>
@@ -222,7 +222,7 @@
   </build>
   <organization>
   	<name>Dr. Krusche &amp; Partner PartG</name>
-  	<url>http://dr-kruscheundpartner.de</url>
+  	<url>http://dr-kruscheundpartner.com</url>
   </organization>
   <url>https://github.com/skrusche63/spark-arules</url>
 </project>

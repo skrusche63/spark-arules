@@ -26,7 +26,11 @@ import scala.collection.JavaConversions._
 object RedisCache {
 
   val client  = RedisClient()
-  
+  /**
+   * The Redis instance is used to register the field description
+   * that has to be used for a certain mining task to map data source
+   * fields onto the internal data format
+   */
   def addFields(req:ServiceRequest,fields:Fields) {
     
     val now = new Date()
@@ -55,7 +59,10 @@ object RedisCache {
     client.lpush(k,v)
     
   }
-  
+  /**
+   * Add a job description of a certain interim step of a certain 
+   * data mining task to the Redis instance
+   */
   def addStatus(req:ServiceRequest,status:String) {
    
     val (uid,task) = (req.data("uid"),req.task)
@@ -69,7 +76,10 @@ object RedisCache {
     client.zadd(k,timestamp,v)
     
   }
-
+  /** 
+   *  Determine whether a field description has been registered
+   *  for a certain data mining task
+   */
   def fieldsExist(uid:String):Boolean = {
 
     val k = "fields:association:" + uid
@@ -132,43 +142,52 @@ object RedisCache {
     }).toList
     
   }
-
-  
   /**
-   * Get timestamp when job with 'uid' started
+   * Retrieve the status of the latest job description 
+   * of a certain mining task
    */
-  def starttime(uid:String):Long = {
-    
-    val k = "job:association:" + uid
-    val jobs = client.zrange(k, 0, -1)
-
-    if (jobs.size() == 0) {
-      0
-    
-    } else {
-      
-      val first = jobs.iterator().next()
-      first.split(":")(0).toLong
-      
-    }
-     
-  }
-  
   def status(uid:String):String = {
 
     val k = "job:association:" + uid
-    val jobs = client.zrange(k, 0, -1)
+    val data = client.zrange(k, 0, -1)
 
-    if (jobs.size() == 0) {
+    if (data.size() == 0) {
       null
     
     } else {
       
-      val job = Serializer.deserializeJob(jobs.toList.last)
+      /* Format: timestamp:jobdesc */
+      val last = data.toList.last
+      val Array(timestamp,jobdesc) = last.split(":")
+      
+      val job = Serializer.deserializeJob(jobdesc)
       job.status
       
     }
 
   }
+  /**
+   * Retrieve all job descriptions of a certain mining task 
+   * in the respective time order
+   */
+  def statuses(uid:String):List[(Long,JobDesc)] = {
+    
+    val k = "job:association:" + uid
+    val data = client.zrange(k, 0, -1)
 
+    if (data.size() == 0) {
+      null
+    
+    } else {
+      
+      data.map(record => {
+        
+        val Array(timestamp,jobdesc) = record.split(":")
+        (timestamp.toLong,Serializer.deserializeJob(jobdesc))
+        
+      }).toList
+      
+    }
+    
+  }
 }
