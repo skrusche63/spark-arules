@@ -109,7 +109,9 @@ object RedisCache {
     
     } else {
       
-      val fields = metas.toList.last
+      val latest = metas.toList.last
+      val Array(timestamp,fields) = latest.split(":")
+      
       Serializer.deserializeFields(fields)
       
     }
