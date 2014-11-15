@@ -64,10 +64,10 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~ 
-    path("index") { 
+    path("index" / Segment) {topic =>  
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doIndex(ctx)
+	      ctx => doIndex(ctx,topic)
 	    }
 	  }
     }  ~ 
@@ -146,7 +146,19 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
   }
 
-  private def doIndex[T](ctx:RequestContext) = doRequest(ctx,"association","index")
+  private def doIndex[T](ctx:RequestContext,subject:String) = {
+    
+    subject match {
+      
+      case "item" => doRequest(ctx,"association","index:item")
+      
+      case "rule" => doRequest(ctx,"association","index:rule")
+      
+      case _ => {}
+      
+    }
+    
+  }
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"association","register")
 
@@ -190,19 +202,6 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     }
       
     body.asInstanceOf[Map[String,String]]
-    
-  }
-  /**
-   * This method returns the 'raw' body provided with a Http request;
-   * it is e.g. used to access the meta service to register metadata
-   * specifications
-   */
-  private def getBodyAsString(ctx:RequestContext):String = {
-   
-    val httpRequest = ctx.request
-    val httpEntity  = httpRequest.entity    
-
-    httpEntity.data.asString
     
   }
   

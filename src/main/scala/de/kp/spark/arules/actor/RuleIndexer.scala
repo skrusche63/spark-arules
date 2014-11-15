@@ -30,13 +30,29 @@ class RuleIndexer extends BaseActor {
     case req:ServiceRequest => {
 
       val uid = req.data("uid")
+      val origin = sender
 
       try {
 
         val index   = req.data("index")
         val mapping = req.data("type")
     
-        val builder = EBF.getBuilder("item",mapping)
+        val topic = req.task match {
+          
+          case "index:item" => "item"
+          
+          case "index:rule" => "rule"
+          
+          case _ => {
+            
+            val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
+            throw new Exception(msg)
+            
+          }
+        
+        }
+        
+        val builder = EBF.getBuilder(topic,mapping)
         val indexer = new ElasticIndexer()
     
         indexer.create(index,mapping,builder)
@@ -45,7 +61,6 @@ class RuleIndexer extends BaseActor {
         val data = Map("uid" -> uid, "message" -> Messages.SEARCH_INDEX_CREATED(uid))
         val response = new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)	
       
-        val origin = sender
         origin ! Serializer.serializeResponse(response)
       
       } catch {
@@ -57,7 +72,6 @@ class RuleIndexer extends BaseActor {
           val data = Map("uid" -> uid, "message" -> e.getMessage())
           val response = new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
       
-          val origin = sender
           origin ! Serializer.serializeResponse(response)
           
         }
