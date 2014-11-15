@@ -53,17 +53,21 @@ case class JobDesc(
   service:String,task:String,status:String
 )
 
-case class Relation (
-  items:List[Int],related:List[Int],support:Int,confidence:Double,weight:Double)
-
 case class Rule (
   antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
 
-case class Relations(site:String,user:String,items:List[Relation])
-
-case class MultiRelations(items:List[Relations])
-
 case class Rules(items:List[Rule])
+/**
+ * A derived association rule that additionally specifies the matching weight
+ * between the antecent field and the respective field in mined and original
+ * association rules
+ */
+case class WeightedRule (
+  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double,weight:Double)
+
+case class WeightedRules(site:String,user:String,items:List[WeightedRule])
+
+case class MultiRelations(items:List[WeightedRules])
 
 object Serializer {
     
@@ -79,17 +83,12 @@ object Serializer {
   
   def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
   def serializeRequest(request:ServiceRequest):String = write(request)
-
-  /*
-   * Support for serialization and deserialization of relations
-   */
-  def serializeMultiRelations(relations:MultiRelations):String = write(relations)
   
-  def serializeRelations(relations:Relations):String = write(relations)
+  def serializeWeightedRules(rules:WeightedRules):String = write(rules)
+  def deserializeWeightedRules(rules:String):WeightedRules = read[WeightedRules](rules)
 
+  def serializeMultiRelations(relations:MultiRelations):String = write(relations)
   def deserializeMultiRelations(relations:String):MultiRelations = read[MultiRelations](relations)
-
-  def deserializeRelations(relations:String):Relations = read[Relations](relations)
   
   /*
    * Support for serialization and deserialization of rules

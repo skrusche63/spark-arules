@@ -74,7 +74,7 @@ class RedisSink {
     val relations = client.zrange(k, 0, -1)
 
     if (relations.size() == 0) {
-      Serializer.serializeMultiRelations(new MultiRelations(List.empty[Relations]))
+      Serializer.serializeMultiRelations(new MultiRelations(List.empty[WeightedRules]))
     
     } else {
       

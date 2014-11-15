@@ -63,7 +63,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
             if (related != null) {
 
               val weight = req.data("weight").toDouble
-              findRelations(req,related,rules,weight)
+              findWeightedRules(req,related,rules,weight)
            }
             
           }
@@ -94,12 +94,12 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
    * above a user defined threshold, and restrict to those relations,
    * where the transaction 'items' do not intersect with the 'consequents' 
    */  
-  private def findRelations(req:ServiceRequest,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
+  private def findWeightedRules(req:ServiceRequest,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
 
     val bcrules = sc.broadcast(rules)
     val bcweight = sc.broadcast(weight)
               
-    val relations = related.map(itemset => {
+    val weightedRules = related.map(itemset => {
                 
       val (site,user,items) = itemset
       val relations = bcrules.value.map(rule => {
@@ -109,19 +109,19 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
         val intersect = items.intersect(rule.antecedent)
         val ratio = intersect.length.toDouble / items.length
                   
-        new Relation(items,rule.consequent,rule.support,rule.confidence,ratio)
+        new WeightedRule(items,rule.consequent,rule.support,rule.confidence,ratio)
         /*
          * Restrict to relations, where a) the intersection ratio is above the
          * externally provided threshold ('weight') and b) where no items also
          * appear as consequents of the respective rules
          */
-      }).filter(r => (r.weight > bcweight.value) && (r.items.intersect(r.related).size == 0))
+      }).filter(r => (r.weight > bcweight.value) && (r.antecedent.intersect(r.consequent).size == 0))
                 
-      new Relations(site,user,relations)
+      new WeightedRules(site,user,relations)
                 
     }).collect()
           
-    saveRelations(req,new MultiRelations(relations.toList))
+    saveRelations(req,new MultiRelations(weightedRules.toList))
           
     /* Update cache */
     RedisCache.addStatus(req,ARulesStatus.FINISHED)
