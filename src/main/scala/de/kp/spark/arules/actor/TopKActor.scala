@@ -49,23 +49,23 @@ class TopKActor(@transient val sc:SparkContext) extends MLActor {
           val source = new TransactionSource(sc)
           /*
            * STEP #1: 
-           * Discover rules from the transactional data source
+           * Discover rules from transactional data
            */
           val dataset = source.get(req.data)
           val rules = if (dataset != null) findRules(req,dataset,params) else null
           /*
            * STEP #2: 
-           * Merge rules with transactional data source and build
-           * weighted relations thereby filtering those relations
-           * below a dynamically provided threshold
+           * Merge rules with transactional data and build weighted rules
+           * thereby filtering those below a dynamically provided threshold
            */
           if (rules != null) {
            
-            val related = source.related(req.data)               
-            if (related != null) {
+            val dataset = source.related(req.data)               
+            if (dataset != null) {
 
               val weight = req.data("weight").toDouble
-              findWeightedRules(req,related,rules,weight)
+              findMultiUserRules(req,dataset,rules,weight)
+              
            }
             
           }
@@ -89,48 +89,7 @@ class TopKActor(@transient val sc:SparkContext) extends MLActor {
     }
     
   }
-  
-  /**
-   * For every (site,user) pair and every discovered association rule, 
-   * determine the 'antecedent' intersection ratio and filter those
-   * above a user defined threshold, and restrict to those relations,
-   * where the transaction 'items' do not intersect with the 'consequents' 
-   */  
-  private def findWeightedRules(req:ServiceRequest,related:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
-
-    val bcrules = sc.broadcast(rules)
-    val bcweight = sc.broadcast(weight)
-              
-    val weightedRules = related.map(itemset => {
-                
-      val (site,user,items) = itemset
-      val relations = bcrules.value.map(rule => {
-
-        val intersect = items.intersect(rule.antecedent)
-        val ratio = intersect.length.toDouble / items.length
-                  
-        new WeightedRule(items,rule.consequent,rule.support,rule.confidence,ratio)
-        /*
-         * Restrict to relations, where a) the intersection ratio is above the
-         * externally provided threshold ('weight') and b) where no items also
-         * appear as consequents of the respective rules
-         */
-      }).filter(r => (r.weight > bcweight.value) && (r.antecedent.intersect(r.consequent).size == 0))
-                
-      new WeightedRules(site,user,relations)
-                
-    }).collect()
-          
-    saveRelations(req,new MultiRelations(weightedRules.toList))
-          
-    /* Update RedisCache */
-    RedisCache.addStatus(req,ARulesStatus.FINISHED)
-
-    /* Notify potential listeners */
-    notify(req,ARulesStatus.FINISHED)
     
-  }
-  
   private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double)):List[Rule] = {
 
     RedisCache.addStatus(req,ARulesStatus.DATASET)

@@ -30,13 +30,13 @@ class RedisSink {
   val client  = RedisClient()
   val service = "arules"
 
-  def addRelations(req:ServiceRequest,relations:MultiRelations) {
+  def addMultiUserRules(req:ServiceRequest, relations:MultiUserRules) {
    
     val now = new Date()
     val timestamp = now.getTime()
     
-    val k = "relation:" + service + ":" + req.data("uid")
-    val v = "" + timestamp + ":" + Serializer.serializeMultiRelations(relations)
+    val k = "multi:user:rule:" + service + ":" + req.data("uid")
+    val v = "" + timestamp + ":" + Serializer.serializeMultiUserRules(relations)
     
     client.zadd(k,timestamp,v)
     
@@ -54,9 +54,9 @@ class RedisSink {
     
   }
  
-  def relationsExist(uid:String):Boolean = {
+  def multiUserRulesExist(uid:String):Boolean = {
 
-    val k = "relation:" + service + ":" + uid
+    val k = "multi:user:rule:" + service + ":" + uid
     client.exists(k)
     
   }
@@ -68,24 +68,24 @@ class RedisSink {
     
   }
   
-  def relations(uid:String):String = {
+  def multiUserRulesAsString(uid:String):String = {
 
-    val k = "relation:" + service + ":" + uid
-    val relations = client.zrange(k, 0, -1)
+    val k = "multi:user:rule:" + service + ":" + uid
+    val rules = client.zrange(k, 0, -1)
 
-    if (relations.size() == 0) {
-      Serializer.serializeMultiRelations(new MultiRelations(List.empty[WeightedRules]))
+    if (rules.size() == 0) {
+      Serializer.serializeMultiUserRules(new MultiUserRules(List.empty[UserRules]))
     
     } else {
       
-      val last = relations.toList.last
+      val last = rules.toList.last
       last.split(":")(1)
       
     }
   
   }
   
-  def rules(uid:String):String = {
+  def rulesAsString(uid:String):String = {
 
     val k = "rule:" + service + ":" + uid
     val rules = client.zrange(k, 0, -1)
@@ -124,6 +124,21 @@ class RedisSink {
     Serializer.serializeRules(new Rules(items))
 
   } 
+  
+  def rulesByUsers(uid:String,users:List[String]):String = {
+                
+    val rules = Serializer.deserializeMultiUserRules(multiUserRulesAsString(uid)).items
+            
+    /*
+     * The users are used as a filter for the respective rules;
+     * note, that a user entry has the following format: site|user
+     * 
+     * This implies that the respective data from rules must be piped
+     */
+    val filteredRules = rules.filter(entry => users.contains(entry.site + "|" + entry.user))
+    Serializer.serializeMultiUserRules(new MultiUserRules(filteredRules))
+
+  }
   
   private def rulesAsList(uid:String):List[Rule] = {
 

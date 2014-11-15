@@ -18,6 +18,7 @@ package de.kp.spark.arules.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import org.apache.spark.rdd.RDD
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.arules.RemoteContext
@@ -25,37 +26,65 @@ import de.kp.spark.arules.RemoteContext
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
 
+import de.kp.spark.arules.redis.RedisCache
+
 /**
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
 abstract class MLActor extends Actor with ActorLogging {
-  
-  protected def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
+  /**
+   * For every (site,user) pair and every discovered association rule, 
+   * determine the 'antecedent' intersection ratio and filter those
+   * above a user defined threshold, and restrict to those rules, where
+   * the transaction 'items' do not intersect with the 'consequents' 
+   */  
+  protected def findMultiUserRules(req:ServiceRequest,dataset:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
     
-    val uid = req.data("uid")
+    val sc = dataset.context
     
-    if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
-  
-    } else {
-      val data = Map("uid" -> uid, "message" -> Messages.MINING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
-  
-    }
+    val bcrules = sc.broadcast(rules)
+    val bcweight = sc.broadcast(weight)
+              
+    val multiUserRules = dataset.map(itemset => {
+                
+      val (site,user,items) = itemset
+      val userRules = bcrules.value.map(rule => {
 
+        val intersect = items.intersect(rule.antecedent)
+        val ratio = intersect.length.toDouble / items.length
+                  
+        new WeightedRule(items,rule.consequent,rule.support,rule.confidence,ratio)
+        /*
+         * Restrict to rules, where a) the intersection ratio is above the
+         * externally provided threshold ('weight') and b) where no items also
+         * appear as consequents of the respective rules
+         */
+      }).filter(r => (r.weight > bcweight.value) && (r.antecedent.intersect(r.consequent).size == 0))
+                
+      new UserRules(site,user,userRules)
+                
+    }).collect()
+          
+    saveMultiUserRules(req,new MultiUserRules(multiUserRules.toList))
+          
+    /* Update RedisCache */
+    RedisCache.addStatus(req,ARulesStatus.FINISHED)
+
+    /* Notify potential listeners */
+    notify(req,ARulesStatus.FINISHED)
+    
   }
   
   /**
-   * (Multi-)Relations are actually registered in an internal Redis instance
+   * (Multi-)User Rules are actually registered in an internal Redis instance
    * only; note, that is different from rules, which are also indexed in an
    * Elasticsearch index
    */
-  protected def saveRelations(req:ServiceRequest,relations:MultiRelations) {
+  protected def saveMultiUserRules(req:ServiceRequest, rules:MultiUserRules) {
 
     val sink = new RedisSink()
-    sink.addRelations(req,relations)
+    sink.addMultiUserRules(req,rules)
     
   }
 
@@ -114,6 +143,22 @@ abstract class MLActor extends Actor with ActorLogging {
     val message = Serializer.serializeResponse(response)    
     RemoteContext.notify(message)
     
+  }
+  
+  protected def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
+    
+    val uid = req.data("uid")
+    
+    if (missing == true) {
+      val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
+      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+  
+    } else {
+      val data = Map("uid" -> uid, "message" -> Messages.MINING_STARTED(uid))
+      new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
+  
+    }
+
   }
 
 }

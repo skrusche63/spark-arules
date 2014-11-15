@@ -64,10 +64,12 @@ case class Rules(items:List[Rule])
  */
 case class WeightedRule (
   antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double,weight:Double)
+/**
+ * A set of weighted rules assigned to a certain user of a specific site
+ */
+case class UserRules(site:String,user:String,items:List[WeightedRule])
 
-case class WeightedRules(site:String,user:String,items:List[WeightedRule])
-
-case class MultiRelations(items:List[WeightedRules])
+case class MultiUserRules(items:List[UserRules])
 
 object Serializer {
     
@@ -84,17 +86,13 @@ object Serializer {
   def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
   def serializeRequest(request:ServiceRequest):String = write(request)
   
-  def serializeWeightedRules(rules:WeightedRules):String = write(rules)
-  def deserializeWeightedRules(rules:String):WeightedRules = read[WeightedRules](rules)
+  def serializeWeightedRules(rules:UserRules):String = write(rules)
+  def deserializeWeightedRules(rules:String):UserRules = read[UserRules](rules)
 
-  def serializeMultiRelations(relations:MultiRelations):String = write(relations)
-  def deserializeMultiRelations(relations:String):MultiRelations = read[MultiRelations](relations)
+  def serializeMultiUserRules(rules:MultiUserRules):String = write(rules)
+  def deserializeMultiUserRules(rules:String):MultiUserRules = read[MultiUserRules](rules)
   
-  /*
-   * Support for serialization and deserialization of rules
-   */
-  def serializeRules(rules:Rules):String = write(rules)
-  
+  def serializeRules(rules:Rules):String = write(rules)  
   def deserializeRules(rules:String):Rules = read[Rules](rules)
   
 }
@@ -162,7 +160,7 @@ object Messages {
   
   def MISSING_PARAMETERS(uid:String):String = String.format("""Missing parameters for uid '%s'.""", uid)
 
-  def RELATIONS_DO_NOT_EXIST(uid:String):String = String.format("""The relations for uid '%s' do not exist.""", uid)
+  def USER_RULES_DO_NOT_EXIST(uid:String):String = String.format("""The user rules exist for uid '%s'.""", uid)
 
   def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
 

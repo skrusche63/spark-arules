@@ -35,11 +35,16 @@ class RuleQuestor extends BaseActor {
       val origin = sender    
       val uid = req.data("uid")
 
-      req.task match {
+      val response = req.task.split(":")(1) match {
+        /*
+         * This request retrieves those rules where the provided items
+         * match the 'antecedent' part of the rule; the items may describe
+         * a set of products and the request demands those products that are
+         * often purchased with the provided ones.
+         */
+        case "antecedent" => {
 
-        case "get:antecedent" => {
-
-          val resp = if (sink.rulesExist(uid) == false) {           
+          if (sink.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -58,15 +63,17 @@ class RuleQuestor extends BaseActor {
              }
             
           }
-           
-          origin ! Serializer.serializeResponse(resp)
-          context.stop(self)
           
         }
-        
-        case "get:consequent" => {
+        /*
+         * This request retrieves those rules where the provided items
+         * match the 'consequent' part of the rule; the items may describe
+         * a set of products for which the purchase rate has to be increased
+         * and the request demands those products that should be promoted.
+         */
+        case "consequent" => {
 
-          val resp = if (sink.rulesExist(uid) == false) {           
+          if (sink.rulesExist(uid) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -85,61 +92,81 @@ class RuleQuestor extends BaseActor {
              }
             
           }
-           
-          origin ! Serializer.serializeResponse(resp)
-          context.stop(self)
           
         }
-         
-        case "get:transaction" => {
+        /*
+         * This request provides a list of users and demands those products 
+         * that have to be recommended to these users; the starting point is
+         * the last purchase or transaction of these users
+         */
+        case "recommendation" => {
 
-          val resp = if (sink.relationsExist(uid) == false) {           
-           failure(req, Messages.RELATIONS_DO_NOT_EXIST(uid))
+          if (sink.multiUserRulesExist(uid) == false) {           
+            failure(req, Messages.USER_RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val relations = sink.relations(uid)
-
-            val data = Map("uid" -> uid, "transaction" -> relations)            
+            val users = req.data("users").split(",").toList
+            val rules = sink.rulesByUsers(uid,users)
+            
+            val data = Map("uid" -> uid, "recommendation" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
-            
+           
           }
-           
-          origin ! Serializer.serializeResponse(resp)
-          context.stop(self)
-           
+          
         }
-       
-        case "get:rule" => {
+        /*
+         * This request retrieves the association rules mined from the
+         * specified data source; no additional data computing is done
+         */
+        case "rule" => {
 
-          val resp = if (sink.rulesExist(uid) == false) {           
-           failure(req, Messages.RULES_DO_NOT_EXIST(uid))
+          if (sink.rulesExist(uid) == false) {           
+            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val rules = sink.rules(uid)
+            val rules = sink.rulesAsString(uid)
 
             val data = Map("uid" -> uid, "rule" -> rules)            
             new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
             
           }
            
-          origin ! Serializer.serializeResponse(resp)
-          context.stop(self)
+        }
+        /*
+         * This request retrieves the list of those rules that partially match
+         * the itemset of the users' latests transaction thereby making sure
+         * that the intersection of antecedent and consequent is empty
+         */
+        case "transaction" => {
+
+          if (sink.multiUserRulesExist(uid) == false) {           
+            failure(req, Messages.USER_RULES_DO_NOT_EXIST(uid))
+            
+          } else {            
+            
+            val rules = sink.multiUserRulesAsString(uid)
+
+            val data = Map("uid" -> uid, "transaction" -> rules)            
+            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+            
+          }
            
         }
         
         case _ => {
           
           val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
-          
-          origin ! Serializer.serializeResponse(failure(req,msg))
-          context.stop(self)
+          failure(req,msg)
            
         }
         
       }
-      
+           
+      origin ! Serializer.serializeResponse(response)
+      context.stop(self)
+       
     }
     
     case _ => {
