@@ -26,7 +26,7 @@ import org.apache.spark.rdd.RDD
 import de.kp.core.arules.{TopKAlgorithm,RuleG,Vertical}
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.source.{FileSource}
+import de.kp.spark.arules.source.{FileSource,TransactionModel}
 
 import scala.collection.JavaConversions._
 
@@ -63,9 +63,11 @@ object TopK {
   
   def extractFileRules(@transient sc:SparkContext,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
     
-    /* Retrieve data from the file system */
+    val model = new TransactionModel(sc)
     val source = new FileSource(sc)
-    val dataset = source.connect()
+
+    val rawset = source.connect()
+    val dataset = model.buildFile(null,rawset)
     
     new TopK().extractRDDRules(dataset,k,minconf,stats)
     

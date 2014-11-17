@@ -49,7 +49,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
            * STEP #1: 
            * Discover rules from the transactional data source
            */
-          val dataset = source.get(req.data)
+          val dataset = source.transDS(req.data)
           val rules = if (dataset != null) findRules(req,dataset,params) else null
           /*
            * STEP #2: 
@@ -58,7 +58,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
            */
           if (rules != null) {
            
-            val dataset = source.related(req.data)               
+            val dataset = source.itemsetDS(req.data)               
             if (dataset != null) {
 
               val weight = req.data("weight").toDouble

@@ -47,7 +47,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
       "quantity",
       "deleted")
 
-  override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
+  override def connect(params:Map[String,Any]):RDD[Map[String,Any]] = {
     
     /* Retrieve site, start & end date from params */
     val site = params("site").asInstanceOf[Int]
@@ -57,96 +57,8 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
 
     val sql = query(database,site.toString,startdate,enddate)
     
-    val rawset = new JdbcReader(sc,site,sql).read(LOG_ITEM_FIELDS)    
-    val rows = rawset.filter(row => (isDeleted(row) == false)).map(row => {
-      
-      val site = row("idsite").asInstanceOf[Long]
-      /* Convert 'idvisitor' into a HEX String representation */
-      val idvisitor = row("idvisitor").asInstanceOf[Array[Byte]]     
-      val user = new java.math.BigInteger(1, idvisitor).toString(16)
+    new JdbcReader(sc,site,sql).read(LOG_ITEM_FIELDS)    
 
-      val group = row("idorder").asInstanceOf[String]
-      val item  = row("idaction_sku").asInstanceOf[Long]
-      
-      (site,user,group,item)
-      
-    })
-    
-    /*
-     * Next we convert the dataset into the SPMF format. This requires to
-     * group the dataset by 'group', sort items in ascending order and make
-     * sure that no item appears more than once in a certain order.
-     * 
-     * Finally, we organize all items of an order into an array, repartition 
-     * them to single partition and assign a unqiue transaction identifier.
-     */
-    val ids = rows.groupBy(_._3).map(data => {
-
-      val sorted = data._2.map(_._4.toInt).toList.distinct.sorted    
-      sorted.toArray
-    
-    }).coalesce(1)
-
-    val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
-    ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
-
-  }
-  
-  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
-    
-    /* Retrieve site, start & end date from params */
-    val site = params("site").asInstanceOf[Int]
-    
-    val startdate = params("startdate").asInstanceOf[String]
-    val enddate   = params("enddate").asInstanceOf[String]
-
-    val sql = query(database,site.toString,startdate,enddate)
-    
-    val rawset = new JdbcReader(sc,site,sql).read(LOG_ITEM_FIELDS)    
-    val dataset = rawset.filter(row => (isDeleted(row) == false)).map(row => {
-      
-      val idsite = row("idsite").asInstanceOf[Long]
-      /* Convert 'idvisitor' into a HEX String representation */
-      val idvisitor = row("idvisitor").asInstanceOf[Array[Byte]]     
-      val user = new java.math.BigInteger(1, idvisitor).toString(16)
-
-      val group = row("idorder").asInstanceOf[String]
-      val item  = row("idaction_sku").asInstanceOf[Long]
-
-      /*
-       * Convert server_time into universal timestamp
-       */
-      val server_time = row("server_time").asInstanceOf[java.sql.Timestamp]
-      val timestamp = server_time.getTime()
-      
-      (idsite,user,group,item,timestamp)
-      
-    })
-    
-    dataset.groupBy(v => (v._1,v._2)).map(data => {
-      
-      val (site,user) = data._1
-      val groups = data._2.groupBy(_._3).map(group => {
-
-        /*
-         * Every group has a unique timestamp, i.e the timestamp
-         * is sufficient to identify a certain group for a user
-         */
-        val timestamp = group._2.head._5
-        val items = group._2.map(_._4.toInt).toList
-
-        (timestamp,items)
-        
-      }).toList.sortBy(_._1)
-      
-      /*
-       * For merging with the rules discovered, we restrict to the 
-       * list of items of the latest group and interpret these as
-       * antecedent candidates with respect to the association rules.
-       */
-     (site.toString,user,groups.last._2)
-       
-    })
   }
   
   /**

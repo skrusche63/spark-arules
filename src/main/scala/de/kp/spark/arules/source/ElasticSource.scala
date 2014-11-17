@@ -22,119 +22,22 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.arules.io.ElasticReader
-import de.kp.spark.arules.spec.Fields
 
-class ElasticSource(@transient sc:SparkContext) extends Source(sc) {
+class ElasticSource(@transient sc:SparkContext) {
  
-  /**
-   * Retrieve the transaction database to be evaluated from
-   * an appropriate Elasticsearch search; the field names that
-   * contribute to the transactions are specified by FieldSpec
-   */
-  override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
+  def connect(params:Map[String,Any]):RDD[Map[String,String]] = {
     /*
      * Elasticsearch is used as a data source as well as a data sink;
      * this implies that the respective indexes and mappings have to
      * be distinguished
      */
-    val index = params("src.index").asInstanceOf[String]
-    val mapping = params("src.type").asInstanceOf[String]
-    
-    val query = params("query").asInstanceOf[String]
- 
-    val uid = params("uid").asInstanceOf[String]
-    val spec = sc.broadcast(Fields.get(uid))
-
-    /* 
-     * Connect to Elasticsearch and extract the following fields from the
-     * respective search index: site, user, group and item
-     */
-    val rawset = new ElasticReader(sc,index,mapping,query).read
-    val dataset = rawset.map(data => {
-      
-      val site = data(spec.value("site")._1)
-      val user = data(spec.value("user")._1)      
-
-      val group = data(spec.value("group")._1)
-      val item  = data(spec.value("item")._1).toInt
-      
-      (site,user,group,item)
-      
-    })
-    
-    /*
-     * Next we convert the dataset into the SPMF format. This requires to
-     * group the dataset by 'group', sort items in ascending order and make
-     * sure that no item appears more than once in a certain order.
-     * 
-     * Finally, we organize all items of an order into an array, repartition 
-     * them to single partition and assign a unqiue transaction identifier.
-     */
-    val ids = dataset.groupBy(_._3).map(valu => {
-
-      val sorted = valu._2.map(_._4).toList.distinct.sorted    
-      sorted.toArray
-    
-    }).coalesce(1)
-
-    val transactions = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
-    ids.zip(transactions).map(valu => (valu._2.toInt,valu._1)).cache()
-
-  }
-
-  def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
-    
-    val index = params("src.index").asInstanceOf[String]
-    val mapping = params("src.type").asInstanceOf[String]
+    val index = params("source.index").asInstanceOf[String]
+    val mapping = params("source.type").asInstanceOf[String]
     
     val query = params("query").asInstanceOf[String]
 
-    val uid = params("uid").asInstanceOf[String]
-    val spec = sc.broadcast(Fields.get(uid))
+    new ElasticReader(sc,index,mapping,query).read
 
-    /* 
-     * Connect to Elasticsearch and extract the following fields from the
-     * respective search index: site, user, group and item
-     */
-    val rawset = new ElasticReader(sc,index,mapping,query).read
-    val dataset = rawset.map(data => {
-      
-      val site = data(spec.value("site")._1)
-      val user = data(spec.value("user")._1)      
-
-      val group = data(spec.value("group")._1)
-      val item  = data(spec.value("item")._1).toInt
-
-      val timestamp  = data(spec.value("timestamp")._1).toLong
-      
-      (site,user,group,item,timestamp)
-      
-    })
-    
-    dataset.groupBy(v => (v._1,v._2)).map(data => {
-      
-      val (site,user) = data._1
-      val groups = data._2.groupBy(_._3).map(group => {
-
-        /*
-         * Every group has a unique timestamp, i.e the timestamp
-         * is sufficient to identify a certain group for a user
-         */
-        val timestamp = group._2.head._5
-        val items = group._2.map(_._4.toInt).toList
-
-        (timestamp,items)
-        
-      }).toList.sortBy(_._1)
-      
-      /*
-       * For merging with the rules discovered, we restrict to the 
-       * list of items of the latest group and interpret these as
-       * antecedent candidates with respect to the association rules.
-       */
-     (site,user,groups.last._2)
-       
-    })
-    
   }
+
 }

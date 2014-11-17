@@ -33,110 +33,21 @@ import de.kp.spark.arules.spec.Fields
  * an article of a publisher site, a product or service of a retailer site,
  * and also a customer state to specify a certain behavioral state.
  */
-class JdbcSource(@transient sc:SparkContext) extends Source(sc) {
+class JdbcSource(@transient sc:SparkContext) {
   
-  override def connect(params:Map[String,Any]):RDD[(Int,Array[Int])] = {
+  def connect(params:Map[String,Any]):RDD[Map[String,Any]] = {
     
     val uid = params("uid").asInstanceOf[String]    
     
     val fieldspec = Fields.get(uid)
     val fields = fieldspec.map(kv => kv._2._1).toList    
-    /*
-     * Convert field specification into broadcast variable
-     */
-    val spec = sc.broadcast(fieldspec)
     
     /* Retrieve site and query from params */
     val site = params("site").asInstanceOf[Int]
     val query = params("query").asInstanceOf[String]
 
-    val rawset = new JdbcReader(sc,site,query).read(fields)
-    val dataset = rawset.map(data => {
-      
-      val site = data(spec.value("site")._1).asInstanceOf[String]
-      val user = data(spec.value("user")._1).asInstanceOf[String] 
+    new JdbcReader(sc,site,query).read(fields)
 
-      val group = data(spec.value("group")._1).asInstanceOf[String]
-      val item  = data(spec.value("item")._1).asInstanceOf[Int]
-      
-      (site,user,group,item)
-      
-    })
-    
-    /*
-     * Next we convert the dataset into the SPMF format. This requires to
-     * group the dataset by 'group', sort items in ascending order and make
-     * sure that no item appears more than once in a certain order.
-     * 
-     * Finally, we organize all items of an order into an array, repartition 
-     * them to single partition and assign a unqiue transaction identifier.
-     */
-    val ids = dataset.groupBy(_._3).map(valu => {
-
-      val sorted = valu._2.map(_._4).toList.distinct.sorted    
-      sorted.toArray
-    
-    }).coalesce(1)
-
-    val index = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
-    ids.zip(index).map(valu => (valu._2.toInt,valu._1)).cache()
-
-  }
-   
-  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
-   
-    val uid = params("uid").asInstanceOf[String]    
-    
-    val fieldspec = Fields.get(uid)
-    val fields = fieldspec.map(kv => kv._2._1).toList    
-    /*
-     * Convert field specification into broadcast variable
-     */
-    val spec = sc.broadcast(fieldspec)
-
-    /* Retrieve site and query from params */
-    val site = params("site").asInstanceOf[Int]
-    val query = params("query").asInstanceOf[String]
-
-    val rawset = new JdbcReader(sc,site,query).read(fields)
-    val dataset = rawset.map(data => {
-      
-      val site = data(spec.value("site")._1).asInstanceOf[String]
-      val user = data(spec.value("user")._1).asInstanceOf[String]      
-
-      val group = data(spec.value("group")._1).asInstanceOf[String]
-      val item  = data(spec.value("item")._1).asInstanceOf[Int]
-
-      val timestamp  = data(spec.value("timestamp")._1).asInstanceOf[Long]
-      
-      (site,user,group,item,timestamp)
-      
-    })
-    
-    dataset.groupBy(v => (v._1,v._2)).map(data => {
-      
-      val (site,user) = data._1
-      val groups = data._2.groupBy(_._3).map(group => {
-
-        /*
-         * Every group has a unique timestamp, i.e the timestamp
-         * is sufficient to identify a certain group for a user
-         */
-        val timestamp = group._2.head._5
-        val items = group._2.map(_._4.toInt).toList
-
-        (timestamp,items)
-        
-      }).toList.sortBy(_._1)
-      
-      /*
-       * For merging with the rules discovered, we restrict to the 
-       * list of items of the latest group and interpret these as
-       * antecedent candidates with respect to the association rules.
-       */
-     (site,user,groups.last._2)
-       
-    })
   }
 
 }

@@ -30,7 +30,12 @@ import de.kp.spark.arules.model.Sources
  */
 class TransactionSource(@transient sc:SparkContext) {
 
-  def get(data:Map[String,String]):RDD[(Int,Array[Int])] = {
+  private val itemsetModel = new ItemsetModel(sc)
+  private val transactionModel = new TransactionModel(sc)
+  
+  def transDS(data:Map[String,String]):RDD[(Int,Array[Int])] = {
+    
+    val uid = data("uid")
     
     val source = data("source")
     source match {
@@ -39,25 +44,45 @@ class TransactionSource(@transient sc:SparkContext) {
        * as an appropriate search index from Elasticsearch; the configuration
        * parameters are retrieved from the service configuration 
        */    
-      case Sources.ELASTIC => new ElasticSource(sc).connect(data)
+      case Sources.ELASTIC => {
+        
+        val rawset = new ElasticSource(sc).connect(data)
+        transactionModel.buildElastic(uid,rawset)
+        
+      }
       /* 
        * Discover top k association rules from transaction database persisted 
        * as a file on the (HDFS) file system; the configuration parameters are 
        * retrieved from the service configuration  
        */    
-      case Sources.FILE => new FileSource(sc).connect(data)
+      case Sources.FILE => {
+        
+        val rawset = new FileSource(sc).connect(data)
+        transactionModel.buildFile(uid,rawset)
+        
+      }
       /*
        * Retrieve Top-K association rules from transaction database persisted 
        * as an appropriate table from a JDBC database; the configuration parameters 
        * are retrieved from the service configuration
        */
-      case Sources.JDBC => new JdbcSource(sc).connect(data)
+      case Sources.JDBC => {
+        
+        val rawset = new JdbcSource(sc).connect(data)
+        transactionModel.buildJDBC(uid,rawset)
+        
+      }
       /*
        * Retrieve Top-K association rules from transaction database persisted 
        * as an appropriate table from a Piwik database; the configuration parameters 
        * are retrieved from the service configuration
        */
-      case Sources.PIWIK => new PiwikSource(sc).connect(data)
+      case Sources.PIWIK => {
+        
+        val rawset = new PiwikSource(sc).connect(data)
+        transactionModel.buildPiwik(uid,rawset)
+        
+      }
             
       case _ => null
       
@@ -65,7 +90,9 @@ class TransactionSource(@transient sc:SparkContext) {
 
   }
 
-  def related(data:Map[String,String]):RDD[(String,String,List[Int])] = {
+  def itemsetDS(data:Map[String,String]):RDD[(String,String,List[Int])] = {
+    
+    val uid = data("uid")
     
     val source = data("source")
     source match {
@@ -74,19 +101,34 @@ class TransactionSource(@transient sc:SparkContext) {
        * as an appropriate search index from Elasticsearch; the configuration
        * parameters are retrieved from the service configuration 
        */    
-      case Sources.ELASTIC => new ElasticSource(sc).related(data)
+      case Sources.ELASTIC => {
+         
+        val rawset = new ElasticSource(sc).connect(data)
+        itemsetModel.buildElastic(uid,rawset)
+        
+      }
       /*
        * Retrieve most recent itemset from a transaction database persisted
        * as an appropriate table from a JDBC database; the parameters are 
        * retrieved from the service configuration
        */
-      case Sources.JDBC => new JdbcSource(sc).related(data)
+      case Sources.JDBC => {
+        
+        val rawset = new JdbcSource(sc).connect(data)
+        itemsetModel.buildJDBC(uid,rawset)
+        
+      }
       /*
        * Retrieve most recent itemset from a transaction database persisted
        * as an appropriate table from a Piwik database; the parameters are 
        * retrieved from the service configuration
        */
-      case Sources.PIWIK => new PiwikSource(sc).related(data)
+      case Sources.PIWIK => {
+        
+        val rawset = new PiwikSource(sc).connect(data)
+        itemsetModel.buildPiwik(uid,rawset)
+        
+      }
             
       case _ => null
       

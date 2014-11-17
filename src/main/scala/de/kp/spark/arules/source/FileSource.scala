@@ -23,7 +23,7 @@ import org.apache.spark.rdd.RDD
 
 import de.kp.spark.arules.Configuration
 
-class FileSource(@transient sc:SparkContext) extends Source(sc) {
+class FileSource(@transient sc:SparkContext) {
 
   val input = Configuration.file()
   
@@ -31,18 +31,9 @@ class FileSource(@transient sc:SparkContext) extends Source(sc) {
    * Read data from file system: it is expected that the lines with
    * the respective text file are already formatted in the SPMF form
    */
-  override def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[(Int,Array[Int])] = {
-    
-    sc.textFile(input).map(valu => {
-      
-      val Array(sid,sequence) = valu.split(",")  
-      (sid.toInt,sequence.split(" ").map(_.toInt))
-    
-    }).cache
-    
-  }
+  def connect(params:Map[String,Any] = Map.empty[String,Any]):RDD[String] = sc.textFile(input)
   
-  override def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
+  def related(params:Map[String,Any]):RDD[(String,String,List[Int])] = {
     throw new Exception("Not implemented")
   }
   
