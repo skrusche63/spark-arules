@@ -100,7 +100,9 @@ class RuleTracker extends Actor with ActorLogging {
              * automatically closed 
              */
             writer.write(index, mapping, source)
+            
           }
+          
         }
       
       } catch {
@@ -125,11 +127,9 @@ class RuleTracker extends Actor with ActorLogging {
     source += EBF.SITE_FIELD -> params(EBF.SITE_FIELD)
     source += EBF.USER_FIELD -> params(EBF.USER_FIELD)
       
-    source += EBF.TIMESTAMP_FIELD -> params(EBF.TIMESTAMP_FIELD)
- 
+    source += EBF.TIMESTAMP_FIELD -> params(EBF.TIMESTAMP_FIELD) 
     source += EBF.GROUP_FIELD -> params(EBF.GROUP_FIELD)
-    source += EBF.ITEM_FIELD -> params(EBF.ITEM_FIELD)
-
+ 
     source
     
   }
