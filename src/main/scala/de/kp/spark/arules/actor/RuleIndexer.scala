@@ -23,6 +23,11 @@ import de.kp.spark.arules.model._
 import de.kp.spark.arules.io.ElasticIndexer
 import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF}
 
+/**
+ * RuleIndexer supports the administration task of creating an
+ * Elasticsearch index, both for the registration of purchase
+ * items and association rules
+ */
 class RuleIndexer extends BaseActor {
   
   def receive = {
@@ -37,11 +42,11 @@ class RuleIndexer extends BaseActor {
         val index   = req.data("index")
         val mapping = req.data("type")
     
-        val topic = req.task match {
+        val topic = req.task.split(":")(1) match {
           
-          case "index:item" => "item"
+          case "item" => "item"
           
-          case "index:rule" => "rule"
+          case "rule" => "rule"
           
           case _ => {
             
@@ -59,7 +64,7 @@ class RuleIndexer extends BaseActor {
         indexer.close()
       
         val data = Map("uid" -> uid, "message" -> Messages.SEARCH_INDEX_CREATED(uid))
-        val response = new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)	
+        val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)	
       
         origin ! Serializer.serializeResponse(response)
       
@@ -70,7 +75,7 @@ class RuleIndexer extends BaseActor {
           log.error(e, e.getMessage())
       
           val data = Map("uid" -> uid, "message" -> e.getMessage())
-          val response = new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+          val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
       
           origin ! Serializer.serializeResponse(response)
           

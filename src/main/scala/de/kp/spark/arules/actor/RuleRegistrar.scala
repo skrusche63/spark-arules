@@ -46,7 +46,7 @@ class RuleRegistrar extends BaseActor {
         fields += new Field("item","integer",req.data("item"))
         RedisCache.addFields(req, new Fields(fields.toList))
         
-        new ServiceResponse("association","register",Map("uid"-> uid),ARulesStatus.SUCCESS)
+        new ServiceResponse("association","register",Map("uid"-> uid),ResponseStatus.SUCCESS)
         
       } catch {
         case throwable:Throwable => failure(req,throwable.getMessage)

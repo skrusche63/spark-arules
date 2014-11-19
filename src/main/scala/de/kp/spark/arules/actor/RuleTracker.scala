@@ -31,13 +31,27 @@ import scala.collection.mutable.HashMap
 class RuleTracker extends Actor with ActorLogging {
   
   def receive = {
-    
+    /*
+     * Example request data:
+     * 
+     * "uid": "123456"
+     * 
+     * "index": "orders"
+     * "type" : "products"
+     * 
+     * "site"    : "site-1"
+     * "user"    : "user-1"
+     * "timestamp: "1234567890"
+     * "group"   : "group-1"
+     * "item"    : "1,2,3,4,5,6,7"
+     * 
+     */
     case req:ServiceRequest => {
 
       val uid = req.data("uid")
       
       val data = Map("uid" -> uid, "message" -> Messages.TRACKED_ITEM_RECEIVED(uid))
-      val response = new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)	
+      val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)	
       
       val origin = sender
       origin ! Serializer.serializeResponse(response)
@@ -59,15 +73,34 @@ class RuleTracker extends Actor with ActorLogging {
       
         } else {
       
-          /* Prepare data */
+          /*
+           * Data preparation comprises the extraction of all common 
+           * fields, i.e. timestamp, site, user and group. The 'item' 
+           * field may specify a list of purchase items and has to be 
+           * processed differently.
+           */
           val source = prepare(req.data)
           /*
-           * Writing this source to the respective index throws an
-           * exception in case of an error; note, that the writer is
-           * automatically closed 
+           * The 'item' field specifies a comma-separated list
+           * of item (e.g.) product identifiers. Note, that every
+           * item is actually indexed individually. This is due to
+           * synergy effects with other data sources
            */
-          writer.write(index, mapping, source)
-        
+          val items = req.data(EBF.ITEM_FIELD).split(",")
+          for  (item <- items) {
+            
+            /*
+             * Set or overwrite the 'item' field in the respective source
+             */
+            source.put(EBF.ITEM_FIELD, item)
+            
+            /*
+             * Writing this source to the respective index throws an
+             * exception in case of an error; note, that the writer is
+             * automatically closed 
+             */
+            writer.write(index, mapping, source)
+          }
         }
       
       } catch {

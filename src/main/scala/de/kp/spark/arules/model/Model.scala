@@ -136,43 +136,56 @@ object Sinks {
 
 object Messages {
 
-  def ALGORITHM_IS_UNKNOWN(uid:String,algorithm:String):String = String.format("""Algorithm '%s' is unknown for uid '%s'.""", algorithm, uid)
+  def ALGORITHM_IS_UNKNOWN(uid:String,algorithm:String):String = 
+    String.format("""[UID: %s] Algorithm '%s' is unknown.""", uid, algorithm)
 
-  def GENERAL_ERROR(uid:String):String = String.format("""A general error appeared for uid '%s'.""", uid)
+  def GENERAL_ERROR(uid:String):String = 
+    String.format("""[UID: %s] A general error appeared.""", uid)
+
+  def MINING_STARTED(uid:String) = 
+    String.format("""[UID: %s] Training task started.""", uid)
+  
+  def MISSING_PARAMETERS(uid:String):String = 
+    String.format("""[UID: %s] Training task has missing parameters.""", uid)
  
-  def NO_ALGORITHM_PROVIDED(uid:String):String = String.format("""No algorithm provided for uid '%s'.""", uid)
+  def NO_ALGORITHM_PROVIDED(uid:String):String = 
+    String.format("""[UID: %s] No algorithm specified.""", uid)
 
-  def NO_PARAMETERS_PROVIDED(uid:String):String = String.format("""No parameters provided for uid '%s'.""", uid)
+  def NO_PARAMETERS_PROVIDED(uid:String):String = 
+    String.format("""[UID: %s] No parameters provided.""", uid)
 
-  def NO_SOURCE_PROVIDED(uid:String):String = String.format("""No source provided for uid '%s'.""", uid)
+  def NO_SOURCE_PROVIDED(uid:String):String = 
+    String.format("""[UID: %s] No source provided.""", uid)
 
-  def NO_ITEMS_PROVIDED(uid:String):String = String.format("""No items are provided for uid '%s'.""", uid)
+  def NO_ITEMS_PROVIDED(uid:String):String = 
+    String.format("""[UID: %s] No items are provided.""", uid)
 
   def REQUEST_IS_UNKNOWN():String = String.format("""Unknown request.""")
 
-  def TASK_ALREADY_STARTED(uid:String):String = String.format("""The task with uid '%s' is already started.""", uid)
+  def RULES_DO_NOT_EXIST(uid:String):String = 
+    String.format("""[UID: %s] No association rules found.""", uid)
 
-  def TASK_DOES_NOT_EXIST(uid:String):String = String.format("""The task with uid '%s' does not exist.""", uid)
+  def SEARCH_INDEX_CREATED(uid:String):String = 
+    String.format("""[UID: %s] Search index created.""", uid)
 
-  def TASK_IS_UNKNOWN(uid:String,task:String):String = String.format("""The task '%s' is unknown for uid '%s'.""", task, uid)
+  def SOURCE_IS_UNKNOWN(uid:String,source:String):String = 
+    String.format("""[UID: %s] Data source '%s' is unknown.""", uid, source)
 
-  def MINING_STARTED(uid:String) = String.format("""Association rule mining started for uid '%s'.""", uid)
-  
-  def MISSING_PARAMETERS(uid:String):String = String.format("""Missing parameters for uid '%s'.""", uid)
+  def TASK_ALREADY_STARTED(uid:String):String = 
+    String.format("""[UID: %s] The task is already started.""", uid)
 
-  def USER_RULES_DO_NOT_EXIST(uid:String):String = String.format("""The user rules exist for uid '%s'.""", uid)
+  def TASK_DOES_NOT_EXIST(uid:String):String = 
+    String.format("""[UID: %s] The task does not exist.""", uid)
 
-  def RULES_DO_NOT_EXIST(uid:String):String = String.format("""The rules for uid '%s' do not exist.""", uid)
-
-  def SOURCE_IS_UNKNOWN(uid:String,source:String):String = String.format("""Source '%s' is unknown for uid '%s'.""", source, uid)
-
-  def SEARCH_INDEX_CREATED(uid:String):String = String.format("""Search index created for uid '%s'.""", uid)
+  def TASK_IS_UNKNOWN(uid:String,task:String):String = 
+    String.format("""[UID: %s] The task '%s' is unknown.""", uid, task)
  
-  def TRACKED_ITEM_RECEIVED(uid:String):String = String.format("""Tracked item received for uid '%s'.""", uid)
+  def TRACKED_ITEM_RECEIVED(uid:String):String = 
+    String.format("""[UID: %s] Tracked item(s) received.""", uid)
  
 }
 
-object ARulesStatus {
+object ResponseStatus {
   
   val DATASET:String = "dataset"
     

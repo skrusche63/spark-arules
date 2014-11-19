@@ -58,7 +58,7 @@ class RuleQuestor extends BaseActor {
                val rules = sink.rulesByAntecedent(uid,items)
                
                val data = Map("uid" -> uid, "rule" -> rules)
-               new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+               new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
              
              }
             
@@ -87,7 +87,7 @@ class RuleQuestor extends BaseActor {
                val rules = sink.rulesByConsequent(uid,items)
                
                val data = Map("uid" -> uid, "rule" -> rules)
-               new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+               new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
              
              }
             
@@ -102,7 +102,7 @@ class RuleQuestor extends BaseActor {
         case "recommendation" => {
 
           if (sink.multiUserRulesExist(uid) == false) {           
-            failure(req, Messages.USER_RULES_DO_NOT_EXIST(uid))
+            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
@@ -110,7 +110,7 @@ class RuleQuestor extends BaseActor {
             val rules = sink.rulesByUsers(uid,users)
             
             val data = Map("uid" -> uid, "recommendation" -> rules)            
-            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+            new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
            
           }
           
@@ -129,7 +129,7 @@ class RuleQuestor extends BaseActor {
             val rules = sink.rulesAsString(uid)
 
             val data = Map("uid" -> uid, "rule" -> rules)            
-            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+            new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
             
           }
            
@@ -142,14 +142,14 @@ class RuleQuestor extends BaseActor {
         case "transaction" => {
 
           if (sink.multiUserRulesExist(uid) == false) {           
-            failure(req, Messages.USER_RULES_DO_NOT_EXIST(uid))
+            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
             val rules = sink.multiUserRulesAsString(uid)
 
             val data = Map("uid" -> uid, "transaction" -> rules)            
-            new ServiceResponse(req.service,req.task,data,ARulesStatus.SUCCESS)
+            new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
             
           }
            

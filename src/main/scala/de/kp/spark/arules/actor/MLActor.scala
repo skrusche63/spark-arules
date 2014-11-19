@@ -69,10 +69,10 @@ abstract class MLActor extends Actor with ActorLogging {
     saveMultiUserRules(req,new MultiUserRules(multiUserRules.toList))
           
     /* Update RedisCache */
-    RedisCache.addStatus(req,ARulesStatus.FINISHED)
+    RedisCache.addStatus(req,ResponseStatus.FINISHED)
 
     /* Notify potential listeners */
-    notify(req,ARulesStatus.FINISHED)
+    notify(req,ResponseStatus.FINISHED)
     
   }
   
@@ -151,11 +151,11 @@ abstract class MLActor extends Actor with ActorLogging {
     
     if (missing == true) {
       val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+      new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
   
     } else {
       val data = Map("uid" -> uid, "message" -> Messages.MINING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.STARTED)	
+      new ServiceResponse(req.service,req.task,data,ResponseStatus.STARTED)	
   
     }
 

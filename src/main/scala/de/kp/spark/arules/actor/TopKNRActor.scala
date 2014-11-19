@@ -40,7 +40,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
 
       if (params != null) {
         /* Register status */
-        RedisCache.addStatus(req,ARulesStatus.STARTED)
+        RedisCache.addStatus(req,ResponseStatus.STARTED)
  
         try {
           
@@ -68,7 +68,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
           }
 
         } catch {
-          case e:Exception => RedisCache.addStatus(req,ARulesStatus.FAILURE)          
+          case e:Exception => RedisCache.addStatus(req,ResponseStatus.FAILURE)          
         }
  
 
@@ -89,7 +89,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
  
   private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
 
-    RedisCache.addStatus(req,ARulesStatus.DATASET)
+    RedisCache.addStatus(req,ResponseStatus.DATASET)
           
     val (k,minconf,delta) = params
     val rules = TopKNR.extractRules(dataset,k,minconf,delta).map(rule => {
@@ -107,7 +107,7 @@ class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
     saveRules(req,new Rules(rules))
           
     /* Update status */
-    RedisCache.addStatus(req,ARulesStatus.RULES)
+    RedisCache.addStatus(req,ResponseStatus.RULES)
     
     rules
     

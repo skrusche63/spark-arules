@@ -27,11 +27,11 @@ abstract class BaseActor extends Actor with ActorLogging {
     
     if (req == null) {
       val data = Map("message" -> message)
-      new ServiceResponse("","",data,ARulesStatus.FAILURE)	
+      new ServiceResponse("","",data,ResponseStatus.FAILURE)	
       
     } else {
       val data = Map("uid" -> req.data("uid"), "message" -> message)
-      new ServiceResponse(req.service,req.task,data,ARulesStatus.FAILURE)	
+      new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
     
     }
     
