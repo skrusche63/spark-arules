@@ -188,11 +188,17 @@ object Messages {
 object ResponseStatus {
   
   val DATASET:String = "dataset"
-    
-  val STARTED:String = "started"
-  val FINISHED:String = "finished"
+  /*
+   * Stati to describe start & end of a longer
+   * running mining task
+   */
+  val MINING_STARTED:String  = "mining:started"
+  val MINING_FINISHED:String = "mining:finished"
   
   val RULES:String = "rules"
+    
+  val TRACKING_STARTED:String = "tracking:started"
+  val TRACKING_FINISHED:String = "tracking:finsihed"
   
   val FAILURE:String = "failure"
   val SUCCESS:String = "success"

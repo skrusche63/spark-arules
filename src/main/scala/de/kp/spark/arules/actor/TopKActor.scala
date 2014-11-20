@@ -42,7 +42,7 @@ class TopKActor(@transient val sc:SparkContext) extends MLActor {
 
       if (missing == false) {
         /* Register status */
-        RedisCache.addStatus(req,ResponseStatus.STARTED)
+        RedisCache.addStatus(req,ResponseStatus.MINING_STARTED)
  
         try {
           

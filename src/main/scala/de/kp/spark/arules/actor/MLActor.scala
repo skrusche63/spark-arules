@@ -69,10 +69,10 @@ abstract class MLActor extends Actor with ActorLogging {
     saveMultiUserRules(req,new MultiUserRules(multiUserRules.toList))
           
     /* Update RedisCache */
-    RedisCache.addStatus(req,ResponseStatus.FINISHED)
+    RedisCache.addStatus(req,ResponseStatus.MINING_FINISHED)
 
     /* Notify potential listeners */
-    notify(req,ResponseStatus.FINISHED)
+    notify(req,ResponseStatus.MINING_FINISHED)
     
   }
   
@@ -155,7 +155,7 @@ abstract class MLActor extends Actor with ActorLogging {
   
     } else {
       val data = Map("uid" -> uid, "message" -> Messages.MINING_STARTED(uid))
-      new ServiceResponse(req.service,req.task,data,ResponseStatus.STARTED)	
+      new ServiceResponse(req.service,req.task,data,ResponseStatus.MINING_STARTED)	
   
     }
 
