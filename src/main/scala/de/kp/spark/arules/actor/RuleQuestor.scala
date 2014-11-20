@@ -106,8 +106,10 @@ class RuleQuestor extends BaseActor {
             
           } else {            
             
+            val site  = req.data("site")
             val users = req.data("users").split(",").toList
-            val rules = sink.rulesByUsers(uid,users)
+            
+            val rules = sink.rulesByUsers(uid,site,users)
             
             val data = Map("uid" -> uid, "recommendation" -> rules)            
             new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)

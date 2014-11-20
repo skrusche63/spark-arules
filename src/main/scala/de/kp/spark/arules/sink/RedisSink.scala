@@ -125,7 +125,7 @@ class RedisSink {
 
   } 
   
-  def rulesByUsers(uid:String,users:List[String]):String = {
+  def rulesByUsers(uid:String,site:String,users:List[String]):String = {
                 
     val rules = Serializer.deserializeMultiUserRules(multiUserRulesAsString(uid)).items
             
@@ -135,7 +135,7 @@ class RedisSink {
      * 
      * This implies that the respective data from rules must be piped
      */
-    val filteredRules = rules.filter(entry => users.contains(entry.site + "|" + entry.user))
+    val filteredRules = rules.filter(entry => site == entry.site && users.contains(entry.user))
     Serializer.serializeMultiUserRules(new MultiUserRules(filteredRules))
 
   }
