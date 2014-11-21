@@ -76,7 +76,6 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
     buildSPMF(dataset)
 
   }
-
     
   def buildPiwik(uid:String,rawset:RDD[Map[String,Any]]):RDD[(Int,Array[Int])] = {
     
