@@ -21,8 +21,10 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.source.JdbcSource
+import de.kp.spark.core.io.JdbcReader
+
 import de.kp.spark.arules.Configuration
-import de.kp.spark.arules.io.JdbcReader
 
 /**
  * PiwikSource is an extension of the common JdbcSource that holds Piwik specific
@@ -47,7 +49,7 @@ class PiwikSource(@transient sc:SparkContext) extends JdbcSource(sc) {
       "quantity",
       "deleted")
 
-  override def connect(params:Map[String,Any]):RDD[Map[String,Any]] = {
+  override def connect(params:Map[String,Any],fields:List[String]=List.empty[String]):RDD[Map[String,Any]] = {
     
     /* Retrieve site, start & end date from params */
     val site = params("site").asInstanceOf[Int]

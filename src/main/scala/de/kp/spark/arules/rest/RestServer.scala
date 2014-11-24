@@ -20,7 +20,8 @@ package de.kp.spark.arules.rest
 
 import akka.actor.ActorSystem
 
-import de.kp.spark.arules.{Configuration,SparkService}
+import de.kp.spark.core.SparkService
+import de.kp.spark.arules.Configuration
 
 object RestServer extends SparkService {
   

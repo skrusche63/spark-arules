@@ -36,6 +36,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
+import de.kp.spark.core.rest.RestService
 
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.actor.{RuleMaster}
@@ -44,7 +45,7 @@ import de.kp.spark.arules.model._
 class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkContext) extends HttpService with Directives {
 
   implicit val ec:ExecutionContext = system.dispatcher  
-  import de.kp.spark.arules.rest.RestJsonSupport._
+  import de.kp.spark.core.rest.RestJsonSupport._
   
   override def actorRefFactory:ActorSystem = system
   

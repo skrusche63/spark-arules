@@ -18,10 +18,11 @@ package de.kp.spark.arules.redis
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.arules.model._
-
 import java.util.Date
 import scala.collection.JavaConversions._
+
+import de.kp.spark.core.redis.RedisClient
+import de.kp.spark.arules.model._
 
 object RedisCache {
 

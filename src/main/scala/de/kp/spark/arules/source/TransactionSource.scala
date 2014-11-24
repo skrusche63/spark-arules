@@ -21,7 +21,12 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
+
+import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model.Sources
+
+import de.kp.spark.arules.spec.Fields
 
 /**
  * A TransactionSource is an abstraction layer on top of
@@ -56,8 +61,10 @@ class TransactionSource(@transient sc:SparkContext) {
        * retrieved from the service configuration  
        */    
       case Sources.FILE => {
-        
-        val rawset = new FileSource(sc).connect(data)
+
+        val path = Configuration.file()
+         
+        val rawset = new FileSource(sc).connect(data,path)
         transactionModel.buildFile(uid,rawset)
         
       }
@@ -67,8 +74,10 @@ class TransactionSource(@transient sc:SparkContext) {
        * are retrieved from the service configuration
        */
       case Sources.JDBC => {
+    
+        val fields = Fields.get(uid).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(data)
+        val rawset = new JdbcSource(sc).connect(data,fields)
         transactionModel.buildJDBC(uid,rawset)
         
       }
@@ -113,8 +122,10 @@ class TransactionSource(@transient sc:SparkContext) {
        * retrieved from the service configuration
        */
       case Sources.JDBC => {
+
+        val fields = Fields.get(uid).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(data)
+        val rawset = new JdbcSource(sc).connect(data,fields)
         itemsetModel.buildJDBC(uid,rawset)
         
       }
