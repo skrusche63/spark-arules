@@ -26,14 +26,6 @@ import org.json4s.native.Serialization.{read,write}
 import de.kp.spark.core.model._
 import de.kp.spark.core.model.BaseMessages
 
-/*
- * Service requests are mapped onto job descriptions and are stored
- * in a Redis instance
- */
-case class JobDesc(
-  service:String,task:String,status:String
-)
-
 case class Rule (
   antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
 
@@ -52,20 +44,7 @@ case class UserRules(site:String,user:String,items:List[WeightedRule])
 
 case class MultiUserRules(items:List[UserRules])
 
-object Serializer {
-    
-  implicit val formats = Serialization.formats(NoTypeHints)
-  
-  def serializeFields(fields:Fields):String = write(fields)
-  def deserializeFields(fields:String):Fields = read[Fields](fields)
-
-  def serializeJob(job:JobDesc):String = write(job)
-  def deserializeJob(job:String):JobDesc = read[JobDesc](job)
-  
-  def serializeResponse(response:ServiceResponse):String = write(response)
-  
-  def deserializeRequest(request:String):ServiceRequest = read[ServiceRequest](request)
-  def serializeRequest(request:ServiceRequest):String = write(request)
+object Serializer extends BaseSerializer {
   
   def serializeWeightedRules(rules:UserRules):String = write(rules)
   def deserializeWeightedRules(rules:String):UserRules = read[UserRules](rules)

@@ -21,7 +21,6 @@ package de.kp.spark.arules.actor
 import de.kp.spark.core.model._
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.redis.RedisCache
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -46,7 +45,7 @@ class RuleRegistrar extends BaseActor {
         fields += new Field("group","string",req.data("group"))
 
         fields += new Field("item","integer",req.data("item"))
-        RedisCache.addFields(req, new Fields(fields.toList))
+        cache.addFields(req, new Fields(fields.toList))
         
         new ServiceResponse("association","register",Map("uid"-> uid),ResponseStatus.SUCCESS)
         

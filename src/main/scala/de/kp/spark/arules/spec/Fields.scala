@@ -18,8 +18,8 @@ package de.kp.spark.arules.spec
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.arules.model._
-import de.kp.spark.arules.redis.RedisCache
+import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisCache
 
 import scala.xml._
 import scala.collection.mutable.HashMap
@@ -27,16 +27,17 @@ import scala.collection.mutable.HashMap
 object Fields {
   
   val path = "fieldspec.xml"
+  val cache = new RedisCache()
 
-  def get(uid:String):Map[String,(String,String)] = {
+  def get(req:ServiceRequest):Map[String,(String,String)] = {
     
     val fields = HashMap.empty[String,(String,String)]
 
     try {
           
-      if (RedisCache.fieldsExist(uid)) {   
+      if (cache.fieldsExist(req)) {   
         
-        val fieldspec = RedisCache.fields(uid)
+        val fieldspec = cache.fields(req)
         for (field <- fieldspec.items) {
         
           val _name = field.name

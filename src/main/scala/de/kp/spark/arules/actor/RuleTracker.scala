@@ -18,7 +18,6 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import akka.actor.{Actor,ActorLogging}
 import de.kp.spark.core.model._
 
 import de.kp.spark.arules.model._
@@ -26,12 +25,10 @@ import de.kp.spark.arules.model._
 import de.kp.spark.arules.io.ElasticWriter
 import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF}
 
-import de.kp.spark.arules.redis.RedisCache
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 
-class RuleTracker extends Actor with ActorLogging {
+class RuleTracker extends BaseActor {
   
   def receive = {
     /*
@@ -79,7 +76,7 @@ class RuleTracker extends Actor with ActorLogging {
           /*
            * Set status to indicate that the data tracking has started
            */
-          RedisCache.addStatus(req,ResponseStatus.TRACKING_STARTED)
+          cache.addStatus(req,ResponseStatus.TRACKING_STARTED)
       
           /*
            * Data preparation comprises the extraction of all common 
@@ -115,7 +112,7 @@ class RuleTracker extends Actor with ActorLogging {
            * Set status to indicate that the respective data have
            * been tracked sucessfully
            */
-          RedisCache.addStatus(req,ResponseStatus.TRACKING_FINISHED)
+          cache.addStatus(req,ResponseStatus.TRACKING_FINISHED)
           
         }
       

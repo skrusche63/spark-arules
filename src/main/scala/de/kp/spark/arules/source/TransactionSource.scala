@@ -21,6 +21,7 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
 import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
 
 import de.kp.spark.arules.Configuration
@@ -38,11 +39,9 @@ class TransactionSource(@transient sc:SparkContext) {
   private val itemsetModel = new ItemsetModel(sc)
   private val transactionModel = new TransactionModel(sc)
   
-  def transDS(data:Map[String,String]):RDD[(Int,Array[Int])] = {
+  def transDS(req:ServiceRequest):RDD[(Int,Array[Int])] = {
     
-    val uid = data("uid")
-    
-    val source = data("source")
+    val source = req.data("source")
     source match {
       /* 
        * Discover top k association rules from transaction database persisted 
@@ -51,8 +50,8 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.ELASTIC => {
         
-        val rawset = new ElasticSource(sc).connect(data)
-        transactionModel.buildElastic(uid,rawset)
+        val rawset = new ElasticSource(sc).connect(req.data)
+        transactionModel.buildElastic(req,rawset)
         
       }
       /* 
@@ -64,8 +63,8 @@ class TransactionSource(@transient sc:SparkContext) {
 
         val path = Configuration.file()
          
-        val rawset = new FileSource(sc).connect(data,path)
-        transactionModel.buildFile(uid,rawset)
+        val rawset = new FileSource(sc).connect(req.data,path)
+        transactionModel.buildFile(req,rawset)
         
       }
       /*
@@ -75,10 +74,10 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.JDBC => {
     
-        val fields = Fields.get(uid).map(kv => kv._2._1).toList    
+        val fields = Fields.get(req).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(data,fields)
-        transactionModel.buildJDBC(uid,rawset)
+        val rawset = new JdbcSource(sc).connect(req.data,fields)
+        transactionModel.buildJDBC(req,rawset)
         
       }
       /*
@@ -88,8 +87,8 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.PIWIK => {
         
-        val rawset = new PiwikSource(sc).connect(data)
-        transactionModel.buildPiwik(uid,rawset)
+        val rawset = new PiwikSource(sc).connect(req.data)
+        transactionModel.buildPiwik(req,rawset)
         
       }
             
@@ -99,11 +98,9 @@ class TransactionSource(@transient sc:SparkContext) {
 
   }
 
-  def itemsetDS(data:Map[String,String]):RDD[(String,String,List[Int])] = {
+  def itemsetDS(req:ServiceRequest):RDD[(String,String,List[Int])] = {
     
-    val uid = data("uid")
-    
-    val source = data("source")
+    val source = req.data("source")
     source match {
       /* 
        * Retrieve most recent itemset from a transaction database persisted
@@ -112,8 +109,8 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.ELASTIC => {
          
-        val rawset = new ElasticSource(sc).connect(data)
-        itemsetModel.buildElastic(uid,rawset)
+        val rawset = new ElasticSource(sc).connect(req.data)
+        itemsetModel.buildElastic(req,rawset)
         
       }
       /*
@@ -123,10 +120,10 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.JDBC => {
 
-        val fields = Fields.get(uid).map(kv => kv._2._1).toList    
+        val fields = Fields.get(req).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(data,fields)
-        itemsetModel.buildJDBC(uid,rawset)
+        val rawset = new JdbcSource(sc).connect(req.data,fields)
+        itemsetModel.buildJDBC(req,rawset)
         
       }
       /*
@@ -136,8 +133,8 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.PIWIK => {
         
-        val rawset = new PiwikSource(sc).connect(data)
-        itemsetModel.buildPiwik(uid,rawset)
+        val rawset = new PiwikSource(sc).connect(req.data)
+        itemsetModel.buildPiwik(req,rawset)
         
       }
             

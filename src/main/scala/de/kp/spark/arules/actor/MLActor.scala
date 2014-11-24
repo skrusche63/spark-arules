@@ -22,19 +22,20 @@ import org.apache.spark.rdd.RDD
 import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.redis.RedisCache
 
 import de.kp.spark.arules.RemoteContext
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
 
-import de.kp.spark.arules.redis.RedisCache
-
 /**
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
 abstract class MLActor extends Actor with ActorLogging {
+  
+  val cache = new RedisCache()
   /**
    * For every (site,user) pair and every discovered association rule, 
    * determine the 'antecedent' intersection ratio and filter those
@@ -71,7 +72,7 @@ abstract class MLActor extends Actor with ActorLogging {
     saveMultiUserRules(req,new MultiUserRules(multiUserRules.toList))
           
     /* Update RedisCache */
-    RedisCache.addStatus(req,ResponseStatus.MINING_FINISHED)
+    cache.addStatus(req,ResponseStatus.MINING_FINISHED)
 
     /* Notify potential listeners */
     notify(req,ResponseStatus.MINING_FINISHED)

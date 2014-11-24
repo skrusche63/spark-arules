@@ -21,13 +21,14 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
 import de.kp.spark.arules.spec.Fields
 
 class TransactionModel(@transient sc:SparkContext) extends Serializable {
   
-  def buildElastic(uid:String,rawset:RDD[Map[String,String]]):RDD[(Int,Array[Int])] = {
+  def buildElastic(req:ServiceRequest,rawset:RDD[Map[String,String]]):RDD[(Int,Array[Int])] = {
 
-    val spec = sc.broadcast(Fields.get(uid))
+    val spec = sc.broadcast(Fields.get(req))
     val dataset = rawset.map(data => {
       
       val site = data(spec.value("site")._1)
@@ -44,7 +45,7 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
 
   }
   
-  def buildFile(uid:String,rawset:RDD[String]):RDD[(Int,Array[Int])] = {
+  def buildFile(req:ServiceRequest,rawset:RDD[String]):RDD[(Int,Array[Int])] = {
     
     rawset.map(valu => {
       
@@ -55,9 +56,9 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
     
   }
   
-  def buildJDBC(uid:String,rawset:RDD[Map[String,Any]]):RDD[(Int,Array[Int])] = {
+  def buildJDBC(req:ServiceRequest,rawset:RDD[Map[String,Any]]):RDD[(Int,Array[Int])] = {
         
-    val fieldspec = Fields.get(uid)
+    val fieldspec = Fields.get(req)
     val fields = fieldspec.map(kv => kv._2._1).toList    
 
     val spec = sc.broadcast(fieldspec)
@@ -77,7 +78,7 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
 
   }
     
-  def buildPiwik(uid:String,rawset:RDD[Map[String,Any]]):RDD[(Int,Array[Int])] = {
+  def buildPiwik(req:ServiceRequest,rawset:RDD[Map[String,Any]]):RDD[(Int,Array[Int])] = {
     
     val rows = rawset.map(row => {
       
