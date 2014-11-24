@@ -21,6 +21,8 @@ package de.kp.spark.arules.sink
 import java.util.{Date,UUID}
 import java.sql._
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 

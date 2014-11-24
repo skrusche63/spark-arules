@@ -36,6 +36,8 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 
 import scala.util.parsing.json._
+
+import de.kp.spark.core.model._
 import de.kp.spark.core.rest.RestService
 
 import de.kp.spark.arules.Configuration

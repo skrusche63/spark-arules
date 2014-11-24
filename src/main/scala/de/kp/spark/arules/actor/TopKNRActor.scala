@@ -21,6 +21,8 @@ package de.kp.spark.arules.actor
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.arules.TopKNR
 import de.kp.spark.arules.source.TransactionSource
 

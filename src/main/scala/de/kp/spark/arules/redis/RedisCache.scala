@@ -22,6 +22,8 @@ import java.util.Date
 import scala.collection.JavaConversions._
 
 import de.kp.spark.core.redis.RedisClient
+import de.kp.spark.core.model._
+
 import de.kp.spark.arules.model._
 
 object RedisCache {

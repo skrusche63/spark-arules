@@ -21,6 +21,8 @@ package de.kp.spark.arules.actor
 import org.apache.spark.rdd.RDD
 import akka.actor.{Actor,ActorLogging}
 
+import de.kp.spark.core.model._
+
 import de.kp.spark.arules.RemoteContext
 
 import de.kp.spark.arules.model._

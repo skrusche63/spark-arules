@@ -20,7 +20,9 @@ package de.kp.spark.arules.sink
 
 import java.util.Date
 
+import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisClient
+
 import de.kp.spark.arules.model._
 
 import scala.collection.JavaConversions._

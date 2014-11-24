@@ -19,6 +19,8 @@ package de.kp.spark.arules.actor
 */
 
 import akka.actor.{Actor,ActorLogging}
+
+import de.kp.spark.core.model._
 import de.kp.spark.arules.model._
 
 abstract class BaseActor extends Actor with ActorLogging {
