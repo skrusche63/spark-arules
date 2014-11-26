@@ -34,70 +34,49 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.Future
 
 class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
-  
+
   val (duration,retries,time) = Configuration.actor   
+	  	    
+  implicit val ec = context.dispatcher
+  implicit val timeout:Timeout = DurationInt(time).second
 
   override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
     case _ : Exception => SupervisorStrategy.Restart
   }
   
   def receive = {
-    
+    /*
+     * This request is initiated by a remote Akka service and
+     * delegated from the RuleService
+     */
     case req:String => {
-      
-      implicit val ec = context.dispatcher
-      implicit val timeout:Timeout = DurationInt(time).second
-	  	    
+
 	  val origin = sender
 
 	  val deser = Serializer.deserializeRequest(req)
-	  val response = deser.task.split(":")(0) match {
-        /*
-         * Retrieve all the relations or rules discovered by a 
-         * previous mining task; relevant is the 'uid' of the 
-         * mining task to get the respective data
-         */
-        case "get" => ask(actor("questor"),deser).mapTo[ServiceResponse]
-        /*
-         * Request to prepare the Elasticsearch index for subsequent
-         * tracking events; this is an event invoked by the admin
-         * interface
-         */
-        case "index" => ask(actor("indexer"),deser).mapTo[ServiceResponse]
-        /*
-         * Request to register the field specification, that determines
-         * which data source fields map onto the internal format used
-         */
-        case "register"  => ask(actor("registrar"),deser).mapTo[ServiceResponse]
-        /*
-         * Request the actual status of an association rule
-         * mining task; note, that get requests should only
-         * be invoked after having retrieved a FINISHED status
-         */
-        case "status" => ask(actor("miner"),deser).mapTo[ServiceResponse]
-        /*
-         * Start the association rule mining
-         */
-        case "train"  => ask(actor("miner"),deser).mapTo[ServiceResponse]
-        /*
-         * Track item for later association rule mining
-         */
-        case "track"  => ask(actor("tracker"),deser).mapTo[ServiceResponse]
-       
-        case _ => {
-
-          Future {     
-            failure(deser,Messages.TASK_IS_UNKNOWN(deser.data("uid"),deser.task))
-          } 
-        
-        }
-      
-      }
+	  val response = execute(deser)
+	  
       response.onSuccess {
         case result => origin ! Serializer.serializeResponse(result)
       }
       response.onFailure {
         case result => origin ! failure(deser,Messages.GENERAL_ERROR(deser.data("uid")))	      
+	  }
+      
+    }
+    /*
+     * This request is initiated by the Rest API
+     */
+    case req:ServiceRequest => {
+
+	  val origin = sender
+
+	  val response = execute(req)	  
+      response.onSuccess {
+        case result => origin ! Serializer.serializeResponse(result)
+      }
+      response.onFailure {
+        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data("uid")))	      
 	  }
       
     }
@@ -113,6 +92,53 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
     
   }
 
+  private def execute(req:ServiceRequest):Future[ServiceResponse] = {
+	  
+    req.task.split(":")(0) match {
+      /*
+       * Retrieve all the relations or rules discovered by a 
+       * previous mining task; relevant is the 'uid' of the 
+       * mining task to get the respective data
+       */
+      case "get" => ask(actor("questor"),req).mapTo[ServiceResponse]
+      /*
+       * Request to prepare the Elasticsearch index for subsequent
+       * tracking events; this is an event invoked by the admin
+       * interface
+       */
+      case "index" => ask(actor("indexer"),req).mapTo[ServiceResponse]
+      /*
+       * Request to register the field specification, that determines
+       * which data source fields map onto the internal format used
+       */
+      case "register" => ask(actor("registrar"),req).mapTo[ServiceResponse]
+      /*
+       * Request the actual status of an association rule
+       * mining task; note, that get requests should only
+       * be invoked after having retrieved a FINISHED status
+       */
+      case "status" => ask(actor("miner"),req).mapTo[ServiceResponse]
+      /*
+       * Start association rule mining
+       */
+      case "train"  => ask(actor("miner"),req).mapTo[ServiceResponse]
+      /*
+       * Track item for later association rule mining
+       */
+      case "track"  => ask(actor("tracker"),req).mapTo[ServiceResponse]
+       
+      case _ => {
+
+        Future {     
+          failure(req,Messages.TASK_IS_UNKNOWN(req.data("uid"),req.task))
+        } 
+        
+      }
+      
+    }
+    
+  }
+  
   private def actor(worker:String):ActorRef = {
     
     worker match {

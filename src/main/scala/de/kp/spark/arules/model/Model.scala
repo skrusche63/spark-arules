@@ -24,7 +24,6 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
 import de.kp.spark.core.model._
-import de.kp.spark.core.model.BaseMessages
 
 case class Rule (
   antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
@@ -116,22 +115,9 @@ object Messages extends BaseMessages {
  
 }
 
-object ResponseStatus {
+object ResponseStatus extends BaseStatus {
   
   val DATASET:String = "dataset"
-  /*
-   * Stati to describe start & end of a longer
-   * running mining task
-   */
-  val MINING_STARTED:String  = "mining:started"
-  val MINING_FINISHED:String = "mining:finished"
-  
   val RULES:String = "rules"
-    
-  val TRACKING_STARTED:String = "tracking:started"
-  val TRACKING_FINISHED:String = "tracking:finsihed"
-  
-  val FAILURE:String = "failure"
-  val SUCCESS:String = "success"
     
 }

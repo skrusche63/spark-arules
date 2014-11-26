@@ -67,10 +67,10 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	    }
 	  }
     }  ~ 
-    path("index" / Segment) {topic =>  
+    path("index" / Segment) {subject =>  
 	  post {
 	    respondWithStatus(OK) {
-	      ctx => doIndex(ctx,topic)
+	      ctx => doIndex(ctx,subject)
 	    }
 	  }
     }  ~ 
