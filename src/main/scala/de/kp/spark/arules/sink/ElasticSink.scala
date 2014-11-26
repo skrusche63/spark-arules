@@ -21,9 +21,10 @@ package de.kp.spark.arules.sink
 import java.util.{Date,UUID}
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.io.ElasticWriter
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF,ElasticWriter}
+import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
