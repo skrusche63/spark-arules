@@ -106,9 +106,6 @@ object Messages extends BaseMessages {
 
   def RULES_DO_NOT_EXIST(uid:String):String = 
     String.format("""[UID: %s] No association rules found.""", uid)
-
-  def SEARCH_INDEX_CREATED(uid:String):String = 
-    String.format("""[UID: %s] Search index created.""", uid)
  
   def TRACKED_ITEM_RECEIVED(uid:String):String = 
     String.format("""[UID: %s] Tracked item(s) received.""", uid)

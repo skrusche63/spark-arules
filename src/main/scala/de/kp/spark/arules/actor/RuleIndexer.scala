@@ -19,10 +19,9 @@ package de.kp.spark.arules.actor
  */
 
 import de.kp.spark.core.model._
+import de.kp.spark.core.io.ElasticIndexer
 
 import de.kp.spark.arules.model._
-
-import de.kp.spark.arules.io.ElasticIndexer
 import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF}
 
 /**
