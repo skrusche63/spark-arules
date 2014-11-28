@@ -1,8 +1,8 @@
-package de.kp.spark.arules.rest
+package de.kp.spark.arules.api
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-ARULES project
-* (https://github.com/skrusche63/spark-arules).
+* (https://github.com/skrusche63/spark-recom).
 * 
 * Spark-ARULES is free software: you can redistribute it and/or modify it under the
 * terms of the GNU General Public License as published by the Free Software
@@ -18,27 +18,16 @@ package de.kp.spark.arules.rest
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import akka.actor.ActorSystem
+import org.apache.spark.SparkContext
+import akka.actor.{ActorSystem,Props}
 
-import de.kp.spark.core.SparkService
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.actor.RuleMaster
 
-object RestServer extends SparkService {
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
-  
-  private def start(args:Array[String],system:ActorSystem) {
+class AkkaApi(system:ActorSystem,@transient val sc:SparkContext) {
 
-    val (host,port) = Configuration.rest
-    
-    /* Start REST API */
-    new RestApi(host,port,system,sc).start()
-      
+  val master = system.actorOf(Props(new RuleMaster(sc)), name="association-master")
+
+  def start() {
+     while (true) {}   
   }
-  
-  def main(args: Array[String]) {
-    start(args, ActorSystem("RestServer"))
-  }
-  
 }

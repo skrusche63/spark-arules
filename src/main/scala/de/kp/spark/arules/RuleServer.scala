@@ -22,39 +22,37 @@ import akka.actor.{ActorSystem,Props}
 import com.typesafe.config.ConfigFactory
 
 import de.kp.spark.core.SparkService
-import de.kp.spark.arules.actor.RuleMaster
+import de.kp.spark.arules.api.{AkkaApi,RestApi}
 
-/**
- * RuleService is an Akka Remoting based Association Rule
- * Mining Service that actually supports Top-K and Top-K
- * non redundant algorithm
- */
-object RuleService {
+object RuleServer extends SparkService {
+  
+  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
 
   def main(args: Array[String]) {
     
-    val name:String = "arules-server"
+    /**
+     * REST API 
+     */
+    val httpSystem = ActorSystem("rest-server")
+    sys.addShutdownHook(httpSystem.shutdown)
+    
+    val (host,port) = Configuration.rest
+    new RestApi(host,port,httpSystem,sc).start()
+ 
+    println("REST API activated.")
+    
+    /**
+     * AKKA API 
+     */
     val conf:String = "server.conf"
 
-    val server = new RuleService(conf, name)
-    while (true) {}
+    val akkaSystem = ActorSystem("akka-server",ConfigFactory.load(conf))
+    sys.addShutdownHook(akkaSystem.shutdown)
     
-    server.shutdown
+    new AkkaApi(akkaSystem,sc).start()
+ 
+    println("AKKA API activated.")
       
   }
 
-}
-
-class RuleService(conf:String, name:String) extends SparkService {
-
-  val system = ActorSystem(name, ConfigFactory.load(conf))
-  sys.addShutdownHook(system.shutdown)
-  
-  /* Create Spark context */
-  private val sc = createCtxLocal("RuleContext",Configuration.spark)      
-
-  val master = system.actorOf(Props(new RuleMaster(sc)), name="arules-master")
-
-  def shutdown = system.shutdown()
-  
 }

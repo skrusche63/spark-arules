@@ -1,4 +1,4 @@
-package de.kp.spark.arules.rest
+package de.kp.spark.arules.api
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-ARULES project
@@ -52,7 +52,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   override def actorRefFactory:ActorSystem = system
   
   val (duration,retries,time) = Configuration.actor   
-  val master = system.actorOf(Props(new RuleMaster(sc)), name="RuleMaster")
+  val master = system.actorOf(Props(new RuleMaster(sc)), name="association-master")
  
   def start() {
     RestService.start(routes,system,host,port)
