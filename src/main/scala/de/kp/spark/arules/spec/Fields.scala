@@ -21,13 +21,17 @@ package de.kp.spark.arules.spec
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
+import de.kp.spark.arules.Configuration
+
 import scala.xml._
 import scala.collection.mutable.HashMap
 
 object Fields {
   
   val path = "fieldspec.xml"
-  val cache = new RedisCache()
+    
+  val (host,port) = Configuration.redis
+  val cache = new RedisCache(host,port.toInt)
 
   def get(req:ServiceRequest):Map[String,(String,String)] = {
     

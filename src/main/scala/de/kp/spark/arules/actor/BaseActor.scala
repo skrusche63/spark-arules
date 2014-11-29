@@ -23,11 +23,13 @@ import akka.actor.{Actor,ActorLogging}
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
+import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
 abstract class BaseActor extends Actor with ActorLogging {
 
-  val cache = new RedisCache()
+  val (host,port) = Configuration.redis
+  val cache = new RedisCache(host,port.toInt)
   
   protected def failure(req:ServiceRequest,message:String):ServiceResponse = {
     

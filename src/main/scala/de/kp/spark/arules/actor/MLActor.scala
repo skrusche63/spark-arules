@@ -24,7 +24,7 @@ import akka.actor.{Actor,ActorLogging}
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisCache
 
-import de.kp.spark.arules.RemoteContext
+import de.kp.spark.arules.{Configuration,RemoteContext}
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
@@ -35,7 +35,9 @@ import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
  */
 abstract class MLActor extends Actor with ActorLogging {
   
-  val cache = new RedisCache()
+  val (host,port) = Configuration.redis
+  val cache = new RedisCache(host,port.toInt)
+  
   /**
    * For every (site,user) pair and every discovered association rule, 
    * determine the 'antecedent' intersection ratio and filter those

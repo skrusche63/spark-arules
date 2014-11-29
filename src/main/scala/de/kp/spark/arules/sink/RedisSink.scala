@@ -23,13 +23,16 @@ import java.util.Date
 import de.kp.spark.core.model._
 import de.kp.spark.core.redis.RedisClient
 
+import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
 import scala.collection.JavaConversions._
 
 class RedisSink {
 
-  val client  = RedisClient()
+  val (host,port) = Configuration.redis
+  val client  = RedisClient(host,port.toInt)
+
   val service = "arules"
 
   def addMultiUserRules(req:ServiceRequest, relations:MultiUserRules) {
