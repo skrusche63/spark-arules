@@ -117,7 +117,7 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * mining task; note, that get requests should only
        * be invoked after having retrieved a FINISHED status
        */
-      case "status" => ask(actor("miner"),req).mapTo[ServiceResponse]
+      case "status" => ask(actor("monitor"),req).mapTo[ServiceResponse]
       /*
        * Start association rule mining
        */
@@ -143,9 +143,11 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
     
     worker match {
   
-      case "indxer" => context.actorOf(Props(new RuleIndexer()))
+      case "indexer" => context.actorOf(Props(new RuleIndexer()))
   
       case "miner" => context.actorOf(Props(new RuleMiner(sc)))
+  
+      case "monitor" => context.actorOf(Props(new RuleMonitor()))
         
       case "questor" => context.actorOf(Props(new RuleQuestor()))
         
