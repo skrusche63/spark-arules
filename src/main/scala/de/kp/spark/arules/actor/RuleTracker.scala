@@ -18,11 +18,12 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.core.io.ElasticWriter
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.io.{ElasticBuilderFactory => EBF}
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
@@ -90,13 +91,13 @@ class RuleTracker extends BaseActor {
            * item is actually indexed individually. This is due to
            * synergy effects with other data sources
            */
-          val items = req.data(EBF.ITEM_FIELD).split(",")
+          val items = req.data(Names.ITEM_FIELD).split(",")
           for  (item <- items) {
             
             /*
              * Set or overwrite the 'item' field in the respective source
              */
-            source.put(EBF.ITEM_FIELD, item)
+            source.put(Names.ITEM_FIELD, item)
             
             /*
              * Writing this source to the respective index throws an
@@ -134,11 +135,11 @@ class RuleTracker extends BaseActor {
     
     val source = HashMap.empty[String,String]
     
-    source += EBF.SITE_FIELD -> params(EBF.SITE_FIELD)
-    source += EBF.USER_FIELD -> params(EBF.USER_FIELD)
+    source += Names.SITE_FIELD -> params(Names.SITE_FIELD)
+    source += Names.USER_FIELD -> params(Names.USER_FIELD)
       
-    source += EBF.TIMESTAMP_FIELD -> params(EBF.TIMESTAMP_FIELD) 
-    source += EBF.GROUP_FIELD -> params(EBF.GROUP_FIELD)
+    source += Names.TIMESTAMP_FIELD -> params(Names.TIMESTAMP_FIELD) 
+    source += Names.GROUP_FIELD -> params(Names.GROUP_FIELD)
  
     source
     
