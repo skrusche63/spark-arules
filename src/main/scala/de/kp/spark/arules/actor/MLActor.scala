@@ -19,10 +19,8 @@ package de.kp.spark.arules.actor
 */
 
 import org.apache.spark.rdd.RDD
-import akka.actor.{Actor,ActorLogging}
 
 import de.kp.spark.core.model._
-import de.kp.spark.core.redis.RedisCache
 
 import de.kp.spark.arules.{Configuration,RemoteContext}
 
@@ -33,10 +31,7 @@ import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
-abstract class MLActor extends Actor with ActorLogging {
-  
-  val (host,port) = Configuration.redis
-  val cache = new RedisCache(host,port.toInt)
+abstract class MLActor extends BaseActor {
   
   /**
    * For every (site,user) pair and every discovered association rule, 
@@ -145,7 +140,7 @@ abstract class MLActor extends Actor with ActorLogging {
     val response = new ServiceResponse(req.service,req.task,data,status)	
     
     /* Notify listeners */
-    val message = Serializer.serializeResponse(response)    
+    val message = serialize(response)    
     RemoteContext.notify(message)
     
   }

@@ -46,8 +46,8 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
   
   def receive = {
     /*
-     * This request is initiated by a remote Akka service and
-     * delegated from the RuleService
+     * This request is initiated by the Akka API; 
+     * the respective responses MUST be serialized
      */
     case req:String => {
 
@@ -57,15 +57,16 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
 	  val response = execute(deser)
 	  
       response.onSuccess {
-        case result => origin ! Serializer.serializeResponse(result)
+        case result => origin ! serialize(result)
       }
       response.onFailure {
-        case result => origin ! failure(deser,Messages.GENERAL_ERROR(deser.data("uid")))	      
+        case result => origin ! serialize(failure(deser,Messages.GENERAL_ERROR(deser.data("uid"))))	      
 	  }
       
     }
     /*
-     * This request is initiated by the Rest API
+     * This request is initiated by the Rest API; 
+     * the respective responses MUST not be serialized
      */
     case req:ServiceRequest => {
 
@@ -73,20 +74,18 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
 
 	  val response = execute(req)	  
       response.onSuccess {
-        case result => origin ! Serializer.serializeResponse(result)
+        case result => origin ! result
       }
       response.onFailure {
-        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data("uid")))	      
+        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data("uid")))      
 	  }
       
     }
   
     case _ => {
 
-      val origin = sender               
       val msg = Messages.REQUEST_IS_UNKNOWN()          
-          
-      origin ! Serializer.serializeResponse(failure(null,msg))
+      log.error(msg)
 
     }
     

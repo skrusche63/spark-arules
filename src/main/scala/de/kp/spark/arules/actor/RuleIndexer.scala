@@ -67,7 +67,7 @@ class RuleIndexer extends BaseActor {
         val data = Map("uid" -> uid, "message" -> Messages.SEARCH_INDEX_CREATED(uid))
         val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)	
       
-        origin ! Serializer.serializeResponse(response)
+        origin ! response
       
       } catch {
         
@@ -78,7 +78,7 @@ class RuleIndexer extends BaseActor {
           val data = Map("uid" -> uid, "message" -> e.getMessage())
           val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
       
-          origin ! Serializer.serializeResponse(response)
+          origin ! response
           
         }
       

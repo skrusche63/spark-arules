@@ -45,4 +45,6 @@ abstract class BaseActor extends Actor with ActorLogging {
     
   }
 
+  protected def serialize(resp:ServiceResponse) = Serializer.serializeResponse(resp)
+  
 }

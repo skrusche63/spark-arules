@@ -53,7 +53,7 @@ class RuleTracker extends BaseActor {
       val response = new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)	
       
       val origin = sender
-      origin ! Serializer.serializeResponse(response)
+      origin ! response
 
       try {
 

@@ -56,7 +56,7 @@ class RuleMiner(@transient val sc:SparkContext) extends BaseActor {
           response.onSuccess {
             case result => {
               
-              origin ! Serializer.serializeResponse(result)
+              origin ! result
               context.stop(self)
               
             }
@@ -65,9 +65,7 @@ class RuleMiner(@transient val sc:SparkContext) extends BaseActor {
           response.onFailure {
             case throwable => {           
               
-              val resp = failure(req,throwable.toString)
-              
-              origin ! Serializer.serializeResponse(resp)	
+              origin ! failure(req,throwable.toString)	
               context.stop(self)
               
             }	  
@@ -79,7 +77,7 @@ class RuleMiner(@transient val sc:SparkContext) extends BaseActor {
           
           val msg = Messages.TASK_IS_UNKNOWN(uid,req.task)
           
-          origin ! Serializer.serializeResponse(failure(req,msg))
+          origin ! failure(req,msg)
           context.stop(self)
            
         }
@@ -93,7 +91,7 @@ class RuleMiner(@transient val sc:SparkContext) extends BaseActor {
       val origin = sender               
       val msg = Messages.REQUEST_IS_UNKNOWN()          
           
-      origin ! Serializer.serializeResponse(failure(null,msg))
+      origin ! failure(null,msg)
       context.stop(self)
 
     }

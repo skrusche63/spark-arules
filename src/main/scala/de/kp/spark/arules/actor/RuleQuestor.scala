@@ -168,7 +168,7 @@ class RuleQuestor extends BaseActor {
         
       }
            
-      origin ! Serializer.serializeResponse(response)
+      origin ! response
       context.stop(self)
        
     }
@@ -178,7 +178,7 @@ class RuleQuestor extends BaseActor {
       val origin = sender               
       val msg = Messages.REQUEST_IS_UNKNOWN()          
           
-      origin ! Serializer.serializeResponse(failure(null,msg))
+      origin ! failure(null,msg)
       context.stop(self)
 
     }
