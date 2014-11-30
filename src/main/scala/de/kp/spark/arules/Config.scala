@@ -53,10 +53,10 @@ object Configuration extends CoreConf {
     
   }
    
-  override def file:String = {
+  override def file:List[String] = {
   
     val cfg = config.getConfig("file")
-    cfg.getString("path")   
+    List(cfg.getString("path"))   
     
   }
  

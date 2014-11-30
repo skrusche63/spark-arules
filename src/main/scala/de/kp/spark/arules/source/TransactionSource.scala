@@ -63,7 +63,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.FILE => {
         
-        val rawset = new FileSource(sc).connect(config.file,req)
+        val rawset = new FileSource(sc).connect(config.file(0),req)
         transactionModel.buildFile(req,rawset)
         
       }
