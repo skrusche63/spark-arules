@@ -18,6 +18,7 @@ package de.kp.spark.arules.io
 * If not, see <http://www.gnu.org/licenses/>.
 */
 import org.elasticsearch.common.xcontent.XContentBuilder
+import de.kp.spark.core.elastic.ElasticItemBuilder
   
 object ElasticBuilderFactory {
   /*
