@@ -18,7 +18,7 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.core.actor.StatusMonitor
+import de.kp.spark.core.actor.StatusQuestor
 import de.kp.spark.arules.Configuration
 
-class RuleMonitor extends StatusMonitor(Configuration)
+class StatusMonitor extends StatusQuestor(Configuration)

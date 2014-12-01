@@ -53,6 +53,8 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   
   val (duration,retries,time) = Configuration.actor   
   val master = system.actorOf(Props(new RuleMaster(sc)), name="association-master")
+
+  private val service = "association"
  
   def start() {
     RestService.start(routes,system,host,port)
@@ -60,6 +62,13 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 
   private def routes:Route = {
 
+    path("admin" / Segment) {subject => 
+	  post {
+	    respondWithStatus(OK) {
+	      ctx => doAdmin(ctx,subject)
+	    }
+	  }
+    }  ~ 
     path("get" / Segment) {subject => 
 	  post {
 	    respondWithStatus(OK) {
@@ -78,13 +87,6 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	  post {
 	    respondWithStatus(OK) {
 	      ctx => doRegister(ctx)
-	    }
-	  }
-    }  ~ 
-    path("status") {
-	  post {
-	    respondWithStatus(OK) {
-	      ctx => doStatus(ctx)
 	    }
 	  }
     }  ~ 
@@ -117,6 +119,19 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     }
   }
 
+  private def doAdmin[T](ctx:RequestContext,subject:String) = {
+    
+    subject match {
+      
+      case "fields" => doRequest(ctx,service,subject)
+      case "status" => doRequest(ctx,service,subject)
+      
+      case _ => {}
+      
+    }
+    
+  }
+
   private def doGet[T](ctx:RequestContext,subject:String) = {
 	    
 	subject match {
@@ -125,23 +140,23 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	   * 'antecedent' retrieves those association rules where an externally
 	   * provided itemset matches the antecedent part of the association rules
 	   */
-	  case "antecedent" => doRequest(ctx,"association","get:antecedent")
+	  case "antecedent" => doRequest(ctx,service,"get:antecedent")
 	  /*
 	   * 'consequent' retrieves those association rules where an externally
 	   * provided itemset matches the consequent part of the association rules
 	   */
-	  case "consequent" => doRequest(ctx,"association","get:consequent")
+	  case "consequent" => doRequest(ctx,service,"get:consequent")
       /*
        * 'transaction' retrieves those association rules where the discovered
        * antecedent part (within the rules) matches items of the last
        * transaction
        */
-	  case "transaction" => doRequest(ctx,"association","get:transaction")
+	  case "transaction" => doRequest(ctx,service,"get:transaction")
 	  /*
 	   * 'rule' retrieves the discovered association rules without any data 
 	   * aggregation or transformation
 	   */
-	  case "rule" => doRequest(ctx,"association","get:rule")
+	  case "rule" => doRequest(ctx,service,"get:rule")
 	      
 	  case _ => {}
 
@@ -153,9 +168,9 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
     subject match {
       
-      case "item" => doRequest(ctx,"association","index:item")
+      case "item" => doRequest(ctx,service,"index:item")
       
-      case "rule" => doRequest(ctx,"association","index:rule")
+      case "rule" => doRequest(ctx,service,"index:rule")
       
       case _ => {}
       
@@ -163,13 +178,11 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     
   }
   
-  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,"association","register")
-
-  private def doStatus[T](ctx:RequestContext) = doRequest(ctx,"association","status")
+  private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register")
   
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,"association","track")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track")
 
-  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,"association","train")
+  private def doTrain[T](ctx:RequestContext) = doRequest(ctx,service,"train")
   
   private def doRequest[T](ctx:RequestContext,service:String,task:String) = {
      

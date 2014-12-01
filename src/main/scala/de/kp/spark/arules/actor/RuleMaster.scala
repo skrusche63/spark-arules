@@ -95,6 +95,11 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
 	  
     req.task.split(":")(0) match {
       /*
+       * Request the field specification of an association rule
+       * mining task; this request is part of the admin interface
+       */
+      case "fields" => ask(actor("fields"),req).mapTo[ServiceResponse]
+      /*
        * Retrieve all the relations or rules discovered by a 
        * previous mining task; relevant is the 'uid' of the 
        * mining task to get the respective data
@@ -116,7 +121,7 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * mining task; note, that get requests should only
        * be invoked after having retrieved a FINISHED status
        */
-      case "status" => ask(actor("monitor"),req).mapTo[ServiceResponse]
+      case "status" => ask(actor("status"),req).mapTo[ServiceResponse]
       /*
        * Start association rule mining
        */
@@ -142,11 +147,12 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
     
     worker match {
   
+      case "fields" => context.actorOf(Props(new FieldMonitor()))
+      case "status" => context.actorOf(Props(new StatusMonitor()))
+  
       case "indexer" => context.actorOf(Props(new RuleIndexer()))
   
       case "miner" => context.actorOf(Props(new RuleMiner(sc)))
-  
-      case "monitor" => context.actorOf(Props(new RuleMonitor()))
         
       case "questor" => context.actorOf(Props(new RuleQuestor()))
         
