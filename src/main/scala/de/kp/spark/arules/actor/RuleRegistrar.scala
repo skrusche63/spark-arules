@@ -45,7 +45,7 @@ class RuleRegistrar extends BaseActor {
         fields += new Field("group","string",req.data("group"))
 
         fields += new Field("item","integer",req.data("item"))
-        cache.addFields(req, new Fields(fields.toList))
+        cache.addFields(req, fields.toList)
         
         new ServiceResponse("association","register",Map("uid"-> uid),ResponseStatus.SUCCESS)
         
