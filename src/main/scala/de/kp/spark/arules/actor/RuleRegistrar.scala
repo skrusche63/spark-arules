@@ -18,11 +18,12 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
+import de.kp.spark.core.spec.FieldBuilder
 
 import de.kp.spark.arules.model._
-
-import scala.collection.mutable.ArrayBuffer
 
 class RuleRegistrar extends BaseActor {
   
@@ -31,23 +32,14 @@ class RuleRegistrar extends BaseActor {
     case req:ServiceRequest => {
       
       val origin = sender    
-      val uid = req.data("uid")
+      val uid = req.data(Names.REQ_UID)
       
       val response = try {
         
-        /* Unpack fields from request and register in Redis instance */
-        val fields = ArrayBuffer.empty[Field]
-
-        fields += new Field("site","string",req.data("site"))
-        fields += new Field("timestamp","long",req.data("timestamp"))
-
-        fields += new Field("user","string",req.data("user"))
-        fields += new Field("group","string",req.data("group"))
-
-        fields += new Field("item","integer",req.data("item"))
-        cache.addFields(req, fields.toList)
+        val fields = new FieldBuilder().build(req,"item")
+        cache.addFields(req, fields)
         
-        new ServiceResponse("association","register",Map("uid"-> uid),ResponseStatus.SUCCESS)
+        new ServiceResponse(req.service,req.task,Map(Names.REQ_UID-> uid),ResponseStatus.SUCCESS)
         
       } catch {
         case throwable:Throwable => failure(req,throwable.getMessage)
