@@ -18,37 +18,7 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.core.Names
+import de.kp.spark.core.actor.ItemRegistrar
+import de.kp.spark.arules.Configuration
 
-import de.kp.spark.core.model._
-import de.kp.spark.core.spec.FieldBuilder
-
-import de.kp.spark.arules.model._
-
-class RuleRegistrar extends BaseActor {
-  
-  def receive = {
-    
-    case req:ServiceRequest => {
-      
-      val origin = sender    
-      val uid = req.data(Names.REQ_UID)
-      
-      val response = try {
-        
-        val fields = new FieldBuilder().build(req,"item")
-        cache.addFields(req, fields)
-        
-        new ServiceResponse(req.service,req.task,Map(Names.REQ_UID-> uid),ResponseStatus.SUCCESS)
-        
-      } catch {
-        case throwable:Throwable => failure(req,throwable.getMessage)
-      }
-      
-      origin ! response
-
-    }
-    
-  }
-
-}
+class RuleRegistrar extends ItemRegistrar(Configuration)
