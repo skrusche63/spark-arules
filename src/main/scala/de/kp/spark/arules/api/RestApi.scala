@@ -180,7 +180,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register")
   
-  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track")
+  private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:item")
 
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,service,"train")
   
