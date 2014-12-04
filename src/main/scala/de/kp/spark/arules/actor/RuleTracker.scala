@@ -45,8 +45,6 @@ class RuleTracker extends BaseTracker(Configuration) {
    * 
    */
   
-  override def prepareEvent(params:Map[String,String]):java.util.Map[String,Object] = null
-  
   override def prepareItem(params:Map[String,String]):java.util.Map[String,Object] = {
     
     val source = HashMap.empty[String,String]
