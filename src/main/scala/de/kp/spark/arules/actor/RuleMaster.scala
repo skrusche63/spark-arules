@@ -116,10 +116,12 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
     
     worker match {
       /*
-       * Request the field specification of an association rule
-       * mining task; this request is part of the admin interface
-       */  
-      case "fields" => context.actorOf(Props(new FieldMonitor()))
+       * Metadata management is part of the core functionality; field or metadata
+       * specifications can be registered in, and retrieved from a Redis database.
+       */
+      case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))
+      case "register" => context.actorOf(Props(new FieldRegistrar(Configuration)))        
+
       /*
        * Retrieve all the relations or rules discovered by a 
        * previous mining task; relevant is the 'uid' of the 
@@ -131,14 +133,13 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * tracking events; this is an event invoked by the admin
        * interface
        */  
-      case "index" => context.actorOf(Props(new RuleIndexer()))
+      case "index" => context.actorOf(Props(new BaseIndexer(Configuration)))
       /*
-       * Request to register the field specification, that determines
-       * which data source fields map onto the internal format used.
+       * Request to track an item for later association rule mining; tracking
+       * functionality is part of the core functionality.
        * 
-       * Metadata management is part of the core functionality.
-       */        
-      case "register" => context.actorOf(Props(new BaseRegistrar(Configuration)))
+       */   
+      case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
       /*
        * Request the actual status of an association rule mining 
        * task; note, that get requests should only be invoked after 
@@ -147,12 +148,6 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * Status management is part of the core functionality.
        */
       case "status" => context.actorOf(Props(new StatusQuestor(Configuration)))
-      /*
-       * Request to track an item for later association rule mining; tracking
-       * functionality is part of the core functionality.
-       * 
-       */   
-      case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
       /*
        * Start association rule mining
        */ 
