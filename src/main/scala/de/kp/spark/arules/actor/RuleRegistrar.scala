@@ -18,7 +18,7 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import de.kp.spark.core.actor.ItemRegistrar
+import de.kp.spark.core.actor.BaseRegistrar
 import de.kp.spark.arules.Configuration
 
-class RuleRegistrar extends ItemRegistrar(Configuration)
+class RuleRegistrar extends BaseRegistrar(Configuration)
