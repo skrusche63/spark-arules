@@ -35,7 +35,7 @@ class RedisSink {
 
   val service = "arules"
 
-  def addMultiUserRules(req:ServiceRequest, relations:MultiUserRules) {
+  def addUserRules(req:ServiceRequest, relations:MultiUserRules) {
    
     val now = new Date()
     val timestamp = now.getTime()
@@ -59,7 +59,7 @@ class RedisSink {
     
   }
  
-  def multiUserRulesExist(uid:String):Boolean = {
+  def userRulesExist(uid:String):Boolean = {
 
     val k = "multi:user:rule:" + service + ":" + uid
     client.exists(k)
@@ -71,23 +71,6 @@ class RedisSink {
     val k = "rule:" + service + ":" + uid
     client.exists(k)
     
-  }
-  
-  def multiUserRulesAsString(uid:String):String = {
-
-    val k = "multi:user:rule:" + service + ":" + uid
-    val rules = client.zrange(k, 0, -1)
-
-    if (rules.size() == 0) {
-      Serializer.serializeMultiUserRules(new MultiUserRules(List.empty[UserRules]))
-    
-    } else {
-      
-      val last = rules.toList.last
-      last.split(":")(1)
-      
-    }
-  
   }
   
   def rulesAsString(uid:String):String = {
@@ -130,9 +113,26 @@ class RedisSink {
 
   } 
   
+  def rulesByAllUsers(uid:String):String = {
+
+    val k = "multi:user:rule:" + service + ":" + uid
+    val rules = client.zrange(k, 0, -1)
+
+    if (rules.size() == 0) {
+      Serializer.serializeMultiUserRules(new MultiUserRules(List.empty[UserRules]))
+    
+    } else {
+      
+      val last = rules.toList.last
+      last.split(":")(1)
+      
+    }
+  
+  }
+  
   def rulesByUsers(uid:String,site:String,users:List[String]):String = {
                 
-    val rules = Serializer.deserializeMultiUserRules(multiUserRulesAsString(uid)).items
+    val rules = Serializer.deserializeMultiUserRules(rulesByAllUsers(uid)).items
             
     /*
      * The users are used as a filter for the respective rules;

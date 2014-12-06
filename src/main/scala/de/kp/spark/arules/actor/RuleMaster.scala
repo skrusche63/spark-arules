@@ -121,6 +121,12 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        */
       case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))
       case "register" => context.actorOf(Props(new FieldRegistrar(Configuration)))        
+      /*
+       * Index management is part of the core functionality; an Elasticsearch 
+       * index can be created and appropriate (tracked) items can be saved.
+       */  
+      case "index" => context.actorOf(Props(new BaseIndexer(Configuration)))
+      case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
 
       /*
        * Retrieve all the relations or rules discovered by a 
@@ -128,18 +134,6 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * mining task to get the respective data
        */       
       case "get" => context.actorOf(Props(new RuleQuestor()))
-      /*
-       * Request to prepare the Elasticsearch index for subsequent
-       * tracking events; this is an event invoked by the admin
-       * interface
-       */  
-      case "index" => context.actorOf(Props(new BaseIndexer(Configuration)))
-      /*
-       * Request to track an item for later association rule mining; tracking
-       * functionality is part of the core functionality.
-       * 
-       */   
-      case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
       /*
        * Request the actual status of an association rule mining 
        * task; note, that get requests should only be invoked after 

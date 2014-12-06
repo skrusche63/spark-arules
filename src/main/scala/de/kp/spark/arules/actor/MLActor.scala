@@ -20,6 +20,7 @@ package de.kp.spark.arules.actor
 
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
 import de.kp.spark.arules.{Configuration,RemoteContext}
@@ -84,7 +85,7 @@ abstract class MLActor extends BaseActor {
   protected def saveMultiUserRules(req:ServiceRequest, rules:MultiUserRules) {
 
     val sink = new RedisSink()
-    sink.addMultiUserRules(req,rules)
+    sink.addUserRules(req,rules)
     
   }
 
@@ -102,9 +103,9 @@ abstract class MLActor extends BaseActor {
     val redis = new RedisSink()
     redis.addRules(req,rules)
     
-    if (req.data.contains("sink") == false) return
+    if (req.data.contains(Names.REQ_SINK) == false) return
     
-    val sink = req.data("sink")
+    val sink = req.data(Names.REQ_SINK)
     if (Sinks.isSink(sink) == false) return
     
     sink match {
@@ -136,8 +137,7 @@ abstract class MLActor extends BaseActor {
   protected def notify(req:ServiceRequest,status:String) {
 
     /* Build message */
-    val data = Map("uid" -> req.data("uid"))
-    val response = new ServiceResponse(req.service,req.task,data,status)	
+    val response = new ServiceResponse(req.service,req.task,req.data,status)	
     
     /* Notify listeners */
     val message = serialize(response)    
@@ -147,14 +147,14 @@ abstract class MLActor extends BaseActor {
   
   protected def response(req:ServiceRequest,missing:Boolean):ServiceResponse = {
     
-    val uid = req.data("uid")
+    val uid = req.data(Names.REQ_UID)
     
     if (missing == true) {
-      val data = Map("uid" -> uid, "message" -> Messages.MISSING_PARAMETERS(uid))
+      val data = Map(Names.REQ_UID -> uid, Names.REQ_MESSAGE -> Messages.MISSING_PARAMETERS(uid))
       new ServiceResponse(req.service,req.task,data,ResponseStatus.FAILURE)	
   
     } else {
-      val data = Map("uid" -> uid, "message" -> Messages.MINING_STARTED(uid))
+      val data = Map(Names.REQ_UID -> uid, Names.REQ_MESSAGE -> Messages.MINING_STARTED(uid))
       new ServiceResponse(req.service,req.task,data,ResponseStatus.MINING_STARTED)	
   
     }

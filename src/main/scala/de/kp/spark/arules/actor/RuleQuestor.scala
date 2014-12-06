@@ -18,6 +18,7 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
 import de.kp.spark.arules.Configuration
@@ -35,7 +36,7 @@ class RuleQuestor extends BaseActor {
     case req:ServiceRequest => {
       
       val origin = sender    
-      val uid = req.data("uid")
+      val uid = req.data(Names.REQ_UID)
 
       val response = req.task.split(":")(1) match {
         /*
@@ -51,15 +52,15 @@ class RuleQuestor extends BaseActor {
             
           } else {    
              
-            if (req.data.contains("items") == false) {
+            if (req.data.contains(Names.REQ_ITEMS) == false) {
                failure(req,Messages.NO_ITEMS_PROVIDED(uid))
              
              } else {
             
-               val items = req.data("items").split(",").map(_.toInt).toList
+               val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
                val rules = sink.rulesByAntecedent(uid,items)
                
-               val data = Map("uid" -> uid, "rule" -> rules)
+               val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
                new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
              
              }
@@ -80,42 +81,19 @@ class RuleQuestor extends BaseActor {
             
           } else {    
 
-            if (req.data.contains("items") == false) {
+            if (req.data.contains(Names.REQ_ITEMS) == false) {
                failure(req,Messages.NO_ITEMS_PROVIDED(uid))
              
              } else {
             
-               val items = req.data("items").split(",").map(_.toInt).toList
+               val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
                val rules = sink.rulesByConsequent(uid,items)
                
-               val data = Map("uid" -> uid, "rule" -> rules)
+               val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
                new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
              
              }
             
-          }
-          
-        }
-        /*
-         * This request provides a list of users and demands those products 
-         * that have to be recommended to these users; the starting point is
-         * the last purchase or transaction of these users
-         */
-        case "recommendation" => {
-
-          if (sink.multiUserRulesExist(uid) == false) {           
-            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
-            
-          } else {            
-            
-            val site  = req.data("site")
-            val users = req.data("users").split(",").toList
-            
-            val rules = sink.rulesByUsers(uid,site,users)
-            
-            val data = Map("uid" -> uid, "recommendation" -> rules)            
-            new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
-           
           }
           
         }
@@ -132,7 +110,7 @@ class RuleQuestor extends BaseActor {
             
             val rules = sink.rulesAsString(uid)
 
-            val data = Map("uid" -> uid, "rule" -> rules)            
+            val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)            
             new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
             
           }
@@ -140,19 +118,26 @@ class RuleQuestor extends BaseActor {
         }
         /*
          * This request retrieves the list of those rules that partially match
-         * the itemset of the users' latests transaction thereby making sure
+         * the itemset of the users' latest transaction thereby making sure
          * that the intersection of antecedent and consequent is empty
          */
         case "transaction" => {
 
-          if (sink.multiUserRulesExist(uid) == false) {           
+          if (sink.userRulesExist(uid) == false) {           
             failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val rules = sink.multiUserRulesAsString(uid)
+            val rules = if (req.data.contains(Names.REQ_SITE) && req.data.contains(Names.REQ_USERS)) {
+            
+              val site  = req.data(Names.REQ_SITE)
+              val users = req.data(Names.REQ_USERS).split(",").toList
+            
+              sink.rulesByUsers(uid,site,users)
+            
+            } else sink.rulesByAllUsers(uid)
 
-            val data = Map("uid" -> uid, "transaction" -> rules)            
+            val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)            
             new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
             
           }
