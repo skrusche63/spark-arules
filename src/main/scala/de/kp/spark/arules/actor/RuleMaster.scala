@@ -127,13 +127,6 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        */  
       case "index" => context.actorOf(Props(new BaseIndexer(Configuration)))
       case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
-
-      /*
-       * Retrieve all the relations or rules discovered by a 
-       * previous mining task; relevant is the 'uid' of the 
-       * mining task to get the respective data
-       */       
-      case "get" => context.actorOf(Props(new RuleQuestor()))
       /*
        * Request the actual status of an association rule mining 
        * task; note, that get requests should only be invoked after 
@@ -142,6 +135,13 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * Status management is part of the core functionality.
        */
       case "status" => context.actorOf(Props(new StatusQuestor(Configuration)))
+
+      /*
+       * Retrieve all the relations or rules discovered by a 
+       * previous mining task; relevant is the 'uid' of the 
+       * mining task to get the respective data
+       */       
+      case "get" => context.actorOf(Props(new RuleQuestor()))
       /*
        * Start association rule mining
        */ 

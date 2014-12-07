@@ -195,7 +195,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
   
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:item")
   
-  /*
+  /**
    * 'index' & 'track' requests support data registration in an Elasticsearch
    * index; while items are can be provided via the REST interface, rules are
    * built by the Association Analysis engine and then registered in the index.
