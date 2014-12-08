@@ -120,7 +120,7 @@ class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
        * specifications can be registered in, and retrieved from a Redis database.
        */
       case "fields"   => context.actorOf(Props(new FieldQuestor(Configuration)))
-      case "register" => context.actorOf(Props(new FieldRegistrar(Configuration)))        
+      case "register" => context.actorOf(Props(new BaseRegistrar(Configuration)))        
       /*
        * Index management is part of the core functionality; an Elasticsearch 
        * index can be created and appropriate (tracked) items can be saved.
