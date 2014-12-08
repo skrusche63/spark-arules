@@ -53,7 +53,6 @@ class RuleMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
        * Status management is part of the core functionality.
        */
       case "status" => context.actorOf(Props(new StatusQuestor(Configuration)))
-
       /*
        * Retrieve all the relations or rules discovered by a 
        * previous mining task; relevant is the 'uid' of the 

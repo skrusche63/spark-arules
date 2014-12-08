@@ -32,13 +32,28 @@ class RuleQuestor extends BaseActor {
   val sink = new RedisSink()
   
   def receive = {
-
+    
+    /*
+     * The Association Analysis engines distinguish two types of requests: (a) rule oriented requests 
+     * that exclusively refer to the detected association rules, and, (b) requests that combine these
+     * rules with other data sources. Actually, this other data source is the last user transaction
+     * within the overall transaction database.
+     * 
+     * (a) rule oriented requests: 'antecedent', 'consequent' and 'rule'
+     * 
+     * (b) combined requests: 'transaction'
+     * 
+     * The latter request combines (user --> items) with (item --> item) rules and enables to reach
+     * related items for a certain user. This information is used as a basis for recommendations.
+     */
+    
     case req:ServiceRequest => {
       
       val origin = sender    
       val uid = req.data(Names.REQ_UID)
 
-      val response = req.task.split(":")(1) match {
+      val Array(task,topic) = req.task.split(":")
+      val response = topic match {
         /*
          * This request retrieves those rules where the provided items
          * match the 'antecedent' part of the rule; the items may describe
@@ -118,8 +133,8 @@ class RuleQuestor extends BaseActor {
         }
         /*
          * This request retrieves the list of those rules that partially match
-         * the itemset of the users' latest transaction thereby making sure
-         * that the intersection of antecedent and consequent is empty
+         * the itemset of the users' last transaction thereby making sure that
+         * the intersection of antecedent and consequent is empty.
          */
         case "transaction" => {
 
