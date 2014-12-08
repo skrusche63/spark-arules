@@ -21,98 +21,16 @@ package de.kp.spark.arules.actor
 import org.apache.spark.SparkContext
 import akka.actor.{ActorRef,Props}
 
-import akka.pattern.ask
-import akka.util.Timeout
-
-import akka.actor.{OneForOneStrategy, SupervisorStrategy}
-
 import de.kp.spark.core.Names
 
 import de.kp.spark.core.actor._
 import de.kp.spark.core.model._
 
 import de.kp.spark.arules.Configuration
-import de.kp.spark.arules.model._
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.Future
-
-class RuleMaster(@transient val sc:SparkContext) extends BaseActor {
-
-  val (duration,retries,time) = Configuration.actor   
-	  	    
-  implicit val ec = context.dispatcher
-  implicit val timeout:Timeout = DurationInt(time).second
-
-  override val supervisorStrategy = OneForOneStrategy(maxNrOfRetries=retries,withinTimeRange = DurationInt(time).minutes) {
-    case _ : Exception => SupervisorStrategy.Restart
-  }
+class RuleMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
   
-  def receive = {
-    /*
-     * This request is initiated by the Akka API; 
-     * the respective responses MUST be serialized
-     */
-    case msg:String => {
-
-	  val origin = sender
-
-	  val req = Serializer.deserializeRequest(msg)
-	  val response = execute(req)
-	  
-      response.onSuccess {
-        case result => origin ! serialize(result)
-      }
-      response.onFailure {
-        case result => origin ! serialize(failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID))))	      
-	  }
-      
-    }
-    /*
-     * This request is initiated by the Rest API; 
-     * the respective responses MUST not be serialized
-     */
-    case req:ServiceRequest => {
-
-	  val origin = sender
-
-	  val response = execute(req)	  
-      response.onSuccess {
-        case result => origin ! result
-      }
-      response.onFailure {
-        case result => origin ! failure(req,Messages.GENERAL_ERROR(req.data(Names.REQ_UID)))      
-	  }
-      
-    }
-  
-    case _ => {
-
-      val msg = Messages.REQUEST_IS_UNKNOWN()          
-      log.error(msg)
-
-    }
-    
-  }
-
-  private def execute(req:ServiceRequest):Future[ServiceResponse] = {
-	
-    try {
-      
-      val task = req.task.split(":")(0)
-      ask(actor(task),req).mapTo[ServiceResponse]
-    
-    } catch {
-      
-      case e:Exception => {
-        Future {failure(req,e.getMessage)}         
-      }
-    
-    }
-     
-  }
-  
-  private def actor(worker:String):ActorRef = {
+  protected def actor(worker:String):ActorRef = {
     
     worker match {
       /*
