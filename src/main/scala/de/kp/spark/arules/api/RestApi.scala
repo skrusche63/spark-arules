@@ -151,74 +151,187 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
     }
   }
 
+  /**
+   * Request parameters for the 'get' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * Additional parameters for certain topics:
+   * 
+   * topic: antecedent, consequent
+   * - items (String, comma-separated list of Integers)
+   * 
+   * topic: transaction
+   * - users (String, comma-separated lits of Strings)
+   * 
+   */  
   private def doGet[T](ctx:RequestContext,subject:String) = {
-	    
-	subject match {
 
-	  /*
-	   * 'antecedent' retrieves those association rules where an externally
-	   * provided itemset matches the antecedent part of the association rules
-	   */
-	  case "antecedent" => doRequest(ctx,service,"get:antecedent")
-	  /*
-	   * 'consequent' retrieves those association rules where an externally
-	   * provided itemset matches the consequent part of the association rules
-	   */
-	  case "consequent" => doRequest(ctx,service,"get:consequent")
-      /*
-       * 'transaction' retrieves those association rules where the discovered
-       * antecedent part (within the rules) matches items of the last
-       * transaction
-       */
-	  case "transaction" => doRequest(ctx,service,"get:transaction")
-	  /*
-	   * 'rule' retrieves the discovered association rules without any data 
-	   * aggregation or transformation
-	   */
-	  case "rule" => doRequest(ctx,service,"get:rule")
-	      
-	  case _ => {}
-
-	}
+    val task = "get:" + subject
+    /*
+     * The following topics are supported:
+     * 
+	 * 'antecedent' retrieves those association rules where an externally
+	 * provided itemset matches the antecedent part of the association rules
+	 * 
+     * 'consequent' retrieves those association rules where an externally
+	 * provided itemset matches the consequent part of the association rules
+	 * 
+	 * 'rule' retrieves the discovered association rules without any data 
+	 * aggregation or transformation
+	 * 
+     * 'transaction' retrieves those association rules where the discovered
+     * antecedent part (within the rules) matches items of the last
+     * transaction
+ 	 * 
+	 */	
+    val topics = List("antecedent","consequent","rule","transaction")
+    if (topics.contains(subject)) doRequest(ctx,service,task)
     
   }
-
+  /**
+   * Request parameters for the 'train' request
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - algorithm (String, TOPK, TOPKNR)
+   * - source (String, ELASTIC, FILE, JDBC, PIWIK)
+   * - sink (String, ELASTIC, JDBC)
+   * 
+   * and the following parameters depend on the selected source:
+   * 
+   * ELASTIC:
+   * 
+   * - source.index (String)
+   * - source.type (String)
+   * - query (String)
+   * 
+   * JDBC:
+   * 
+   * - query (String)
+   * 
+   * and the following parameters depend on the selected sink:
+   * 
+   * ELASTIC:
+   * 
+   * - sink.index (String)
+   * - sink.type (String)
+   * 
+   * and the model building parameters have to be distinguished by the
+   * selected algorithm
+   * 
+   * TOPK
+   * 
+   * - k (Integer)
+   * - minconf (Double)
+   * - weight (Double)
+   * 
+   * TOPKNR
+   * 
+   * - k (Integer)
+   * - minconf (Double)
+   * - delta (Int)
+   * - weight (Double)
+   * 
+   */
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,service,"train")
 
   /**
    * 'fields' and 'register' requests refer to the metadata management 
    * of the Association Analysis engine; for a certain task (uid) and 
    * a specific model (name), a specification of the respective data fields 
-   * can be registered and retrieved from a Redis database.
+   * can be registered and retrieved from a Redis database. 
+   * 
+   * Request parameters for the 'fields' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
    */
   private def doFields[T](ctx:RequestContext) = doRequest(ctx,service,"fields:item")
-  
+  /**
+   * Request parameters for the 'register' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * The information element (item) is pre-defined for the Association Analysis
+   * engine. This implies, that for registration requests, the following additional
+   * parameters have to be provided (the value specifies tha data source field name):
+   * 
+   * - user (String)
+   * - timestamp (String) 
+   * - group (String)
+   * - item (String)
+   * - score (String)
+   * 
+   * These parameters are used to specify the mapping between the field name used by the
+   * Association Analysis engine and the respective field name in the data source.
+   * 
+   */    
   private def doRegister[T](ctx:RequestContext) = doRequest(ctx,service,"register:item")
   
   /**
    * 'index' & 'track' requests support data registration in an Elasticsearch
    * index; while items are can be provided via the REST interface, rules are
    * built by the Association Analysis engine and then registered in the index.
+   * 
+   * Request parameters for the 'index' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - source (String)
+   * - type (String)
+   * 
    */
   private def doIndex[T](ctx:RequestContext,subject:String) = {
     
-    subject match {
-      
-      case "item" => doRequest(ctx,service,"index:item")
-      case "rule" => doRequest(ctx,service,"index:rule")
-      
-      case _ => {}
-      
-    }
+    val task = "index:" + subject
+    
+    val topics = List("item","rule")
+    if (topics.contains(subject)) doRequest(ctx,service,task)
     
   }
-  
+  /**
+   * Request parameters for the 'track' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * - name (String)
+   * 
+   * - source (String)
+   * - type (String)
+   * 
+   * The information element (item) is pre-defined for the Association Analysis
+   * engine. This implies, that for tracking requests, the following additional
+   * parameters have to be provided:
+   * 
+   * - user (String)
+   * - timestamp (Long)
+   * - group (String)
+   * - item (String, comma separated list of Integers)
+   * - score (String, comma separated list of Double)
+   * 
+   */   
   private def doTrack[T](ctx:RequestContext) = doRequest(ctx,service,"track:item")
 
   /**
    * 'status' is an administration request to determine whether a certain data
-   * mining task has been finished or not; the only parameter required for status 
-   * requests is the unique identifier of a certain task
+   * mining task has been finished or not. 
+   * 
+   * Request parameters for the 'status' request:
+   * 
+   * - site (String)
+   * - uid (String)
+   * 
    */
   private def doStatus[T](ctx:RequestContext,subject:String) = {
     

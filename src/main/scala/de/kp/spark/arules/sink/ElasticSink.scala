@@ -34,10 +34,10 @@ class ElasticSink {
 
   def addRules(req:ServiceRequest,rules:Rules) {
 
-    val uid = req.data("uid")
+    val uid = req.data(Names.REQ_UID)
 
-    val index   = req.data("dst.index")
-    val mapping = req.data("dst.type")
+    val index   = req.data(Names.REQ_SINK_INDEX)
+    val mapping = req.data(Names.REQ_SINK_TYPE)
     
     val writer = new ElasticWriter()
     
