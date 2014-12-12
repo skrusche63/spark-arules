@@ -45,6 +45,8 @@ class RuleMaster(@transient sc:SparkContext) extends BaseMaster(Configuration) {
        */  
       case "index" => context.actorOf(Props(new BaseIndexer(Configuration)))
       case "track" => context.actorOf(Props(new BaseTracker(Configuration)))
+
+      case "params" => context.actorOf(Props(new ParamQuestor(Configuration)))
       /*
        * Request the actual status of an association rule mining 
        * task; note, that get requests should only be invoked after 
