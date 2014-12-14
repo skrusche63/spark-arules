@@ -91,8 +91,6 @@ class TopKActor(@transient val sc:SparkContext) extends MLActor {
   }
     
   private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double)):List[Rule] = {
-
-    cache.addStatus(req,ResponseStatus.DATASET)
           
     val (k,minconf) = params               
     val rules = TopK.extractRules(dataset,k,minconf).map(rule => {
@@ -107,11 +105,7 @@ class TopKActor(@transient val sc:SparkContext) extends MLActor {
             
     })
           
-    saveRules(req,new Rules(rules))
-          
-    /* Update cache */
-    cache.addStatus(req,ResponseStatus.RULES)
-    
+    saveRules(req,new Rules(rules))    
     rules
     
   }

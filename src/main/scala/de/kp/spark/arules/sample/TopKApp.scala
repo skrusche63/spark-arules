@@ -30,7 +30,7 @@ object TopKApp extends SparkApp {
   def main(args:Array[String]) {
 
     val input  = "/Work/tmp/arules/input/marketbasket.dat"
-    val output = Configuration.file(0)
+    val output = Configuration.input(0)
     
     var start = System.currentTimeMillis()
     

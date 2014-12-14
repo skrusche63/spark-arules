@@ -21,6 +21,8 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.core.source.{ElasticSource,FileSource,JdbcSource}
 
@@ -43,7 +45,7 @@ class TransactionSource(@transient sc:SparkContext) {
   
   def transDS(req:ServiceRequest):RDD[(Int,Array[Int])] = {
     
-    val source = req.data("source")
+    val source = req.data(Names.REQ_SOURCE)
     source match {
       /* 
        * Discover top k association rules from transaction database persisted 
@@ -63,7 +65,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.FILE => {
         
-        val rawset = new FileSource(sc).connect(config.file(0),req)
+        val rawset = new FileSource(sc).connect(config.input(0),req)
         transactionModel.buildFile(req,rawset)
         
       }
@@ -100,7 +102,7 @@ class TransactionSource(@transient sc:SparkContext) {
 
   def itemsetDS(req:ServiceRequest):RDD[(String,String,List[Int])] = {
     
-    val source = req.data("source")
+    val source = req.data(Names.REQ_SOURCE)
     source match {
       /* 
        * Retrieve most recent itemset from a transaction database persisted

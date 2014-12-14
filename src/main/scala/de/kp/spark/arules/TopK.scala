@@ -69,7 +69,7 @@ object TopK {
     val config = Configuration
     val source = new FileSource(sc)
 
-    val rawset = source.connect(config.file(0),null)
+    val rawset = source.connect(config.input(0),null)
     val dataset = model.buildFile(null,rawset)
     
     new TopK().extractRDDRules(dataset,k,minconf,stats)
