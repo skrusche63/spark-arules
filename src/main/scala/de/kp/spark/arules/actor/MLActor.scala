@@ -18,6 +18,7 @@ package de.kp.spark.arules.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.Names
@@ -26,13 +27,13 @@ import de.kp.spark.core.model._
 import de.kp.spark.arules.{Configuration,RemoteContext}
 
 import de.kp.spark.arules.model._
-import de.kp.spark.arules.sink.{ElasticSink,JdbcSink,RedisSink}
+import de.kp.spark.arules.sink._
 
 /**
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
-abstract class MLActor extends BaseActor {
+abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
   
   /**
    * For every (site,user) pair and every discovered association rule, 
@@ -121,8 +122,14 @@ abstract class MLActor extends BaseActor {
             
         val jdbc = new JdbcSink()
         jdbc.addRules(req,rules)
-        
+ 
+      }
 
+      case Sinks.PARQUET => {
+            
+        val parquet = new ParquetSink(sc)
+        parquet.addRules(req,rules)
+ 
       }
       
       case _ => {/* do nothing */}

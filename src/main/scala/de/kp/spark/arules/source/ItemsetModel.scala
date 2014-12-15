@@ -21,9 +21,15 @@ package de.kp.spark.arules.source
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
+import de.kp.spark.core.Names
+
 import de.kp.spark.core.model._
 import de.kp.spark.arules.spec.Fields
 
+/**
+ * The ItemsetModel supports association rules with an antecedent part
+ * that specifies the latest transaction
+ */
 class ItemsetModel(@transient sc:SparkContext) extends Serializable {
   
   def buildElastic(req:ServiceRequest,rawset:RDD[Map[String,String]]):RDD[(String,String,List[Int])] = {
@@ -31,13 +37,13 @@ class ItemsetModel(@transient sc:SparkContext) extends Serializable {
     val spec = sc.broadcast(Fields.get(req))
     val dataset = rawset.map(data => {
       
-      val site = data(spec.value("site")._1)
-      val user = data(spec.value("user")._1)      
+      val site = data(spec.value(Names.SITE_FIELD)._1)
+      val user = data(spec.value(Names.USER_FIELD)._1)      
 
-      val group = data(spec.value("group")._1)
-      val item  = data(spec.value("item")._1).toInt
+      val group = data(spec.value(Names.GROUP_FIELD)._1)
+      val item  = data(spec.value(Names.ITEM_FIELD)._1).toInt
 
-      val timestamp  = data(spec.value("timestamp")._1).toLong
+      val timestamp  = data(spec.value(Names.TIMESTAMP_FIELD)._1).toLong
       
       (site,user,group,item,timestamp)
       
@@ -45,6 +51,19 @@ class ItemsetModel(@transient sc:SparkContext) extends Serializable {
 
     buildItemset(dataset)
   
+  }
+  
+  def buildFile(req:ServiceRequest,rawset:RDD[String]):RDD[(String,String,List[Int])] = {
+    
+    val dataset = rawset.map(valu => {
+      
+      val Array(site,user,group,item,timestamp) = valu.split(",")  
+      (site,user,group,item.toInt,timestamp.toLong)
+    
+    })
+
+    buildItemset(dataset)
+    
   }
   
   def buildJDBC(req:ServiceRequest,rawset:RDD[Map[String,Any]]):RDD[(String,String,List[Int])] = {
@@ -55,13 +74,37 @@ class ItemsetModel(@transient sc:SparkContext) extends Serializable {
     val spec = sc.broadcast(fieldspec)
     val dataset = rawset.map(data => {
       
-      val site = data(spec.value("site")._1).asInstanceOf[String]
-      val user = data(spec.value("user")._1).asInstanceOf[String]      
+      val site = data(spec.value(Names.SITE_FIELD)._1).asInstanceOf[String]
+      val user = data(spec.value(Names.USER_FIELD)._1).asInstanceOf[String]      
 
-      val group = data(spec.value("group")._1).asInstanceOf[String]
-      val item  = data(spec.value("item")._1).asInstanceOf[Int]
+      val group = data(spec.value(Names.GROUP_FIELD)._1).asInstanceOf[String]
+      val item  = data(spec.value(Names.ITEM_FIELD)._1).asInstanceOf[Int]
 
-      val timestamp  = data(spec.value("timestamp")._1).asInstanceOf[Long]
+      val timestamp  = data(spec.value(Names.TIMESTAMP_FIELD)._1).asInstanceOf[Long]
+      
+      (site,user,group,item,timestamp)
+      
+    })
+
+    buildItemset(dataset)
+    
+  }
+
+  def buildParquetC(req:ServiceRequest,rawset:RDD[Map[String,Any]]):RDD[(String,String,List[Int])] = {
+    
+    val fieldspec = Fields.get(req)
+    val fields = fieldspec.map(kv => kv._2._1).toList    
+
+    val spec = sc.broadcast(fieldspec)
+    val dataset = rawset.map(data => {
+      
+      val site = data(spec.value(Names.SITE_FIELD)._1).asInstanceOf[String]
+      val user = data(spec.value(Names.USER_FIELD)._1).asInstanceOf[String]      
+
+      val group = data(spec.value(Names.GROUP_FIELD)._1).asInstanceOf[String]
+      val item  = data(spec.value(Names.ITEM_FIELD)._1).asInstanceOf[Int]
+
+      val timestamp  = data(spec.value(Names.TIMESTAMP_FIELD)._1).asInstanceOf[Long]
       
       (site,user,group,item,timestamp)
       

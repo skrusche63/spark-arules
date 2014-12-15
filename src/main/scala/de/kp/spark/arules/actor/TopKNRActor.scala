@@ -28,18 +28,19 @@ import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
 
-class TopKNRActor(@transient val sc:SparkContext) extends MLActor {
+class TopKNRActor(@transient sc:SparkContext) extends MLActor(sc) {
 
   def receive = {
     
     case req:ServiceRequest => {
 
       val params = properties(req)
+      val missing = (params == null)
 
       /* Send response to originator of request */
-      sender ! response(req, (params == null))
+      sender ! response(req, missing)
 
-      if (params != null) {
+      if (missing == false) {
         /* Register status */
         cache.addStatus(req,ResponseStatus.MINING_STARTED)
  

@@ -28,7 +28,7 @@ import de.kp.spark.arules.TopK
 import de.kp.spark.arules.source.TransactionSource
 import de.kp.spark.arules.model._
 
-class TopKActor(@transient val sc:SparkContext) extends MLActor {
+class TopKActor(@transient sc:SparkContext) extends MLActor(sc) {
  
   def receive = {
 
