@@ -26,8 +26,23 @@ import org.json4s.native.Serialization.{read,write}
 import de.kp.spark.core.model._
 
 case class Rule (
-  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double)
+  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double
+)
+/**
+ * A CRule is derived from mined association rules and has a focus on a 
+ * single consequent, and the respective weight of this with respective
+ * to the association rule.
+ * 
+ * A CRule is the basis for associative classifiers, where the consequent
+ * is used as the target class to classify the items specified as antecedent.
+ * 
+ */
+case class CRule(
+  antecedent:List[Int],consequent:Int,support:Int,confidence:Double,weight:Double
+)  
 
+case class CRules(items:List[CRule])
+  
 case class Rules(items:List[Rule])
 /**
  * A derived association rule that additionally specifies the matching weight
@@ -44,6 +59,12 @@ case class UserRules(site:String,user:String,items:List[WeightedRule])
 case class MultiUserRules(items:List[UserRules])
 
 object Serializer extends BaseSerializer {
+  /*
+   * Serialization and de-serialization support for classifier
+   * rules; these rules cas be used to feed to e.g. decision trees
+   */
+  def serializeCRules(rules:CRules):String = write(rules)
+  def deserializeCRules(rules:String):CRules = read[CRules](rules)
   
   def serializeWeightedRules(rules:UserRules):String = write(rules)
   def deserializeWeightedRules(rules:String):UserRules = read[UserRules](rules)

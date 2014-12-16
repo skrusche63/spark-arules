@@ -190,6 +190,12 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
      * 'consequent' retrieves those association rules where an externally
 	 * provided itemset matches the consequent part of the association rules
 	 * 
+	 * 'crule' retrieves a slight modification of the discovered association 
+	 * rules with a single consequent item and the respective weight with 
+	 * respect to the original rule; a 'crule' or classifier rule is a means
+	 * to use association rule mining in combination with classifiers such
+	 * as random forests
+	 * 
 	 * 'rule' retrieves the discovered association rules without any data 
 	 * aggregation or transformation
 	 * 
@@ -198,7 +204,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
      * transaction
  	 * 
 	 */	
-    val topics = List("antecedent","consequent","rule","transaction")
+    val topics = List("antecedent","consequent","crule","rule","transaction")
     if (topics.contains(subject)) doRequest(ctx,service,task)
     
   }

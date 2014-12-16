@@ -62,7 +62,7 @@ class RuleQuestor extends BaseActor {
          */
         case "antecedent" => {
 
-          if (sink.rulesExist(uid) == false) {           
+          if (sink.rulesExist(req) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -73,7 +73,7 @@ class RuleQuestor extends BaseActor {
              } else {
             
                val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
-               val rules = sink.rulesByAntecedent(uid,items)
+               val rules = sink.rulesByAntecedent(req,items)
                
                val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
                new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
@@ -91,7 +91,7 @@ class RuleQuestor extends BaseActor {
          */
         case "consequent" => {
 
-          if (sink.rulesExist(uid) == false) {           
+          if (sink.rulesExist(req) == false) {           
             failure(req,Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {    
@@ -102,7 +102,7 @@ class RuleQuestor extends BaseActor {
              } else {
             
                val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
-               val rules = sink.rulesByConsequent(uid,items)
+               val rules = sink.rulesByConsequent(req,items)
                
                val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
                new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
@@ -112,18 +112,42 @@ class RuleQuestor extends BaseActor {
           }
           
         }
+        case "crule" => {
+          /*
+           * This request retrieves a derived version of association with a single
+           * consequent and the respective weight with respect to original rules;
+           * these classifier rules can be used to feed classifiers.
+           */ 
+          if (sink.rulesExist(req) == false) {           
+            failure(req, Messages.RULES_DO_NOT_EXIST(uid))
+            
+          } else {       
+            
+            val crules = sink.rulesAsList(req).flatMap(rule => {
+            
+              val ratio = 1.toDouble / rule.consequent.length
+              rule.consequent.map(item => CRule(rule.antecedent,item,rule.support,rule.confidence,ratio))
+              
+            })
+               
+            val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> Serializer.serializeCRules(CRules(crules)))
+            new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
+            
+          }
+         
+        }
         /*
          * This request retrieves the association rules mined from the
          * specified data source; no additional data computing is done
          */
         case "rule" => {
 
-          if (sink.rulesExist(uid) == false) {           
+          if (sink.rulesExist(req) == false) {           
             failure(req, Messages.RULES_DO_NOT_EXIST(uid))
             
           } else {            
             
-            val rules = sink.rulesAsString(uid)
+            val rules = sink.rulesAsString(req)
 
             val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)            
             new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
