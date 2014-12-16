@@ -313,7 +313,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - uid (String)
    * - name (String)
    * 
-   * - source (String)
+   * - index (String)
    * - type (String)
    * 
    */
