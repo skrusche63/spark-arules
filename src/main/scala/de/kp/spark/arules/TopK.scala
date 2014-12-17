@@ -23,10 +23,12 @@ import org.apache.spark.SparkContext._
 
 import org.apache.spark.rdd.RDD
 
-import de.kp.core.arules.{TopKAlgorithm,RuleG,Vertical}
+import de.kp.spark.core.model._
+
+import de.kp.core.arules._
 import de.kp.spark.core.source.FileSource
 
-import de.kp.spark.arules.model._
+import de.kp.spark.arules.model.Serializer
 import de.kp.spark.arules.source.{TransactionModel}
 
 import scala.collection.JavaConversions._

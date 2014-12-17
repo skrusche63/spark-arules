@@ -24,26 +24,6 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
 import de.kp.spark.core.model._
-
-case class Rule (
-  antecedent:List[Int],consequent:List[Int],support:Int,confidence:Double
-)
-/**
- * A CRule is derived from mined association rules and has a focus on a 
- * single consequent, and the respective weight of this with respective
- * to the association rule.
- * 
- * A CRule is the basis for associative classifiers, where the consequent
- * is used as the target class to classify the items specified as antecedent.
- * 
- */
-case class CRule(
-  antecedent:List[Int],consequent:Int,support:Int,confidence:Double,weight:Double
-)  
-
-case class CRules(items:List[CRule])
-  
-case class Rules(items:List[Rule])
 /**
  * A derived association rule that additionally specifies the matching weight
  * between the antecent field and the respective field in mined and original
@@ -59,21 +39,12 @@ case class UserRules(site:String,user:String,items:List[WeightedRule])
 case class MultiUserRules(items:List[UserRules])
 
 object Serializer extends BaseSerializer {
-  /*
-   * Serialization and de-serialization support for classifier
-   * rules; these rules cas be used to feed to e.g. decision trees
-   */
-  def serializeCRules(rules:CRules):String = write(rules)
-  def deserializeCRules(rules:String):CRules = read[CRules](rules)
   
   def serializeWeightedRules(rules:UserRules):String = write(rules)
   def deserializeWeightedRules(rules:String):UserRules = read[UserRules](rules)
 
   def serializeMultiUserRules(rules:MultiUserRules):String = write(rules)
   def deserializeMultiUserRules(rules:String):MultiUserRules = read[MultiUserRules](rules)
-  
-  def serializeRules(rules:Rules):String = write(rules)  
-  def deserializeRules(rules:String):Rules = read[Rules](rules)
   
 }
 
@@ -126,9 +97,6 @@ object Messages extends BaseMessages {
 
   def NO_ITEMS_PROVIDED(uid:String):String = 
     String.format("""[UID: %s] No items are provided.""", uid)
-
-  def RULES_DO_NOT_EXIST(uid:String):String = 
-    String.format("""[UID: %s] No association rules found.""", uid)
  
   def TRACKED_ITEM_RECEIVED(uid:String):String = 
     String.format("""[UID: %s] Tracked item(s) received.""", uid)
