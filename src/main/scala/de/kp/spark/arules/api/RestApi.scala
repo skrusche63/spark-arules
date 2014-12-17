@@ -332,7 +332,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - uid (String)
    * - name (String)
    * 
-   * - source (String)
+   * - index (String)
    * - type (String)
    * 
    * The information element (item) is pre-defined for the Association Analysis
