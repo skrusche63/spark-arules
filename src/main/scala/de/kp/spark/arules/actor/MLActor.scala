@@ -34,6 +34,9 @@ import de.kp.spark.arules.sink._
  * actors, TopKActor and TopKNRActor
  */
 abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
+
+  private val (host,port) = Configuration.redis
+  private val redis = new RedisSink(host,port.toInt)
   
   /**
    * For every (site,user) pair and every discovered association rule, 
@@ -84,9 +87,7 @@ abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
    * Elasticsearch index
    */
   protected def saveMultiUserRules(req:ServiceRequest, rules:MultiUserRules) {
-
-    val sink = new RedisSink()
-    sink.addUserRules(req,rules)
+    redis.addUserRules(req,rules)
     
   }
 
@@ -101,7 +102,6 @@ abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
      * on a per request basis, additional data sinks may be used; this depends
      * on whether a cetain sink has been specified with the request
      */
-    val redis = new RedisSink()
     redis.addRules(req,rules)
     
     if (req.data.contains(Names.REQ_SINK) == false) return

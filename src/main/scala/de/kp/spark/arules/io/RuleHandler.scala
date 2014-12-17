@@ -28,7 +28,8 @@ import de.kp.spark.arules.sink.RedisSink
 
 class RuleHandler {
 
-  private val sink = new RedisSink()
+  private val (host,port) = Configuration.redis
+  private val sink = new RedisSink(host,port.toInt)
     
   /*
    * The Association Analysis engines distinguish two types of requests: (a) rule oriented requests 

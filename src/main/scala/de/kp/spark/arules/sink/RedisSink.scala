@@ -23,17 +23,14 @@ import java.util.Date
 import de.kp.spark.core.Names
 
 import de.kp.spark.core.model._
-import de.kp.spark.core.redis.RedisClient
+import de.kp.spark.core.redis.RedisDB
 
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
 import scala.collection.JavaConversions._
 
-class RedisSink {
-
-  val (host,port) = Configuration.redis
-  val client  = RedisClient(host,port.toInt)
+class RedisSink(host:String,port:Int) extends RedisDB(host,port){
 
   val service = "arules"
 
@@ -45,86 +42,21 @@ class RedisSink {
     val k = "multi:user:rule:" + service + ":" + req.data("uid")
     val v = "" + timestamp + ":" + Serializer.serializeMultiUserRules(relations)
     
-    client.zadd(k,timestamp,v)
-    
-  }
-  /**
-   * Add serialized rules to the Redis instance
-   */
-  def addRules(req:ServiceRequest, rules:Rules) {
-   
-    val now = new Date()
-    val timestamp = now.getTime()
-    
-    val k = ruleKey(req)
-    val v = "" + timestamp + ":" + Serializer.serializeRules(rules)
-    
-    client.zadd(k,timestamp,v)
+    getClient.zadd(k,timestamp,v)
     
   }
  
   def userRulesExist(uid:String):Boolean = {
 
     val k = "multi:user:rule:" + service + ":" + uid
-    client.exists(k)
+    getClient.exists(k)
     
   }
-   
-  def rulesExist(req:ServiceRequest):Boolean = {
-
-    val k = ruleKey(req)
-    client.exists(k)
     
-  }
-  
-  def rulesAsString(req:ServiceRequest):String = {
-
-    val k = ruleKey(req)
-    val rules = client.zrange(k, 0, -1)
-
-    if (rules.size() == 0) {
-      Serializer.serializeRules(new Rules(List.empty[Rule]))
-    
-    } else {
-      
-      val last = rules.toList.last
-      last.split(":")(1)
-      
-    }
-  
-  }
-
-  private def ruleKey(req:ServiceRequest):String = {
-    "rule:" + req.data(Names.REQ_SITE) + ":" + req.data(Names.REQ_UID) + ":" + req.data(Names.REQ_NAME) 
-  }
-  
-  /**
-   * Retrieve those rules, where the antecedents match
-   * the provided ones
-   */
-  def rulesByAntecedent(req:ServiceRequest,antecedent:List[Int]):String = {
-  
-    /* Restrict to those rules, that match the antecedents */
-    val items = rulesAsList(req).filter(rule => isEqual(rule.antecedent,antecedent))
-    Serializer.serializeRules(new Rules(items))
-    
-  } 
-  /**
-   * Retrieve those rules, where the consequents match
-   * the provided ones
-   */
-  def rulesByConsequent(req:ServiceRequest,consequent:List[Int]):String = {
-  
-    /* Restrict to those rules, that match the consequents */
-    val items = rulesAsList(req).filter(rule => isEqual(rule.consequent,consequent))
-    Serializer.serializeRules(new Rules(items))
-
-  } 
-  
   def rulesByAllUsers(uid:String):String = {
 
     val k = "multi:user:rule:" + service + ":" + uid
-    val rules = client.zrange(k, 0, -1)
+    val rules = getClient.zrange(k, 0, -1)
 
     if (rules.size() == 0) {
       Serializer.serializeMultiUserRules(new MultiUserRules(List.empty[UserRules]))
@@ -151,30 +83,6 @@ class RedisSink {
     val filteredRules = rules.filter(entry => site == entry.site && users.contains(entry.user))
     Serializer.serializeMultiUserRules(new MultiUserRules(filteredRules))
 
-  }
-  
-  def rulesAsList(req:ServiceRequest):List[Rule] = {
-
-    val k = ruleKey(req)
-    val rules = client.zrange(k, 0, -1)
-
-    if (rules.size() == 0) {
-      List.empty[Rule]
-    
-    } else {
-      
-      val last = rules.toList.last
-      Serializer.deserializeRules(last.split(":")(1)).items
-      
-    }
-  
-  }
-  
-  private def isEqual(itemset1:List[Int],itemset2:List[Int]):Boolean = {
-    
-    val intersect = itemset1.intersect(itemset2)
-    intersect.size == itemset1.size
-    
   }
 
 }
