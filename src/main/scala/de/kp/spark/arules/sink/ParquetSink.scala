@@ -42,23 +42,9 @@ class ParquetSink(@transient sc:SparkContext) {
     val now = new Date()
     val timestamp = now.getTime()
    
-    val dataset = sc.parallelize(rules.items.flatMap(rule => {
-      /* 
-       * Unique identifier to group all entries 
-       * that refer to the same rule
-       */      
-      val rid = UUID.randomUUID().toString()
-      /*
-       * The rule antecedents are indexed as single documents
-       * with an additional weight, derived from the total number
-       * of antecedents per rule
-       */
-      rule.antecedent.map(item => {
-        val weight = (1.toDouble / rule.antecedent.length)
-        RuleObject(timestamp,uid,rid,item,rule.consequent,rule.support,rule.confidence,weight)
-      })
-      
-    }))
+    val dataset = sc.parallelize(rules.items.map(rule => {
+        RuleObject(uid,timestamp,rule.antecedent,rule.consequent,rule.support,rule.total,rule.confidence)
+      }))
 
     writer.writeRules(Configuration.input(0), dataset)
     

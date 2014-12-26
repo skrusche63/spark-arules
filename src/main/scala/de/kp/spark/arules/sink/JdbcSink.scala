@@ -58,12 +58,13 @@ class JdbcSink {
         /*  Add rule record */      
         val rid = UUID.randomUUID().toString()        
         val ruleSQL = "INSERT INTO " + database + ".predictiveworks_rules " +
-                      "VALUES ('$1', '$2', $3, $4, $5)"
+                      "VALUES ('$1', '$2', $3, $4, $5, $6)"
                       .replace("$1",rid)
                       .replace("$2",req.data("uid"))
                       .replace("$3",timestamp.toString)
                       .replace("$4",rule.support.toString)
-                      .replace("$5",rule.confidence.toString)
+                      .replace("$5",rule.total.toString)
+                      .replace("$6",rule.confidence.toString)
         
         stmt.execute(ruleSQL)
          
@@ -146,6 +147,7 @@ class JdbcSink {
                      " uid VARCHAR(255), " + 
                      " timestamp BIGINT, " + 
                      " support INTEGER, " + 
+                     " total BIGINT, " + 
                      " confidence DOUBLE, " + 
                      " PRIMARY KEY ( rid ))"
 
