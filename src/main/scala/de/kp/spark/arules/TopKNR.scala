@@ -84,22 +84,4 @@ object TopKNR {
 
   }
 
-  def rulesToJson(rules:List[RuleG]):String = {
-    
-    val items = rules.map(rule => {
-			
-      val antecedent = rule.getItemset1().toList.map(_.toInt)
-      val consequent = rule.getItemset2().toList.map(_.toInt)
-
-      val support    = rule.getAbsoluteSupport()
-      val confidence = rule.getConfidence()
-	
-      new Rule(antecedent,consequent,support,confidence)
-	
-    })
-    
-    Serializer.serializeRules(new Rules(items))
-
-  }
-
 }

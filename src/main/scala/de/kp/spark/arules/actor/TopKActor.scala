@@ -92,7 +92,13 @@ class TopKActor(@transient sc:SparkContext) extends MLActor(sc) {
     
   private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double)):List[Rule] = {
           
-    val (k,minconf) = params               
+    val (k,minconf) = params    
+    /*
+     * 'total' is the number of transaction and specifies
+     * the reference base for the 'support' parameter
+     */
+    val total = dataset.count()
+    
     val rules = TopK.extractRules(dataset,k,minconf).map(rule => {
      
       val antecedent = rule.getItemset1().toList.map(_.toInt)
@@ -101,7 +107,7 @@ class TopKActor(@transient sc:SparkContext) extends MLActor(sc) {
       val support    = rule.getAbsoluteSupport()
       val confidence = rule.getConfidence()
 	
-      new Rule(antecedent,consequent,support,confidence)
+      new Rule(antecedent,consequent,support,total,confidence)
             
     })
           
