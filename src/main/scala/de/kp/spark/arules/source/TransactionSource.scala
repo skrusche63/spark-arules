@@ -39,7 +39,6 @@ import de.kp.spark.arules.spec.Fields
 class TransactionSource(@transient sc:SparkContext) {
 
   private val config = Configuration
-  private val base = config.input(0)
   
   private val itemsetModel = new ItemsetModel(sc)
   private val transactionModel = new TransactionModel(sc)
@@ -66,7 +65,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.FILE => {
        
-        val store = String.format("""%s/%s/%s""",base,req.data(Names.REQ_NAME),req.data(Names.REQ_UID))
+        val store = req.data(Names.REQ_URL)
          
         val rawset = new FileSource(sc).connect(store,req)
         transactionModel.buildFile(req,rawset)
@@ -91,8 +90,8 @@ class TransactionSource(@transient sc:SparkContext) {
        * service configuration
        */
       case Sources.PARQUET => {
-    
-        val store = String.format("""%s/%s/%s""",base,req.data(Names.REQ_NAME),req.data(Names.REQ_UID))
+       
+        val store = req.data(Names.REQ_URL)
        
         val rawset = new ParquetSource(sc).connect(store,req)
         transactionModel.buildParquet(req,rawset)
@@ -137,8 +136,8 @@ class TransactionSource(@transient sc:SparkContext) {
        * parameters are retrieved from the service configuration 
        */    
       case Sources.FILE => {
-    
-        val store = String.format("""%s/%s/%s""",base,req.data(Names.REQ_NAME),req.data(Names.REQ_UID))
+       
+        val store = req.data(Names.REQ_URL)
         
         val rawset = new FileSource(sc).connect(store,req)
         itemsetModel.buildFile(req,rawset)
@@ -163,8 +162,8 @@ class TransactionSource(@transient sc:SparkContext) {
        * configuration
        */
       case Sources.PARQUET => {
-    
-        val store = String.format("""%s/%s/%s""",base,req.data(Names.REQ_NAME),req.data(Names.REQ_UID))
+       
+        val store = req.data(Names.REQ_URL)
         
         val rawset = new ParquetSource(sc).connect(store,req)
         itemsetModel.buildJDBC(req,rawset)
