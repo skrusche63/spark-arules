@@ -1,4 +1,4 @@
-package de.kp.spark.arules.sink
+package de.kp.spark.arules
 /* Copyright (c) 2014 Dr. Krusche & Partner PartG
 * 
 * This file is part of the Spark-ARULES project
@@ -18,33 +18,18 @@ package de.kp.spark.arules.sink
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import de.kp.spark.core.Names
-import de.kp.spark.core.model._
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.SQLContext
 
-import de.kp.spark.arules.RequestContext
-import de.kp.spark.arules.model._
+class RequestContext(  
+  /*
+   * Reference to the common SparkContext; this context can be used
+   * to access HDFS based data sources or leverage the Spark machine
+   * learning library or other Spark based functionality
+   */
+  @transient val sc:SparkContext) extends Serializable {
 
-class ParquetSink(@transient ctx:RequestContext) {
-
-  import ctx.sqlc.createSchemaRDD
-  def addRules(req:ServiceRequest,rules:Rules) {
-    
-    /* url = e.g.../part1/part2/part3/1 */
-    val url = req.data(Names.REQ_URL)
-   
-    val pos = url.lastIndexOf('/')
-    
-    val base = url.substring(0, pos)
-    val step = url.substring(pos+1).toInt + 1
-    
-    val store = base + "/" + (step + 1)
-            
-    val table = ctx.sc.parallelize(rules.items.map(x => {
-      ParquetRule(x.antecedent,x.consequent,x.support,x.total,x.confidence)	  
-    }))
-    
-    table.saveAsParquetFile(store)  
-    
-  }
+  val sqlc = new SQLContext(sc)
+  val config = Configuration
 
 }

@@ -18,19 +18,20 @@ package de.kp.spark.arules.source
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.Names
 
+import de.kp.spark.arules.RequestContext
 import de.kp.spark.core.model._
+
 import de.kp.spark.arules.spec.Fields
 
-class TransactionModel(@transient sc:SparkContext) extends Serializable {
+class TransactionModel(@transient ctx:RequestContext) extends Serializable {
   
   def buildElastic(req:ServiceRequest,rawset:RDD[Map[String,String]]):RDD[(Int,Array[Int])] = {
 
-    val spec = sc.broadcast(Fields.get(req))
+    val spec = ctx.sc.broadcast(Fields.get(req))
     val dataset = rawset.map(data => {
       
       val site = data(spec.value(Names.SITE_FIELD)._1)
@@ -63,7 +64,7 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
     val fieldspec = Fields.get(req)
     val fields = fieldspec.map(kv => kv._2._1).toList    
 
-    val spec = sc.broadcast(fieldspec)
+    val spec = ctx.sc.broadcast(fieldspec)
     val dataset = rawset.map(data => {
       
       val site = data(spec.value(Names.SITE_FIELD)._1).asInstanceOf[String]
@@ -85,7 +86,7 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
     val fieldspec = Fields.get(req)
     val fields = fieldspec.map(kv => kv._2._1).toList    
 
-    val spec = sc.broadcast(fieldspec)
+    val spec = ctx.sc.broadcast(fieldspec)
     val dataset = rawset.map(data => {
       
       val site = data(spec.value(Names.SITE_FIELD)._1).asInstanceOf[String]
@@ -142,7 +143,7 @@ class TransactionModel(@transient sc:SparkContext) extends Serializable {
     
     }).coalesce(1)
 
-    val transactions = sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
+    val transactions = ctx.sc.parallelize(Range.Long(0,ids.count,1),ids.partitions.size)
     ids.zip(transactions).map(valu => (valu._2.toInt,valu._1)).cache()
    
   }

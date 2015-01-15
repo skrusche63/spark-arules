@@ -18,7 +18,6 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.spark.SparkContext
 import akka.actor.{ActorRef,Props}
 
 import de.kp.spark.core.Names
@@ -26,13 +25,13 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.actor._
 import de.kp.spark.core.model._
 
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.RequestContext
 import de.kp.spark.arules.model._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 
-class RuleMiner(@transient sc:SparkContext) extends BaseTrainer(Configuration) {
+class RuleMiner(@transient ctx:RequestContext) extends BaseTrainer(ctx.config) {
 
   protected def validate(req:ServiceRequest):Option[String] = {
 
@@ -79,9 +78,9 @@ class RuleMiner(@transient sc:SparkContext) extends BaseTrainer(Configuration) {
 
     val algorithm = req.data(Names.REQ_ALGORITHM)
     if (algorithm == Algorithms.TOPK) {      
-      context.actorOf(Props(new TopKActor(sc)))      
+      context.actorOf(Props(new TopKActor(ctx)))      
     } else {
-     context.actorOf(Props(new TopKNRActor(sc)))
+     context.actorOf(Props(new TopKNRActor(ctx)))
     }
   
   }

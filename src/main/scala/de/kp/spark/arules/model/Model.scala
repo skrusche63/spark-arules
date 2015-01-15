@@ -24,6 +24,15 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read,write}
 
 import de.kp.spark.core.model._
+
+case class ParquetRule(
+  antecedent:Seq[Int],
+  consequent:Seq[Int],
+  support:Int,
+  total:Long,
+  confidence:Double
+)
+
 /**
  * A derived association rule that additionally specifies the matching weight
  * between the antecent field and the respective field in mined and original

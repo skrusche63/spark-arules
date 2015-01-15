@@ -18,7 +18,6 @@ package de.kp.spark.arules.source
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.Names
@@ -26,7 +25,7 @@ import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 import de.kp.spark.core.source._
 
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.RequestContext
 import de.kp.spark.arules.model.Sources
 
 import de.kp.spark.arules.spec.Fields
@@ -36,12 +35,12 @@ import de.kp.spark.arules.spec.Fields
  * different physical data source to retrieve a transaction
  * database compatible with the Top-K and Top-KNR algorithm
  */
-class TransactionSource(@transient sc:SparkContext) {
+class TransactionSource(@transient ctx:RequestContext) {
 
-  private val config = Configuration
+  private val config = ctx.config
   
-  private val itemsetModel = new ItemsetModel(sc)
-  private val transactionModel = new TransactionModel(sc)
+  private val itemsetModel = new ItemsetModel(ctx)
+  private val transactionModel = new TransactionModel(ctx)
   
   def transDS(req:ServiceRequest):RDD[(Int,Array[Int])] = {
     
@@ -54,7 +53,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.ELASTIC => {
         
-        val rawset = new ElasticSource(sc).connect(config,req)
+        val rawset = new ElasticSource(ctx.sc).connect(config,req)
         transactionModel.buildElastic(req,rawset)
         
       }
@@ -67,7 +66,7 @@ class TransactionSource(@transient sc:SparkContext) {
        
         val store = req.data(Names.REQ_URL)
          
-        val rawset = new FileSource(sc).connect(store,req)
+        val rawset = new FileSource(ctx.sc).connect(store,req)
         transactionModel.buildFile(req,rawset)
         
       }
@@ -80,7 +79,7 @@ class TransactionSource(@transient sc:SparkContext) {
     
         val fields = Fields.get(req).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(config,req,fields)
+        val rawset = new JdbcSource(ctx.sc).connect(config,req,fields)
         transactionModel.buildJDBC(req,rawset)
         
       }
@@ -93,7 +92,7 @@ class TransactionSource(@transient sc:SparkContext) {
        
         val store = req.data(Names.REQ_URL)
        
-        val rawset = new ParquetSource(sc).connect(store,req)
+        val rawset = new ParquetSource(ctx.sc).connect(store,req)
         transactionModel.buildParquet(req,rawset)
         
       }
@@ -104,7 +103,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.PIWIK => {
         
-        val rawset = new PiwikSource(sc).connect(config,req)
+        val rawset = new PiwikSource(ctx.sc).connect(config,req)
         transactionModel.buildPiwik(req,rawset)
         
       }
@@ -126,7 +125,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */    
       case Sources.ELASTIC => {
          
-        val rawset = new ElasticSource(sc).connect(config,req)
+        val rawset = new ElasticSource(ctx.sc).connect(config,req)
         itemsetModel.buildElastic(req,rawset)
         
       }
@@ -139,7 +138,7 @@ class TransactionSource(@transient sc:SparkContext) {
        
         val store = req.data(Names.REQ_URL)
         
-        val rawset = new FileSource(sc).connect(store,req)
+        val rawset = new FileSource(ctx.sc).connect(store,req)
         itemsetModel.buildFile(req,rawset)
         
       }
@@ -152,7 +151,7 @@ class TransactionSource(@transient sc:SparkContext) {
 
         val fields = Fields.get(req).map(kv => kv._2._1).toList    
         
-        val rawset = new JdbcSource(sc).connect(config,req,fields)
+        val rawset = new JdbcSource(ctx.sc).connect(config,req,fields)
         itemsetModel.buildJDBC(req,rawset)
         
       }
@@ -165,7 +164,7 @@ class TransactionSource(@transient sc:SparkContext) {
        
         val store = req.data(Names.REQ_URL)
         
-        val rawset = new ParquetSource(sc).connect(store,req)
+        val rawset = new ParquetSource(ctx.sc).connect(store,req)
         itemsetModel.buildJDBC(req,rawset)
         
       }
@@ -176,7 +175,7 @@ class TransactionSource(@transient sc:SparkContext) {
        */
       case Sources.PIWIK => {
         
-        val rawset = new PiwikSource(sc).connect(config,req)
+        val rawset = new PiwikSource(ctx.sc).connect(config,req)
         itemsetModel.buildPiwik(req,rawset)
         
       }

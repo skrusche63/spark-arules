@@ -20,8 +20,6 @@ package de.kp.spark.arules.api
 
 import java.util.Date
 
-import org.apache.spark.SparkContext
-
 import akka.actor.{ActorRef,ActorSystem,Props}
 import akka.pattern.ask
 
@@ -40,19 +38,19 @@ import scala.util.parsing.json._
 import de.kp.spark.core.model._
 import de.kp.spark.core.rest.RestService
 
-import de.kp.spark.arules.Configuration
+import de.kp.spark.arules.{RequestContext => RequestCtx}
 import de.kp.spark.arules.actor.{RuleMaster}
 import de.kp.spark.arules.model._
 
-class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkContext) extends HttpService with Directives {
+class RestApi(host:String,port:Int,system:ActorSystem,@transient val requestCtx:RequestCtx) extends HttpService with Directives {
 
   implicit val ec:ExecutionContext = system.dispatcher  
   import de.kp.spark.core.rest.RestJsonSupport._
   
   override def actorRefFactory:ActorSystem = system
   
-  val (duration,retries,time) = Configuration.actor   
-  val master = system.actorOf(Props(new RuleMaster(sc)), name="association-master")
+  val (duration,retries,time) = requestCtx.config.actor   
+  val master = system.actorOf(Props(new RuleMaster(requestCtx)), name="association-master")
 
   private val service = "association"
  
@@ -198,13 +196,9 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
 	 * 
 	 * 'rule' retrieves the discovered association rules without any data 
 	 * aggregation or transformation
-	 * 
-     * 'transaction' retrieves those association rules where the discovered
-     * antecedent part (within the rules) matches items of the last
-     * transaction
  	 * 
 	 */	
-    val topics = List("antecedent","consequent","crule","rule","transaction")
+    val topics = List("antecedent","consequent","crule","rule")
     if (topics.contains(subject)) doRequest(ctx,service,task)
     
   }
@@ -216,7 +210,7 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * - name (String)
    * 
    * - algorithm (String, TOPK, TOPKNR)
-   * - source (String, ELASTIC, FILE, JDBC, PIWIK)
+   * - source (String, ELASTIC, FILE, JDBC, PARQUET, PIWIK)
    * - sink (String, ELASTIC, JDBC)
    * 
    * and the following parameters depend on the selected source:
@@ -245,14 +239,12 @@ class RestApi(host:String,port:Int,system:ActorSystem,@transient val sc:SparkCon
    * 
    * - k (Integer)
    * - minconf (Double)
-   * - weight (Double)
    * 
    * TOPKNR
    * 
    * - k (Integer)
    * - minconf (Double)
    * - delta (Int)
-   * - weight (Double)
    * 
    */
   private def doTrain[T](ctx:RequestContext) = doRequest(ctx,service,"train")

@@ -18,9 +18,6 @@ package de.kp.spark.arules
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.model._
@@ -64,12 +61,12 @@ class TopK {
 
 object TopK {
   
-  def extractFileRules(@transient sc:SparkContext,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
+  def extractFileRules(@transient ctx:RequestContext,k:Int,minconf:Double,stats:Boolean=true):List[RuleG] = {
     
-    val model = new TransactionModel(sc)
+    val model = new TransactionModel(ctx)
 
     val config = Configuration
-    val source = new FileSource(sc)
+    val source = new FileSource(ctx.sc)
 
     val rawset = source.connect(config.input(0),null)
     val dataset = model.buildFile(null,rawset)

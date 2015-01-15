@@ -18,13 +18,12 @@ package de.kp.spark.arules.actor
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
-import de.kp.spark.arules.{Configuration,RemoteContext}
+import de.kp.spark.arules.{RemoteContext,RequestContext}
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink._
@@ -33,10 +32,12 @@ import de.kp.spark.arules.sink._
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
-abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
+abstract class MLActor(@transient ctx:RequestContext) extends BaseActor {
 
-  private val (host,port) = Configuration.redis
-  private val redis = new RedisSink(host,port.toInt)
+  private val (host,port) = ctx.config.redis
+
+  private val redis = new RedisSink(host,port.toInt)            
+  private val parquet = new ParquetSink(ctx)
   
   /**
    * For every (site,user) pair and every discovered association rule, 
@@ -98,9 +99,12 @@ abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
   protected def saveRules(req:ServiceRequest,rules:Rules) {
     
     /*
-     * Discovered rules are always registered in an internal Redis instance;
-     * on a per request basis, additional data sinks may be used; this depends
-     * on whether a cetain sink has been specified with the request
+     * Discovered rules are always registered in an internal Redis instance
+     * for fast rule access, and also as a Parquet file for sharing with other
+     * applications.
+     * 
+     * In addition, additional data sinks may be used; this depends on whether 
+     * a cetain sink has been specified with the request
      */
     redis.addRules(req,rules)
     
@@ -122,13 +126,6 @@ abstract class MLActor(@transient sc:SparkContext) extends BaseActor {
             
         val jdbc = new JdbcSink()
         jdbc.addRules(req,rules)
- 
-      }
-
-      case Sinks.PARQUET => {
-            
-        val parquet = new ParquetSink(sc)
-        parquet.addRules(req,rules)
  
       }
       

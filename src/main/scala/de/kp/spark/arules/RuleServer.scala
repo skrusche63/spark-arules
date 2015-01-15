@@ -30,6 +30,8 @@ object RuleServer extends SparkService {
 
   def main(args: Array[String]) {
     
+    val ctx = new RequestContext(sc)
+    
     /**
      * REST API 
      */
@@ -37,7 +39,7 @@ object RuleServer extends SparkService {
     sys.addShutdownHook(httpSystem.shutdown)
     
     val (host,port) = Configuration.rest
-    new RestApi(host,port,httpSystem,sc).start()
+    new RestApi(host,port,httpSystem,ctx).start()
  
     println("REST API activated.")
     
@@ -49,7 +51,7 @@ object RuleServer extends SparkService {
     val akkaSystem = ActorSystem("akka-server",ConfigFactory.load(conf))
     sys.addShutdownHook(akkaSystem.shutdown)
     
-    new AkkaApi(akkaSystem,sc).start()
+    new AkkaApi(akkaSystem,ctx).start()
  
     println("AKKA API activated.")
       

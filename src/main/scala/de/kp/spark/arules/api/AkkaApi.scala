@@ -18,14 +18,14 @@ package de.kp.spark.arules.api
 * If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.apache.spark.SparkContext
 import akka.actor.{ActorSystem,Props}
 
+import de.kp.spark.arules.RequestContext
 import de.kp.spark.arules.actor.RuleMaster
 
-class AkkaApi(system:ActorSystem,@transient val sc:SparkContext) {
+class AkkaApi(system:ActorSystem,@transient val ctx:RequestContext) {
 
-  val master = system.actorOf(Props(new RuleMaster(sc)), name="association-master")
+  val master = system.actorOf(Props(new RuleMaster(ctx)), name="association-master")
 
   def start() {
      while (true) {}   

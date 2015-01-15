@@ -18,17 +18,16 @@ package de.kp.spark.arules.actor
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.model._
 
-import de.kp.spark.arules.TopKNR
+import de.kp.spark.arules.{RequestContext,TopKNR}
 import de.kp.spark.arules.source.TransactionSource
 
 import de.kp.spark.arules.model._
 
-class TopKNRActor(@transient sc:SparkContext) extends MLActor(sc) {
+class TopKNRActor(@transient ctx:RequestContext) extends MLActor(ctx) {
 
   def receive = {
     
@@ -46,28 +45,10 @@ class TopKNRActor(@transient sc:SparkContext) extends MLActor(sc) {
  
         try {
           
-          val source = new TransactionSource(sc)
-          /*
-           * STEP #1: 
-           * Discover rules from the transactional data source
-           */
+          val source = new TransactionSource(ctx)
           val dataset = source.transDS(req)
-          val rules = if (dataset != null) findRules(req,dataset,params) else null
-          /*
-           * STEP #2: 
-           * Merge rules with transactional data and build weighted rules 
-           * thereby filtering those below a dynamically provided threshold
-           */
-          if (rules != null) {
-           
-            val dataset = source.itemsetDS(req)               
-            if (dataset != null) {
 
-              val weight = req.data("weight").toDouble
-              findMultiUserRules(req,dataset,rules,weight)
-           }
-            
-          }
+          findRules(req,dataset,params)
 
         } catch {
           case e:Exception => cache.addStatus(req,ResponseStatus.FAILURE)          
@@ -89,7 +70,7 @@ class TopKNRActor(@transient sc:SparkContext) extends MLActor(sc) {
     
   }
  
-  private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)):List[Rule] = {
+  private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double,Int)) {
           
     val (k,minconf,delta) = params
     /*
@@ -111,7 +92,6 @@ class TopKNRActor(@transient sc:SparkContext) extends MLActor(sc) {
     })
           
     saveRules(req,new Rules(rules))
-    rules
     
   }
   

@@ -129,26 +129,7 @@ class RuleHandler {
           new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
             
         }
-        /*
-         * This request retrieves the list of those rules that partially match
-         * the itemset of the users' last transaction thereby making sure that
-         * the intersection of antecedent and consequent is empty.
-         */
-        case "transaction" => {
-            
-          val rules = if (req.data.contains(Names.REQ_SITE) && req.data.contains(Names.REQ_USERS)) {
-            
-             val site  = req.data(Names.REQ_SITE)
-             val users = req.data(Names.REQ_USERS).split(",").toList
-            
-             sink.rulesByUsers(uid,site,users)
-            
-          } else sink.rulesByAllUsers(uid)
 
-          val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)            
-          new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
-            
-        }
         case _ => throw new Exception(Messages.TASK_IS_UNKNOWN(uid,req.task))
         
       }
