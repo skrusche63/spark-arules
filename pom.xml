@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>spark-arules</groupId>
   <artifactId>spark-arules</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <name>Spark-ARULES</name>
   <description>Reactive Association Analysis engine of Predictiveworks.</description>
   <inceptionYear>2010</inceptionYear>
@@ -141,50 +141,6 @@
 	  <artifactId>json4s-native_2.10</artifactId>
 	  <version>3.2.10</version>
     </dependency>
-    
-    <!-- spray 1.2.0 -->
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-can</artifactId>
-      <version>1.2.0</version>
-    </dependency>  
-    
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-routing</artifactId>
-      <version>1.2.0</version>
-    </dependency>  
-    
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-client</artifactId>
-      <version>1.2.0</version>
-    </dependency>  
-    
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-caching</artifactId>
-      <version>1.2.0</version>
-    </dependency>  
-
-    <!-- akka 2.2.3 -->
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_2.10</artifactId>
-      <version>2.2.3</version>
-    </dependency>
-    
-    <dependency>
-	  <groupId>com.typesafe.akka</groupId>
-	  <artifactId>akka-contrib_2.10</artifactId>
-	  <version>2.2.3</version>
-    </dependency> 
- 
-    <dependency>
-	  <groupId>com.typesafe.akka</groupId>
-	  <artifactId>akka-remote_2.10</artifactId>
-	  <version>2.2.3</version>
-    </dependency>
 
     <dependency>
 	  <groupId>mysql</groupId>
@@ -202,11 +158,6 @@
   </dependencies>
  
   <repositories>
-    <repository>
-      <id>spray repo</id>
-      <name>Spray Repository</name>
-      <url>http://repo.spray.io/</url>
-    </repository>
     <repository>
       <id>conjars.org</id>
       <url>http://conjars.org/repo</url>
