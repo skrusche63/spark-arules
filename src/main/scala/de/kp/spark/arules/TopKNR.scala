@@ -19,15 +19,9 @@ package de.kp.spark.arules
  */
 
 import org.apache.spark.rdd.RDD
+import de.kp.core.arules._
 
 import de.kp.spark.core.model._
-
-import de.kp.core.arules._
-import de.kp.spark.core.source.FileSource
-
-import de.kp.spark.arules.model.Serializer
-import de.kp.spark.arules.source.{TransactionModel}
-
 import scala.collection.JavaConversions._
 
 class TopKNR {
@@ -60,20 +54,6 @@ class TopKNR {
 }
 
 object TopKNR {
-  
-  def extractFileRules(@transient ctx:RequestContext,k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
-    
-    val model = new TransactionModel(ctx)
-
-    val config = Configuration
-    val source = new FileSource(ctx.sc)
-
-    val rawset = source.connect(config.input(0),null)
-    val dataset = model.buildFile(null,rawset)
-    
-    new TopKNR().extractRDDRules(dataset,k,minconf,delta,stats)
-    
-  }
   
   def extractRules(dataset:RDD[(Int,Array[Int])],k:Int,minconf:Double,delta:Int,stats:Boolean=true):List[RuleG] = {
     

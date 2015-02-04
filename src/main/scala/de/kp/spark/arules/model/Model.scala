@@ -72,19 +72,6 @@ object Algorithms {
   
 }
 
-object Sources {
-
-  val FILE:String    = "FILE"
-  val ELASTIC:String = "ELASTIC" 
-  val JDBC:String    = "JDBC"    
-  val PARQUET:String = "PARQUET"    
-  val PIWIK:String   = "PIWIK"    
-  
-  private val sources = List(FILE,ELASTIC,JDBC,PARQUET,PIWIK)
-  def isSource(source:String):Boolean = sources.contains(source)
-  
-}
-
 object Sinks {
   
   val ELASTIC:String = "ELASTIC"
