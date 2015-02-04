@@ -35,9 +35,9 @@ object ItemSpec extends Fields {
   val (host,port) = Configuration.redis
   val cache = new RedisCache(host,port.toInt)
 
-  def get(req:ServiceRequest):Map[String,(String,String)] = {
+  def get(req:ServiceRequest):Map[String,String] = {
     
-    val fields = HashMap.empty[String,(String,String)]
+    val fields = HashMap.empty[String,String]
 
     try {
           
@@ -47,10 +47,9 @@ object ItemSpec extends Fields {
         for (field <- fieldspec) {
         
           val _name = field.name
-          val _type = field.datatype
-          
           val _mapping = field.value
-          fields += _name -> (_mapping,_type) 
+
+          fields += _name -> _mapping
           
         }
         
@@ -60,10 +59,9 @@ object ItemSpec extends Fields {
         for (field <- root \ "field") {
       
           val _name  = (field \ "@name").toString
-          val _type  = (field \ "@type").toString
-
           val _mapping = field.text
-          fields += _name -> (_mapping,_type) 
+          
+          fields += _name -> _mapping
       
         }
       
