@@ -21,7 +21,9 @@ package de.kp.spark.arules.actor
 import org.apache.spark.rdd.RDD
 
 import de.kp.spark.core.model._
+
 import de.kp.spark.core.source.ItemSource
+import de.kp.spark.core.source.handler.SPMFHandler
 
 import de.kp.spark.arules.{RequestContext,TopKNR}
 import de.kp.spark.arules.model._
@@ -47,7 +49,7 @@ class TopKNRActor(@transient ctx:RequestContext) extends MLActor(ctx) {
         try {
           
           val source = new ItemSource(ctx.sc,ctx.config,ItemSpec)
-          val dataset = source.connect(req)
+          val dataset = SPMFHandler.item2SPMF(source.connect(req))
 
           findRules(req,dataset,params)
 
