@@ -80,33 +80,6 @@
 	  <artifactId>spark-sql_2.10</artifactId>
 	  <version>${spark.version}</version>
     </dependency>            
-    
-    <!-- hadoop client -->
-    <dependency>
-	  <groupId>org.apache.hadoop</groupId>
-	  <artifactId>hadoop-client</artifactId>
-	  <version>2.4.0</version>
-	  <exclusions>
-	    <exclusion>
-	      <groupId>org.jboss.netty</groupId>
-	    </exclusion>
-	    <exclusion>
-	      <groupId>io.netty</groupId>
-	    </exclusion>
-	    <exclusion>
-	      <groupId>org.eclipse.jetty</groupId>
-	    </exclusion>
-	    <exclusion>
-	      <groupId>org.mortbay.jetty</groupId>
-	    </exclusion>
-	    <exclusion>
-	      <groupId>org.ow2.asm</groupId>
-	    </exclusion>
-	    <exclusion>
-	      <groupId>asm</groupId>
-	    </exclusion>
-	  </exclusions>
-    </dependency>            
 
     <!--  cascading (from conjars.org) -->
     <dependency>
