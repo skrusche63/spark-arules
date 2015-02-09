@@ -5,13 +5,13 @@
     names; note, that these field names are used if no field
     specification is provided.
     -->
-	<field name="site" type="String">site</field>
-	<field name="user" type="String">user</field>
-    <field name="group" type="String">group</field>	
-    <field name="item" type="Integer">item</field>
+	<field name="site" type="string">site</field>
+	<field name="user" type="string">user</field>
+    <field name="group" type="string">group</field>	
+    <field name="item" type="integer">item</field>
     <!--  
     The timestamp field is exclusively used by the Itemset model 
     -->
-	<field name="timestamp" type="Long">timestamp</field>
+	<field name="timestamp" type="long">timestamp</field>
 
 </fieldspec>

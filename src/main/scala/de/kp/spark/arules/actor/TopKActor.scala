@@ -48,7 +48,7 @@ class TopKActor(@transient ctx:RequestContext) extends MLActor(ctx) {
  
         try {
           
-          val source = new ItemSource(ctx.sc,ctx.config,ItemSpec)
+          val source = new ItemSource(ctx.sc,ctx.config,new ItemSpec(req))
           val dataset = SPMFHandler.item2SPMF(source.connect(req))
 
           findRules(req,dataset,params)
