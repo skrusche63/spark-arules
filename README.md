@@ -115,15 +115,3 @@ The Reactive Association Analysis Engine supports a rapidly increasing list of a
 
 and JDBC database.
 
----
-
-### Technology
-
-* Akka
-* Akka Remoting
-* Elasticsearch
-* Redis
-* Spark
-* Spark Streaming
-* Spray
-
