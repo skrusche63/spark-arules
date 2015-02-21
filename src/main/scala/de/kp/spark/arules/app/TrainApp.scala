@@ -137,7 +137,12 @@ object TrainApp extends SparkService {
         
         val cfg = ConfigFactory.load(value)
         
-        params += "algorithm" -> cfg.getString("algo")
+        val algo = cfg.getString("algo")
+        if (Algorithms.isAlgorithm(algo) == false)
+          parser.usage("Parameter 'algo' must be one of [TOPK, TOPKNR].")
+          
+        params += "algorithm" -> algo
+        
         params += "source" -> cfg.getString("source")
 
         /* TOP-K & TOP-K NR */
