@@ -57,17 +57,16 @@ object VerticalBuilder {
      * 
      * Determine max item
      */
-    val ids = dataset.flatMap(value => value._2).collect()
-    val max = sc.broadcast(ids.max)
+    val max_item = dataset.flatMap(value => value._2).max
+    val max = sc.broadcast(max_item)
     
     /*
      * STEP #2
      * 
      * Build transactions
      */  
-    val transactions = dataset.map(valu => {
+    val transactions = dataset.map{case(tid,items) => {
       
-      val (tid,items) = valu
       /*
        * Sort items of a transaction by descending order because
        * TopKRules and TNR assume that items are sorted by lexical 
@@ -81,7 +80,7 @@ object VerticalBuilder {
       
 	  trans
 	  
-    })
+    }}
     
     val total = sc.broadcast(transactions.count())
 
