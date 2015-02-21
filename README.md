@@ -4,8 +4,6 @@
 
 ## Reactive Association Analysis Engine
 
-![Association Analysis Engine Overview](https://raw.githubusercontent.com/skrusche63/spark-arules/master/images/association-rules-overview.png)
-
 The Association Analysis Engine is one of the nine members of the open ensemble and is built to support association rule mining with a new and redefined 
 mining algorithm. The approach overcomes the well-known "threshold problem" and makes it a lot easier to directly leverage the resulting content and product rules.
 
@@ -92,69 +90,30 @@ We adapted Viger's original implementation and made his **Top-K** and **Top-K No
 
 ### Akka
 
-Akka is a toolkit to build concurrent scalable applications, using the [Actor Model](http://en.wikipedia.org/wiki/Actor_model). Akka comes with a feature called *Akka Remoting*, which easily enables to setup a communication between software components in a peer-to-peer fashion.
+Akka is a toolkit to build concurrent scalable applications, using the [Actor Model](http://en.wikipedia.org/wiki/Actor_model). Akka comes with a feature called *Akka Remoting*, which easily enables to setup 
+a communication between software components in a peer-to-peer fashion.
 
-Akka and Akka Remoting are an appropriate means to establish a communication between prior independent software components - easy and fast.
+Akka is leveraged in this software project to enable external software projects to interact with this Association Analysis engine. Besides external communication, Akka is also used to implement the internal 
+interaction between the different functional building blocks of the engine:
 
----
-
-### Spark
-
-From the [Apache Spark](https://spark.apache.org/) website:
-
-> Apache Spark is a fast and general engine for large-scale data processing and is up to 100x faster than Hadoop MR in memory.
-
-The increasing number of associated projects, such as [Spark SQL](https://spark.apache.org/sql/) and [Spark Streaming](https://spark.apache.org/streaming/), enables Spark to become the future  Unified Data Insight Platform. With this perspective in mind, we have integrated recently published Association Rule algorithms with Spark. This allows for a seamless usage of association rule mining either with batch or streaming data sources.
+* Administration
+* Indexing & Tracking
+* Training
+* Retrieval 
 
 ---
 
 ### Data Sources
 
-The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources. Below is a list of data sources that are already supported or will be supported in the near future:
+The Reactive Association Analysis Engine supports a rapidly increasing list of applicable data sources. Below is a list of data sources that are already supported:
 
-#### Elasticsearch
+* Cassandra,
+* Elasticsearch,
+* HBase,
+* MongoDB,
+* Parquent,
 
-[Elasticsearch](http://www.elasticsearch.org) is a flexible and powerful distributed real-time search and analytics engine. Besides linguistic and semantic enrichment, for data in a search index there is an increasing demand to apply analytics, knowledge discovery & data mining, and even predictive analytics to gain deeper insights into the data and further increase their business value.
-
-A step towards analytics is the recently introduced combination with [Logstash](http://logstash.net/) to easily store logs and other time based event data from any system in a single place.
-
-The Association Analysis Engine comes with a connector to Elasticsearch and thus brings knowledge discovery and data mining to the world of indexed data. The use cases are endless. 
-
-E.g. Elasticsearch may be used to support product search for an ecommerce platform and also as a NoSQL database to store order and cart events. Connected to the Association Analysis Engine, Elasticsearch also turns into a Market Basket Analysis, and Real-time Recommendation platform. 
-
-#### Piwik Analytics
-
-[Piwik Analytics](http://piwik.org) is the leading and widely used open source web analytics platform, and is an excellent starting point to move into the world of dynamic catalogs, product recommendations, purchase predictions and more.
-
-#### Pimcore (coming soon)
-
-[Pimcore](http://pimcore.org) is an open source multi-channel experience and engagement management platform and contains a variety of integrated applications such as Digital Asset Management, Ecommerce Framework, Marketing & Campaign Management, Multi-Channel & Web-to-Print, Product Information Management, Targeting & Personalization and
-Web Content Management.
-
-#### Relational Databases
-
-Elasticsearch is one of the connectors actually supported. As many ecommerce sites and analytics platforms work with JDBC databases, the Association Analysis Engine also comes with a JDBC connector.
-
-Discovering hidden relations in multiple large-scale tables even across databases is an emerging data management task. Database structures are usually pre-defined and reflect the information requirements that were
-valid when the respective system was built. In other words, tables and their relations specify a more or less decaying data perspective. And, real-world data often have valuable associations that were simply out of scope when the respective data model was built.
-
-Association Rule Mining in relational database tables is an appropriate means to detect overlooked data relations and thereby helps to make data management or adaptive to the data reality.
-
----
-
-### Data Sinks
-
-#### Elasticsearch
-
-The Association Analysis Engine writes discovered rules to an Elasticsearch index. This ensures that these rules e.g. may directly be used for product recommendations delivered with appropriate product search results.
-
-#### JDBC
-
-The Association Analysis Engine writes discovered rules to a JDBC database. This ensures that these rules e.g. may directly be used with SQL statements that query the database for product placements.
-
-#### Redis
-
-[Redis](http://redis.io) is open source and an advanced key-value cache and store, often referred to as a distributed data structure server. The Association Analysis Engine writes discovered rules to a Redis instance as a multi-purpose serving layer for software enrichments that are not equipped with Elasticsearch.
+and JDBC database.
 
 ---
 

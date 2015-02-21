@@ -55,16 +55,6 @@
 	  <groupId>org.apache.spark</groupId>
 	  <artifactId>spark-core_2.10</artifactId>
 	  <version>${spark.version}</version>
-	  <exclusions>
-	    <!-- 
-	    Apache Sparks uses an elder version of jackson-mapper-asl (1.01), which
-	    is in conflict with jackson-core-asl 1.8.8, used by ES Hadoop
-	     -->
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>jackson-mapper-asl</artifactId>
-        </exclusion>
-	  </exclusions>
     </dependency>
     
     <!-- spark mllib -->
