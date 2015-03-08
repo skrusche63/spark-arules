@@ -29,6 +29,7 @@ import de.kp.spark.arules.{RequestContext,TopK}
 import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.spec.ItemSpec
+import scala.collection.mutable.ArrayBuffer
 
 class TopKActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
     
@@ -36,9 +37,16 @@ class TopKActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
           
     val source = new ItemSource(ctx.sc,ctx.config,new ItemSpec(req))
     val dataset = SPMFHandler.item2SPMF(source.connect(req))
+      
+    val params = ArrayBuffer.empty[Param]
           
     val k = req.data("k").toInt
+    params += Param("k","integer",k.toString)
+    
     val minconf = req.data("minconf").toDouble
+    params += Param("minconf","double",minconf.toString)
+
+    cache.addParams(req, params.toList)
 
     /*
      * 'total' is the number of transaction and specifies
@@ -63,6 +71,9 @@ class TopKActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
   }
   
   override def validate(req:ServiceRequest) {
+
+    if (req.data.contains("name") == false) 
+      throw new Exception("No name for association rules provided.")
 
     if (req.data.contains("k") == false)
       throw new Exception("Parameter 'k' is missing.")

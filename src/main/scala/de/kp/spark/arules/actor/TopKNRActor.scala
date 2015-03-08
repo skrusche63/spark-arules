@@ -29,6 +29,7 @@ import de.kp.spark.arules.{RequestContext,TopKNR}
 import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.spec.ItemSpec
+import scala.collection.mutable.ArrayBuffer
 
 class TopKNRActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
  
@@ -36,11 +37,22 @@ class TopKNRActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
           
     val source = new ItemSource(ctx.sc,ctx.config,new ItemSpec(req))
     val dataset = SPMFHandler.item2SPMF(source.connect(req))
+    
+    /*
+     * Extract training parameters and register in Redis cache
+     */
+    val params = ArrayBuffer.empty[Param]
           
     val k = req.data("k").toInt
+    params += Param("k","integer",k.toString)
+
     val minconf = req.data("minconf").toDouble
+    params += Param("minconf","double",minconf.toString)
         
     val delta = req.data("delta").toInt
+    params += Param("delta","integer",delta.toString)
+
+    cache.addParams(req, params.toList)
  
     /*
      * 'total' is the number of transaction and specifies
@@ -65,6 +77,9 @@ class TopKNRActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
   }
   
   override def validate(req:ServiceRequest) {
+
+    if (req.data.contains("name") == false) 
+      throw new Exception("No name for association rules provided.")
 
     if (req.data.contains("k") == false)
       throw new Exception("Parameter 'k' is missing.")
