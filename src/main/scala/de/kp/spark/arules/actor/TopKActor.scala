@@ -30,52 +30,16 @@ import de.kp.spark.arules.model._
 
 import de.kp.spark.arules.spec.ItemSpec
 
-class TopKActor(@transient ctx:RequestContext) extends MLActor(ctx) {
- 
-  def receive = {
-
-    case req:ServiceRequest => {
-      
-      val params = properties(req)
-      val missing = (params == null)
-      
-      /* Send response to originator of request */
-      sender ! response(req, missing)
-
-      if (missing == false) {
-        /* Register status */
-        cache.addStatus(req,ResponseStatus.MINING_STARTED)
- 
-        try {
-          
-          val source = new ItemSource(ctx.sc,ctx.config,new ItemSpec(req))
-          val dataset = SPMFHandler.item2SPMF(source.connect(req))
-
-          findRules(req,dataset,params)
-          
-        } catch {
-          case e:Exception => cache.addStatus(req,ResponseStatus.FAILURE)          
-        }
- 
-
-      }
-      
-      context.stop(self)
-          
-    }
+class TopKActor(@transient ctx:RequestContext) extends TrainActor(ctx) {
     
-    case _ => {
-      
-      log.error("Unknown request.")
-      context.stop(self)
-      
-    }
-    
-  }
-    
-  private def findRules(req:ServiceRequest,dataset:RDD[(Int,Array[Int])],params:(Int,Double)) {
+  override def train(req:ServiceRequest) {
           
-    val (k,minconf) = params    
+    val source = new ItemSource(ctx.sc,ctx.config,new ItemSpec(req))
+    val dataset = SPMFHandler.item2SPMF(source.connect(req))
+          
+    val k = req.data("k").toInt
+    val minconf = req.data("minconf").toDouble
+
     /*
      * 'total' is the number of transaction and specifies
      * the reference base for the 'support' parameter
@@ -98,21 +62,14 @@ class TopKActor(@transient ctx:RequestContext) extends MLActor(ctx) {
     
   }
   
-  private def properties(req:ServiceRequest):(Int,Double) = {
-      
-    try {
-      
-      val k = req.data("k").toInt
-      val minconf = req.data("minconf").toDouble
-        
-      return (k,minconf)
-        
-    } catch {
-      case e:Exception => {
-         return null          
-      }
-    }
+  override def validate(req:ServiceRequest) {
+
+    if (req.data.contains("k") == false)
+      throw new Exception("Parameter 'k' is missing.")
     
+    if (req.data.contains("minconf") == false)
+      throw new Exception("Parameter 'minconf' is missing.")
+   
   }
 
 }

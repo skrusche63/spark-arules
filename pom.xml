@@ -117,6 +117,13 @@
       <artifactId>jedis</artifactId>
       <version>2.5.2</version>
     </dependency>
+    
+    <!--  argot parser -->
+    <dependency>
+      <groupId>org.clapper</groupId>
+      <artifactId>argot_2.10</artifactId>
+      <version>1.0.3</version>
+    </dependency>     
   
   </dependencies>
  

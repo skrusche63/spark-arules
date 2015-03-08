@@ -23,7 +23,7 @@ import org.apache.spark.rdd.RDD
 import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
-import de.kp.spark.arules.{RemoteContext,RequestContext}
+import de.kp.spark.arules.RequestContext
 
 import de.kp.spark.arules.model._
 import de.kp.spark.arules.sink._
@@ -32,65 +32,64 @@ import de.kp.spark.arules.sink._
  * MLActor comprises common functionality for the algorithm specific
  * actors, TopKActor and TopKNRActor
  */
-abstract class MLActor(@transient ctx:RequestContext) extends BaseActor {
+abstract class TrainActor(@transient ctx:RequestContext) extends BaseActor {
 
   private val (host,port) = ctx.config.redis
 
   private val redis = new RedisSink(host,port.toInt)            
   private val parquet = new ParquetSink(ctx)
   
-  /**
-   * For every (site,user) pair and every discovered association rule, 
-   * determine the 'antecedent' intersection ratio and filter those
-   * above a user defined threshold, and restrict to those rules, where
-   * the transaction 'items' do not intersect with the 'consequents' 
-   */  
-  protected def findMultiUserRules(req:ServiceRequest,dataset:RDD[(String,String,List[Int])],rules:List[Rule],weight:Double) {
-    
-    val sc = dataset.context
-    
-    val bcrules = sc.broadcast(rules)
-    val bcweight = sc.broadcast(weight)
-              
-    val multiUserRules = dataset.map(itemset => {
-                
-      val (site,user,items) = itemset
-      val userRules = bcrules.value.map(rule => {
+  def receive = {
 
-        val intersect = items.intersect(rule.antecedent)
-        val ratio = intersect.length.toDouble / items.length
-                  
-        new WeightedRule(items,rule.consequent,rule.support,rule.confidence,ratio)
-        /*
-         * Restrict to rules, where a) the intersection ratio is above the
-         * externally provided threshold ('weight') and b) where no items also
-         * appear as consequents of the respective rules
-         */
-      }).filter(r => (r.weight > bcweight.value) && (r.antecedent.intersect(r.consequent).size == 0))
-                
-      new UserRules(site,user,userRules)
-                
-    }).collect()
-          
-    saveMultiUserRules(req,new MultiUserRules(multiUserRules.toList))
-          
-    /* Update RedisCache */
-    cache.addStatus(req,ResponseStatus.MINING_FINISHED)
+    case req:ServiceRequest => {
+      
+      val origin = sender
+      val missing = try {
+        
+        validate(req)
+        false
+      
+      } catch {
+        case e:Exception => true
+        
+      }
 
-    /* Notify potential listeners */
-    notify(req,ResponseStatus.MINING_FINISHED)
+      origin ! response(req, missing)
+
+      if (missing == false) {
+ 
+        try {
+
+          /* Update cache */
+          cache.addStatus(req,ResponseStatus.MINING_STARTED)
+          
+          train(req)
+          
+          /* Update cache */
+          cache.addStatus(req,ResponseStatus.MINING_FINISHED)
+ 
+        } catch {
+          case e:Exception => cache.addStatus(req,ResponseStatus.FAILURE)          
+        }
+
+      }
+      
+      context.stop(self)
+          
+    }
+    
+    case _ => {
+      
+      log.error("unknown request.")
+      context.stop(self)
+      
+    }
     
   }
   
-  /**
-   * (Multi-)User Rules are actually registered in an internal Redis instance
-   * only; note, that is different from rules, which are also indexed in an
-   * Elasticsearch index
-   */
-  protected def saveMultiUserRules(req:ServiceRequest, rules:MultiUserRules) {
-    redis.addUserRules(req,rules)
-    
-  }
+  protected def validate(req:ServiceRequest)
+  
+  protected def train(req:ServiceRequest)
 
   /**
    * Rules are actually registered in an internal Redis instance as well
@@ -132,20 +131,6 @@ abstract class MLActor(@transient ctx:RequestContext) extends BaseActor {
       case _ => {/* do nothing */}
       
     }
-    
-  }
-
-  /**
-   * Notify all registered listeners about a certain status
-   */
-  protected def notify(req:ServiceRequest,status:String) {
-
-    /* Build message */
-    val response = new ServiceResponse(req.service,req.task,req.data,status)	
-    
-    /* Notify listeners */
-    val message = serialize(response)    
-    RemoteContext.notify(message)
     
   }
   
