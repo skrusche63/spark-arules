@@ -21,6 +21,8 @@ package de.kp.spark.arules.io
 import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
+import de.kp.spark.core.redis.RedisDB
+
 import de.kp.spark.arules.Configuration
 import de.kp.spark.arules.model._
 
@@ -29,7 +31,7 @@ import de.kp.spark.arules.sink.RedisSink
 class RuleHandler {
 
   private val (host,port) = Configuration.redis
-  private val sink = new RedisSink(host,port.toInt)
+  private val redis = new RedisDB(host,port.toInt)
     
   /*
    * The Association Analysis engines distinguish two types of requests: (a) rule oriented requests 
@@ -49,7 +51,7 @@ class RuleHandler {
     val uid = req.data(Names.REQ_UID)
     val Array(task,topic) = req.task.split(":")
 
-    val response = if (sink.rulesExist(req) == false) {           
+    val response = if (redis.rulesExist(req) == false) {           
       throw new Exception(Messages.RULES_DO_NOT_EXIST(uid))
             
     } else {    
@@ -69,7 +71,7 @@ class RuleHandler {
           } else {
             
              val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
-             val rules = sink.rulesByAntecedent(req,items)
+             val rules = redis.rulesByAntecedent(req,items)
                
              val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
              new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
@@ -91,7 +93,7 @@ class RuleHandler {
           } else {
             
             val items = req.data(Names.REQ_ITEMS).split(",").map(_.toInt).toList
-            val rules = sink.rulesByConsequent(req,items)
+            val rules = redis.rulesByConsequent(req,items)
                
             val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)
             new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)
@@ -106,7 +108,7 @@ class RuleHandler {
          */           
         case "crule" => {
             
-          val crules = sink.rulesAsList(req).flatMap(rule => {
+          val crules = redis.rulesAsList(req).flatMap(rule => {
             
             val ratio = 1.toDouble / rule.consequent.length
             rule.consequent.map(item => CRule(rule.antecedent,item,rule.support,rule.confidence,ratio))
@@ -123,7 +125,7 @@ class RuleHandler {
          */
         case "rule" => {
             
-          val rules = sink.rulesAsString(req)
+          val rules = redis.rulesAsString(req)
 
           val data = Map(Names.REQ_UID -> uid, Names.REQ_RESPONSE -> rules)            
           new ServiceResponse(req.service,req.task,data,ResponseStatus.SUCCESS)

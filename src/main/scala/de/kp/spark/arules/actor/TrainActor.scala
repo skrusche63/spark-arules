@@ -23,6 +23,7 @@ import org.apache.spark.rdd.RDD
 import de.kp.spark.core.Names
 import de.kp.spark.core.model._
 
+import de.kp.spark.core.redis.RedisDB
 import de.kp.spark.arules.RequestContext
 
 import de.kp.spark.arules.model._
@@ -35,8 +36,8 @@ import de.kp.spark.arules.sink._
 abstract class TrainActor(@transient ctx:RequestContext) extends BaseActor {
 
   private val (host,port) = ctx.config.redis
-
-  private val redis = new RedisSink(host,port.toInt)            
+  private val redis = new RedisDB(host,port.toInt)
+  
   private val parquet = new ParquetSink(ctx)
   
   def receive = {
